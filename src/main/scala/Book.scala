@@ -3,7 +3,7 @@ object Book extends App {
 
   val scalaBooks = List(
     Book("Scala in Depth", List("Suereth")),
-    Book("Functional Programming in Scala", List("Chiusano", "Bjarnason")),
+    Book("FP in Scala", List("Chiusano", "Bjarnason")),
     Book("Get Programming with Scala", List("Sfregola"))
   )
 
@@ -24,9 +24,9 @@ object Book extends App {
   val a3 = scalaBooks.flatMap(_.authors)
   assert(a2 == a3)
 
-  def friendRecommendations(friend: String): List[Book] = {
-    val fiction = List(Book("Harry Potter", List("Rowling")), Book("The Lord of the Rings", List("Tolkien")))
+  def recommendedBooks(friend: String): List[Book] = {
     val scala   = List(Book("FP in Scala", List("Chiusano", "Bjarnason")), Book("Scala in Depth", List("Suereth")))
+    val fiction = List(Book("Harry Potter", List("Rowling")), Book("The Lord of the Rings", List("Tolkien")))
 
     if (friend == "Alice") scala
     else if (friend == "Bob") fiction
@@ -42,7 +42,7 @@ object Book extends App {
   val friends = List("Alice", "Bob")
 
   val b1 = friends
-    .flatMap(friendRecommendations)
+    .flatMap(recommendedBooks)
     .flatMap(_.authors)
     .flatMap(moreBooksByAuthor)
   println(b1)
@@ -51,7 +51,7 @@ object Book extends App {
   )
 
   val b2 = friends
-    .flatMap(friend => friendRecommendations(friend))
+    .flatMap(friend => recommendedBooks(friend))
     .flatMap(recommendation => recommendation.authors)
     .flatMap(author => moreBooksByAuthor(author))
   assert(b1 == b2)
@@ -67,10 +67,12 @@ object Book extends App {
 
   val c1 = friends
     .flatMap(friend => {
-      friendRecommendations(friend).flatMap(recommendation => {
+      recommendedBooks(friend).flatMap(recommendation => {
         recommendation.authors.flatMap(author => {
           moreBooksByAuthor(author).map(book => {
-            s"You may like ${book.title}, because $friend recommended you another $author's book"
+            s"You may like ${book.title}, " +
+            s"because $friend recommended you " +
+            s"another $author's book"
           })
         })
       })
@@ -83,10 +85,13 @@ object Book extends App {
 
   val c2 = for {
     friend         <- friends
-    recommendation <- friendRecommendations(friend)
+    recommendation <- recommendedBooks(friend)
     author         <- recommendation.authors
     book           <- moreBooksByAuthor(author)
-  } yield s"You may like ${book.title}, because $friend recommended you another $author's book"
+  } yield
+    s"You may like ${book.title}, " +
+    s"because $friend recommended you " +
+    s"another $author's book"
 
   assert(c1 == c2)
 }

@@ -48,14 +48,14 @@ scalaBooks.flatMap(_.authors)
 ## Coffee Break: Dealing with lists of lists
 
 ```tut:book:silent
-def friendRecommendations(friend: String): List[Book] = {
-  val fiction = List(
-    Book("Harry Potter", List("Rowling")),
-    Book("The Lord of the Rings", List("Tolkien")))
-
+def recommendedBooks(friend: String): List[Book] = {
   val scala = List(
     Book("FP in Scala", List("Chiusano", "Bjarnason")),
     Book("Scala in Depth", List("Suereth")))
+
+  val fiction = List(
+    Book("Harry Potter", List("Rowling")),
+    Book("The Lord of the Rings", List("Tolkien")))
 
   if(friend == "Alice") scala
   else if(friend == "Bob") fiction
@@ -65,69 +65,88 @@ def friendRecommendations(friend: String): List[Book] = {
 
 ```tut
 val friends = List("Alice", "Bob")
-val fr = friends.map(friendRecommendations)
+val friendBooks = friends.map(recommendedBooks)
 ```
 
 ```tut
-val recommendations = fr.flatten
-```
-
-```tut
-friends.flatMap(friendRecommendations)
-```
-
-```tut
-recommendations.flatMap(_.authors)
-```
-
-```tut
-friends.flatMap(friendRecommendations).flatMap(_.authors)
-```
-
-## Practical case of using more flatMaps
-
-```tut:book:silent
-def moreBooksByAuthor(author: String): List[Book] =
-  if(author == "Tolkien") List(Book("The Hobbit", List("Tolkien"))) else List.empty
-```
-
-```tut
-friends.flatMap(friendRecommendations).flatMap(_.authors).flatMap(moreBooksByAuthor)
-```
-
-## .flatMap and the size of the list
-
-```tut:book:silent
-val authors   = List("Chiusano", "Bjarnason", "Suereth", "Rowling", "Tolkien")
+val recommendations = friendBooks.flatten
 ```
 
 ```tut:book
-val moreBooks = authors.map(author => moreBooksByAuthor(author))
+friends.flatMap(recommendedBooks)
+```
+
+```tut
+val authors = recommendations.flatMap(_.authors)
+```
+
+```tut:book
+friends.flatMap(recommendedBooks).flatMap(_.authors)
+```
+
+## Practical use case of using more flatMaps
+
+```tut:book
+friends.flatMap(recommendedBooks).flatMap(_.authors)
+```
+
+```tut:book:silent
+def moreBooksByAuthor(author: String): List[Book] = {
+  if(author == "Tolkien") List(Book("The Hobbit", List("Tolkien")))
+  else List.empty
+}
+```
+
+```tut:book
+friends.flatMap(recommendedBooks).flatMap(_.authors).flatMap(moreBooksByAuthor)
+```
+
+## .flatMap and changing the size of the list
+
+```tut:book:silent
+val authors = List("Chiusano", "Bjarnason", "Suereth", "Rowling", "Tolkien")
+```
+
+```tut:book
+val moreBooks = authors.map(moreBooksByAuthor)
 moreBooks.flatten
+```
+
+```tut
+List(1, 2, 3).flatMap(i => List(i, i + 10))
+List(1, 2, 3).flatMap(i => List(i * 2))
+List(1, 2, 3).flatMap(i =>
+  if(i % 2 == 0) List(i) else List.empty)
 ```
 
 ## Values that depend on other values
 
-```tut
-friends.flatMap(friendRecommendations).flatMap(_.authors).flatMap(moreBooksByAuthor)
+```tut:book
+friends.flatMap(recommendedBooks).flatMap(_.authors).flatMap(moreBooksByAuthor)
 ```
 
-```tut:book:fail:silent
-friends.flatMap(friend =>
-  friendRecommendations(friend)
+```tut:book
+val recommendations = friends.flatMap(friend =>
+  recommendedBooks(friend)
 ).flatMap(recommendation =>
   recommendation.authors
 ).flatMap(author =>
   moreBooksByAuthor(author)
-).flatMap(book => ???)
+)
 ```
 
 ```tut:book
-val recommendations = friends.flatMap(friend => {
-  friendRecommendations(friend).flatMap(recommendation => {
+recommendations.map(book => s"You may like ${book.title}")
+```
+
+```tut:book
+val feed = friends.flatMap(friend => {
+  recommendedBooks(friend).flatMap(recommendation => {
     recommendation.authors.flatMap(author => {
       moreBooksByAuthor(author).map(book => {
-        s"You may like ${book.title}, because $friend recommended you another $author's book"
+        s"You may like ${book.title}, " +
+        s"because $friend recommended you " +
+        s"another $author's book"
       })
     })
   })
@@ -136,6 +155,40 @@ val recommendations = friends.flatMap(friend => {
 
 ```tut:invisible
 assert(
-  recommendations == List("You may like The Hobbit, because Bob recommended you another Tolkien's book")
+  feed == List("You may like The Hobbit, because Bob recommended you another Tolkien's book")
+)
+```
+
+## Better syntax for nested flatMaps
+
+```tut:book
+friends.flatMap(friend => {
+  recommendedBooks(friend).flatMap(recommendation => {
+    recommendation.authors.flatMap(author => {
+      moreBooksByAuthor(author).map(book => {
+        s"You may like ${book.title}, " +
+        s"because $friend recommended you " +
+        s"another $author's book"
+      })
+    })
+  })
+})
+```
+
+```tut:book
+val feed = for {
+  friend         <- friends
+  recommendation <- recommendedBooks(friend)
+  author         <- recommendation.authors
+  book           <- moreBooksByAuthor(author)
+} yield
+  (s"You may like ${book.title}, " +
+   s"because $friend recommended you " +
+   s"another $author's book")
+```
+
+```tut:invisible
+assert(
+  feed == List("You may like The Hobbit, because Bob recommended you another Tolkien's book")
 )
 ```
