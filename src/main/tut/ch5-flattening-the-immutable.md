@@ -192,3 +192,56 @@ assert(
   feed == List("You may like The Hobbit, because Bob recommended you another Tolkien's book")
 )
 ```
+
+## Coffee Break: flatMaps vs for-comprehensions
+
+```tut:book:silent
+case class Point(x: Int, y: Int, color: String)
+
+val xs     = List(1)
+val ys     = List(-2, 7)
+val colors = List("pink")
+```
+
+```tut:book
+xs.flatMap(x => {
+  ys.flatMap(y => {
+    colors.map(color => {
+      Point(x, y, color)
+    })
+  })
+})
+```
+
+```tut
+for {
+  x     <- xs
+  y     <- ys
+  color <- colors
+} yield Point(x, y, color)
+```
+
+```tut:book
+def pointColors(x: Int, y: Int): List[String] = {
+  if (x < 0 || y < 0) List("red", "blue")
+  else List("pink")
+}
+```
+
+```tut:book
+xs.flatMap(x => {
+  ys.flatMap(y => {
+    pointColors(x, y).map(color => {
+      Point(x, y, color)
+    })
+  })
+})
+```
+
+```tut
+for {
+  x     <- xs
+  y     <- ys
+  color <- pointColors(x, y)
+} yield Point(x, y, color)
+```
