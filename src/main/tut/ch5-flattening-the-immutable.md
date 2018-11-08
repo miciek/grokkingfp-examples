@@ -245,3 +245,52 @@ for {
   color <- pointColors(x, y)
 } yield Point(x, y, color)
 ```
+
+## It's not the for you are looking for
+
+```tut
+val xs = List(1, 2, 3, 4, 5)
+val result = for {
+  x <- xs
+} yield x * x
+```
+
+## Defining for comprehension
+
+```tut:book
+for {
+  x <- Set(1, 2)
+  y <- List(10, 100)
+} yield x * y            // Set(10, 100, 20, 200)
+```
+
+```tut:book
+for {
+  x <- List(1, 2)
+  y <- Set(10, 100)
+} yield x * y            // List(10, 100, 20, 200)
+```
+
+## Practicing for comprehensions
+
+```tut:book
+for {
+  x <- List(1, 2, 3)
+  y <- Set(1)
+} yield x * y           // List(1, 2, 3)
+```
+
+```tut:book
+for {
+  x <- Set(1, 2, 3)
+  y <- List(1)
+} yield x * y           // Set(1, 2, 3)
+```
+
+```tut:book
+for {
+  x <- List(1, 2, 3)
+  y <- Set(1)
+  z <- Set(0)
+} yield x * y * z       // List(0, 0, 0)
+```
