@@ -47,4 +47,12 @@ object Point extends App {
     color <- pointColors(x, y)
   } yield Point(x, y, color)
   assert(b1 == b2)
+
+  val b3 = for {
+    x     <- xs if x >= 0
+    y     <- ys if y >= 0
+    color <- pointColors(x, y)
+  } yield Point(x, y, color)
+  println(b3)
+  assert(b3 == List(Point(1, 7, "pink")))
 }
