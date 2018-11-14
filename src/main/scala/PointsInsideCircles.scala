@@ -1,3 +1,5 @@
+import scala.collection.mutable
+
 /**
   * Given the list of points and radiuses,
   * calculate which points are inside circles defined by these radiuses.
@@ -7,7 +9,7 @@
   * c) writing algorithms in a readable way using for comprehensions
   * d) using conditions in algorithms inside for comprehensions
   */
-object Point extends App {
+object PointsInsideCircles extends App {
   case class Point(x: Int, y: Int)
 
   val points   = List(Point(5, 2), Point(1, 1))
@@ -15,6 +17,18 @@ object Point extends App {
 
   def isInside(point: Point, radius: Int): Boolean = {
     radius * radius >= point.x * point.x + point.y * point.y
+  }
+
+  def imperative = {
+    val result = mutable.MutableList[String]()
+    for (point <- points) {
+      for (r <- radiuses) {
+        if(isInside(point, r)) {
+          result += s"$point is inside circle with radius $r"
+        }
+      }
+    }
+    result
   }
 
   val b1 =
@@ -46,4 +60,5 @@ object Point extends App {
   } yield s"$point is inside circle with radius $r"
   println(d1)
   assert(d1 == List("Point(1,1) is inside circle with radius 2"))
+  assert(d1 == imperative.toList)
 }
