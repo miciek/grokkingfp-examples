@@ -23,7 +23,7 @@ object PointsInsideCircles extends App {
     val result = mutable.MutableList[String]()
     for (point <- points) {
       for (r <- radiuses) {
-        if(isInside(point, r)) {
+        if (isInside(point, r)) {
           result += s"$point is inside circle with radius $r"
         }
       }
@@ -61,4 +61,13 @@ object PointsInsideCircles extends App {
   println(d1)
   assert(d1 == List("Point(1,1) is inside circle with radius 2"))
   assert(d1 == imperative.toList)
+
+  val riskyRadiuses = List(-10, 0, 2)
+  val d2 = for {
+    point <- points
+    r     <- riskyRadiuses if r > 0
+    if isInside(point, r)
+  } yield s"$point is inside circle with radius $r"
+  println(d2)
+  assert(d1 == d2)
 }
