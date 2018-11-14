@@ -1,6 +1,13 @@
+import scala.collection.mutable
+
 /**
   * Given the list of all interesting books,
   * return a list of movie recommendations.
+  *
+  * SKILLS:
+  * a) dealing with lists of lists using .flatten
+  * b) writing algorithms using flatMap instead of for loops
+  * c) writing algorithms in a readable way using for comprehensions
   */
 object BookAdaptations extends App {
   case class Book(title: String, authors: List[String])
@@ -16,6 +23,19 @@ object BookAdaptations extends App {
       List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
     else
       List.empty
+  }
+
+  def imperative = {
+    val result = mutable.MutableList[String]()
+    for (book <- books) {
+      for (author <- book.authors) {
+        for (movie <- movieAdaptations(author)) {
+          result += s"You may like ${movie.title}, " +
+          s"because you liked $author's ${book.title}"
+        }
+      }
+    }
+    result
   }
 
   val a1 = books.map(_.authors)
@@ -78,4 +98,5 @@ object BookAdaptations extends App {
     s"because you liked $author's ${book.title}"
 
   assert(c1 == c2)
+  assert(c1 == imperative.toList)
 }
