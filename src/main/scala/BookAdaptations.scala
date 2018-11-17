@@ -18,6 +18,9 @@ object BookAdaptations extends App {
     Book("The Hobbit", List("Tolkien"))
   )
 
+  val scalaBooksQty = books.map(book => book.title).filter(title => title.contains("Scala")).size
+  assert(scalaBooksQty == 1)
+
   def movieAdaptations(author: String): List[Movie] = {
     if (author == "Tolkien")
       List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
