@@ -1,8 +1,9 @@
-import scala.collection.mutable
+import java.util
+import scala.collection.JavaConverters._
 
 /**
   * Given the list of all interesting books,
-  * return a list of movie recommendations.
+  * return a feed of movie recommendations.
   *
   * SKILLS:
   * a) dealing with lists of lists using .flatten
@@ -21,27 +22,27 @@ object BookAdaptations extends App {
   val scalaBooksQty = books.map(book => book.title).filter(title => title.contains("Scala")).size
   assert(scalaBooksQty == 1)
 
-  def movieAdaptations(author: String): List[Movie] = {
+  def bookAdaptations(author: String): List[Movie] = {
     if (author == "Tolkien")
       List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
     else
       List.empty
   }
 
-  def imperative = {
-    val result = mutable.MutableList[String]()
-    for (book <- books) {
-      for (author <- book.authors) {
-        for (movie <- movieAdaptations(author)) {
-          result += s"You may like ${movie.title}, " +
-          s"because you liked $author's ${book.title}"
+  def recommendationFeed(books: List[Book]) = {
+    val result = new util.ArrayList[String]()
+    for (book <- books)
+      for (author <- book.authors)
+        for (movie <- bookAdaptations(author)) {
+          result.add(
+            s"You may like ${movie.title}, " +
+            s"because you liked $author's ${book.title}"
+          )
         }
-      }
-    }
     result
   }
 
-  val a1 = books.map(_.authors)
+  val a1 = books.map(book => book.authors)
   assert(
     a1 == List(
       List("Chiusano", "Bjarnason"),
@@ -49,35 +50,35 @@ object BookAdaptations extends App {
     )
   )
 
-  val a2 = books.map(_.authors).flatten
+  val a2 = books.map(book => book.authors).flatten
   assert(
     a2 == List("Chiusano", "Bjarnason", "Tolkien")
   )
 
-  val a3 = books.flatMap(_.authors)
+  val a3 = books.flatMap(book => book.authors)
   assert(a2 == a3)
 
-  val b1 = books
+  val authors    = List("Chiusano", "Bjarnason", "Tolkien")
+  val movieLists = authors.map(author => bookAdaptations(author))
+  assert(
+    movieLists == List(List.empty, List.empty, List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug")))
+  )
+
+  val b1 = movieLists.flatten
+
+  val b2 = books
     .flatMap(book => book.authors)
-    .flatMap(author => movieAdaptations(author))
-  println(b1)
+    .flatMap(author => bookAdaptations(author))
+  println(b2)
   assert(
-    b1 == List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
+    b2 == List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
   )
-
-  val authors   = List("Chiusano", "Bjarnason", "Tolkien")
-  val moreBooks = authors.map(author => movieAdaptations(author))
-  assert(
-    moreBooks == List(List.empty, List.empty, List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug")))
-  )
-
-  val b2 = moreBooks.flatten
   assert(b1 == b2)
 
   val c1 = books
     .flatMap(book => {
       book.authors.flatMap(author => {
-        movieAdaptations(author).map(movie => {
+        bookAdaptations(author).map(movie => {
           s"You may like ${movie.title}, " +
           s"because you liked $author's ${book.title}"
         })
@@ -95,11 +96,11 @@ object BookAdaptations extends App {
   val c2 = for {
     book   <- books
     author <- book.authors
-    movie  <- movieAdaptations(author)
+    movie  <- bookAdaptations(author)
   } yield
     s"You may like ${movie.title}, " +
     s"because you liked $author's ${book.title}"
 
   assert(c1 == c2)
-  assert(c1 == imperative.toList)
+  assert(c1 == recommendationFeed(books).asScala.toList)
 }
