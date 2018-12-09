@@ -15,4 +15,3 @@ lazy val root = (project in file("."))
     scalafmtOnCompile := true,
     addCommandAlias("formatAll", ";sbt:scalafmt;test:scalafmt;compile:scalafmt")
   )
-  .enablePlugins(TutPlugin)
