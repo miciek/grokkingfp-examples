@@ -5,7 +5,6 @@ import scala.collection.mutable
   * calculate which points are inside circles defined by these radiuses.
   *
   * SKILLS:
-  * b) writing algorithms using flatMap instead of for loops
   * c) writing algorithms in a readable way using for comprehensions
   * d) using conditions in algorithms inside for comprehensions
   */
@@ -31,27 +30,19 @@ object PointsInsideCircles extends App {
     result
   }
 
-  val b1 =
-    points.flatMap(point => {
-      radiuses.map(r => {
-        s"$point is inside circle with radius $r: ${isInside(point, r)}"
-      })
-    })
-  println(b1)
+  val c1 = for {
+    point <- points
+    r     <- radiuses
+  } yield s"$point is inside circle with radius $r: ${isInside(point, r)}"
+  println(c1)
   assert(
-    b1 == List(
+    c1 == List(
       "Point(5,2) is inside circle with radius 2: false",
       "Point(5,2) is inside circle with radius 1: false",
       "Point(1,1) is inside circle with radius 2: true",
       "Point(1,1) is inside circle with radius 1: false"
     )
   )
-
-  val c1 = for {
-    point <- points
-    r     <- radiuses
-  } yield s"$point is inside circle with radius $r: ${isInside(point, r)}"
-  assert(b1 == c1)
 
   val d1 = for {
     point <- points
@@ -65,7 +56,8 @@ object PointsInsideCircles extends App {
   val riskyRadiuses = List(-10, 0, 2)
   val d2 = for {
     point <- points
-    r     <- riskyRadiuses if r > 0
+    r     <- riskyRadiuses
+    if r > 0
     if isInside(point, r)
   } yield s"$point is inside circle with radius $r"
   println(d2)

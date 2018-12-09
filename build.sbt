@@ -13,5 +13,13 @@ lazy val root = (project in file("."))
       "-Xlint"
     ),
     scalafmtOnCompile := true,
-    addCommandAlias("formatAll", ";sbt:scalafmt;test:scalafmt;compile:scalafmt")
+    addCommandAlias("formatAll", ";sbt:scalafmt;test:scalafmt;compile:scalafmt"),
+    addCommandAlias(
+      "runAll",
+      ";runMain BookAdaptations" +
+      ";runMain BookFriendRecommendations" +
+      ";runMain Points2d3d" +
+      ";runMain PointsInsideCircles" +
+      ";runMain SequencedNestedFlatMaps"
+    )
   )

@@ -1,4 +1,8 @@
-class SequencedNestedFlatMaps extends App {
+/**
+  * SKILLS:
+  * b) writing algorithms using flatMap instead of for loops
+  */
+object SequencedNestedFlatMaps extends App {
   val s = List(1, 2, 3)
     .flatMap(a => List(a * 2))
     .flatMap(b => List(b, b + 10))
