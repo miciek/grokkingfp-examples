@@ -59,7 +59,7 @@ object PointsInsideCircles extends App {
     r     <- riskyRadiuses
     if r > 0
     if isInside(point, r)
-  } yield s"$point is inside circle with radius $r"
+  } yield point
+  assert(d2 == List(Point(1, 1)))
   println(d2)
-  assert(d1 == d2)
 }
