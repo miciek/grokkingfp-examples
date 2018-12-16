@@ -21,6 +21,7 @@ lazy val root = (project in file("."))
       ";runMain Points2d3d" +
       ";runMain PointsInsideCircles" +
       ";runMain SequencedNestedFlatMaps" +
-      ";runMain Events"
+      ";runMain Events" +
+      ";runMain RandomForComprehensions"
     )
   )
