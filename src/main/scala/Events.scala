@@ -1,27 +1,27 @@
 object Events extends App {
   case class Event(name: String, start: Int, end: Int)
 
-  def parseEvent1(name: String, start: Int, end: Int): Event = {
+  def parseEventAdHoc(name: String, start: Int, end: Int): Event = {
     if (name.size > 0 && end < 3000 & start <= end)
       Event(name, start, end)
     else
-      Event("INVALID EVENT", 0, 0)
+      null
   }
 
-  assert(parseEvent1("World War II", 1939, 1945) == Event("World War II", 1939, 1945))
-  assert(parseEvent1("", 1939, 1945) == Event("INVALID EVENT", 0, 0))
-  assert(parseEvent1("Event", 1949, 1945) == Event("INVALID EVENT", 0, 0))
+  assert(parseEventAdHoc("Apollo Program", 1961, 1972) == Event("Apollo Program", 1961, 1972))
+  assert(parseEventAdHoc("", 1939, 1945) == null)
+  assert(parseEventAdHoc("Event", 1949, 1945) == null)
 
-  def parseEvent2(name: String, start: Int, end: Int): Option[Event] = {
+  def parseEventOpt(name: String, start: Int, end: Int): Option[Event] = {
     if (name.size > 0 && end < 3000 & start <= end)
       Some(Event(name, start, end))
     else
       None
   }
 
-  assert(parseEvent2("World War II", 1939, 1945) == Some(Event("World War II", 1939, 1945)))
-  assert(parseEvent2("", 1939, 1945) == None)
-  assert(parseEvent2("Event", 1949, 1945) == None)
+  assert(parseEventOpt("Apollo Program", 1961, 1972) == Some(Event("Apollo Program", 1961, 1972)))
+  assert(parseEventOpt("", 1939, 1945) == None)
+  assert(parseEventOpt("Event", 1949, 1945) == None)
 
   def validateName(name: String): Option[String] =
     if (name.size > 0) Some(name) else None
@@ -39,7 +39,7 @@ object Events extends App {
       validStart <- validateStart(start, end)
     } yield Event(validName, validStart, validEnd)
 
-  assert(parseEvent("World War II", 1939, 1945) == Some(Event("World War II", 1939, 1945)))
+  assert(parseEvent("Apollo Program", 1961, 1972) == Some(Event("Apollo Program", 1961, 1972)))
   assert(parseEvent("", 1939, 1945) == None)
   assert(parseEvent("Event", 1949, 1945) == None)
 }
