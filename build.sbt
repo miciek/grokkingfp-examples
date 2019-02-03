@@ -16,6 +16,8 @@ lazy val root = (project in file("."))
     addCommandAlias("formatAll", ";sbt:scalafmt;test:scalafmt;compile:scalafmt"),
     addCommandAlias(
       "runAll",
+      ";runMain Intro" +
+      ";runMain IntroScala" +
       ";runMain BookAdaptations" +
       ";runMain BookFriendRecommendations" +
       ";runMain Points2d3d" +
