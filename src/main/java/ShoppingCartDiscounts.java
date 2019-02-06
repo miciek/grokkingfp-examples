@@ -152,23 +152,19 @@ public class ShoppingCartDiscounts {
         // STEP 3: LESS MUTABLE STATE & REFERENTIAL TRANSPARENCY
         ShoppingCartRT cart4 = new ShoppingCartRT();
         cart4.addItem(apple);
-        assert(ShoppingCartRT.getDiscountPercentage(cart4.getItems()) == 0);
-
         cart4.addItem(lemon);
-        assert(ShoppingCartRT.getDiscountPercentage(cart4.getItems()) == 0);
-
         cart4.addItem(book);
-        assert(ShoppingCartRT.getDiscountPercentage(cart4.getItems()) == 5);
-
         cart4.addItem(mango);
-        assert(ShoppingCartRT.getDiscountPercentage(cart4.getItems()) == 5);
+        List<String> fruitsAndBook = new ArrayList<>(cart4.getItems());
+        assert(ShoppingCartRT.getDiscountPercentage(fruitsAndBook) == 5);
 
         // PROBLEM 3 SOLVED:
-        List<String> items4 = cart4.getItems();
-        items4.remove(book);
+        List<String> justFruits = new ArrayList<>(cart4.getItems());
+        justFruits.remove(book);
 
-        assert(ShoppingCartRT.getDiscountPercentage(cart4.getItems()) == 0); // calling getDiscountPercentage(cart4 with no book) returns 0
+        assert(ShoppingCartRT.getDiscountPercentage(justFruits) == 0); // calling getDiscountPercentage(justFruits) returns 0
+        assert(ShoppingCartRT.getDiscountPercentage(justFruits) == 0); // EVERY... TIME...
         cart4.addItem(book);
-        assert(ShoppingCartRT.getDiscountPercentage(cart4.getItems()) == 5); // calling getDiscountPercentage(cart4 with book) returns 5
+        assert(ShoppingCartRT.getDiscountPercentage(fruitsAndBook) == 5); // calling getDiscountPercentage(fruitsAndBook) returns 5
     }
 }
