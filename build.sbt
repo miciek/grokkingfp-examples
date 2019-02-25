@@ -3,7 +3,7 @@ lazy val root = (project in file("."))
     name := "grokkingfp-examples",
     organization := "Michał Płachta (Manning)",
     version := "1.0",
-    scalaVersion := "2.12.7",
+    scalaVersion := "2.12.8",
     scalacOptions ++= List(
       "-unchecked",
       "-Ywarn-unused-import",
@@ -12,15 +12,17 @@ lazy val root = (project in file("."))
       "-language:higherKinds",
       "-Xlint"
     ),
-    scalafmtOnCompile := true,
     fork in run := true,
     javaOptions in run += "-ea",
-    addCommandAlias("formatAll", ";sbt:scalafmt;test:scalafmt;compile:scalafmt"),
+    compile in Compile := (compile in Compile).dependsOn(scalafmt in Compile).dependsOn(scalafmtSbt in Compile).value,
     addCommandAlias(
       "runAll",
       ";runMain Intro" +
       ";runMain IntroScala" +
+      ";runMain PureFunctions" +
       ";runMain ShoppingCartDiscounts" +
+      ";runMain DeletingMutability" +
+      ";runMain TipCalculation" +
       ";runMain Restaurant" +
       ";runMain BookAdaptations" +
       ";runMain BookFriendRecommendations" +

@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 class ShoppingCartBad {
@@ -66,15 +68,11 @@ class ShoppingCartLessMutableState {
     }
 }
 
-class ShoppingCartRT {
-    private List<String> items = new ArrayList<>();
-
-    public void addItem(String item) {
-        items.add(item);
-    }
-
-    public List<String> getItems() {
-        return items;
+class ShoppingCart {
+    public List<String> addItem(List<String> items, String item) {
+        List<String> updated = new ArrayList<>(items);
+        updated.add(item);
+        return updated;
     }
 
     public static int getDiscountPercentage(List<String> items) {
@@ -113,14 +111,11 @@ public class ShoppingCartDiscounts {
         cart2.addItem(book);
         assert(cart2.getDiscountPercentage() == 5);
 
-        cart2.addItem(mango);
-        assert(cart2.getDiscountPercentage() == 5);
-
         // PROBLEM 2:
         List<String> items2 = cart2.getItems();
         items2.remove(book);
 
-        assert(!cart2.getItems().contains("Book")); // NO BOOK IN THE CART
+        assert(!cart2.getItems().contains(book)); // NO BOOK IN THE CART
         assert(cart2.getDiscountPercentage() == 5); // SO SHOULD BE 0!
 
         // STEP 2: LESS MUTABLE STATE
@@ -134,14 +129,11 @@ public class ShoppingCartDiscounts {
         cart3.addItem(book);
         assert(cart3.getDiscountPercentage() == 5);
 
-        cart3.addItem(mango);
-        assert(cart3.getDiscountPercentage() == 5);
-
         // PROBLEM 2 SOLVED:
         List<String> items3 = cart3.getItems();
         items3.remove(book);
 
-        assert(!cart3.getItems().contains("Book")); // NO BOOK IN THE CART
+        assert(!cart3.getItems().contains(book)); // NO BOOK IN THE CART
         assert(cart3.getDiscountPercentage() == 0); // SO DISCOUNT IS 0
 
         // PROBLEM 3:
@@ -149,22 +141,15 @@ public class ShoppingCartDiscounts {
         cart3.addItem(book);
         assert(cart3.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
 
-        // STEP 3: LESS MUTABLE STATE & REFERENTIAL TRANSPARENCY
-        ShoppingCartRT cart4 = new ShoppingCartRT();
-        cart4.addItem(apple);
-        cart4.addItem(lemon);
-        cart4.addItem(book);
-        cart4.addItem(mango);
-        List<String> fruitsAndBook = new ArrayList<>(cart4.getItems());
-        assert(ShoppingCartRT.getDiscountPercentage(fruitsAndBook) == 5);
+        // STEP 3: IMMUTABLE
+        ShoppingCart cart4 = new ShoppingCart();
+        List<String> empty = new ArrayList<>();
+        List<String> justApple = cart4.addItem(empty,apple);
+        List<String> appleAndBook = cart4.addItem(justApple,book);
+        assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5);
 
         // PROBLEM 3 SOLVED:
-        List<String> justFruits = new ArrayList<>(cart4.getItems());
-        justFruits.remove(book);
-
-        assert(ShoppingCartRT.getDiscountPercentage(justFruits) == 0); // calling getDiscountPercentage(justFruits) returns 0
-        assert(ShoppingCartRT.getDiscountPercentage(justFruits) == 0); // EVERY... TIME...
-        cart4.addItem(book);
-        assert(ShoppingCartRT.getDiscountPercentage(fruitsAndBook) == 5); // calling getDiscountPercentage(fruitsAndBook) returns 5
+        assert(ShoppingCart.getDiscountPercentage(justApple) == 0); // calling getDiscountPercentage(justApple) returns 0
+        assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5); // calling getDiscountPercentage(appleAndBook) returns 5
     }
 }

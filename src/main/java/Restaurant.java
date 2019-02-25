@@ -1,8 +1,3 @@
-public class Restaurant {
-    public static void main(String[] args) {
-    }
-}
-
 class RestaurantBill {
     private double mealCharge = 0;
     private double tax = 0;
@@ -18,5 +13,10 @@ class RestaurantBill {
 
     public double getTotal() {
         return this.total;
+    }
+}
+
+public class Restaurant {
+    public static void main(String[] args) {
     }
 }
