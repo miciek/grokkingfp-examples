@@ -1,30 +1,9 @@
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 class ShoppingCartBad {
-    private List<String> items = new ArrayList<>();
-    private boolean bookAdded = false;
-
-    public int addItem(String item) {
-        items.add(item);
-        if(item.equals("Book")) {
-            bookAdded = true;
-        }
-        if(bookAdded) {
-            return 5;
-        } else {
-            return 0;
-        }
-    }
-
-    public List<String> getItems() {
-        return items;
-    }
-}
-
-class ShoppingCartResponsibility {
     private List<String> items = new ArrayList<>();
     private boolean bookAdded = false;
 
@@ -33,10 +12,6 @@ class ShoppingCartResponsibility {
         if(item.equals("Book")) {
             bookAdded = true;
         }
-    }
-
-    public List<String> getItems() {
-        return items;
     }
 
     public int getDiscountPercentage() {
@@ -46,17 +21,72 @@ class ShoppingCartResponsibility {
             return 0;
         }
     }
+
+    public List<String> getItems() {
+        return items;
+    }
 }
 
-class ShoppingCartLessMutableState {
+class ShoppingCartCopying {
+    private List<String> items = new ArrayList<>();
+    private boolean bookAdded = false;
+
+    public void addItem(String item) {
+        items.add(item);
+        if(item.equals("Book")) {
+            bookAdded = true;
+        }
+    }
+
+    public int getDiscountPercentage() {
+        if(bookAdded) {
+            return 5;
+        } else {
+            return 0;
+        }
+    }
+
+    public List<String> getItems() {
+        return new ArrayList<>(items);
+    }
+}
+
+class ShoppingCartWithRemove {
+    private List<String> items = new ArrayList<>();
+    private boolean bookAdded = false;
+
+    public void addItem(String item) {
+        items.add(item);
+        if(item.equals("Book")) {
+            bookAdded = true;
+        }
+    }
+
+    public int getDiscountPercentage() {
+        if(bookAdded) {
+            return 5;
+        } else {
+            return 0;
+        }
+    }
+
+    public List<String> getItems() {
+        return new ArrayList<>(items);
+    }
+
+    public void removeItem(String item) {
+        items.remove(item);
+        if(item.equals("Book")) {
+            bookAdded = false;
+        }
+    }
+}
+
+class ShoppingCartRecalculating {
     private List<String> items = new ArrayList<>();
 
     public void addItem(String item) {
         items.add(item);
-    }
-
-    public List<String> getItems() {
-        return items;
     }
 
     public int getDiscountPercentage() {
@@ -66,15 +96,17 @@ class ShoppingCartLessMutableState {
             return 0;
         }
     }
+
+    public List<String> getItems() {
+        return new ArrayList<>(items);
+    }
+
+    public void removeItem(String item) {
+        items.remove(item);
+    }
 }
 
 class ShoppingCart {
-    public List<String> addItem(List<String> items, String item) {
-        List<String> updated = new ArrayList<>(items);
-        updated.add(item);
-        return updated;
-    }
-
     public static int getDiscountPercentage(List<String> items) {
         if(items.contains("Book")) {
             return 5;
@@ -86,70 +118,71 @@ class ShoppingCart {
 
 public class ShoppingCartDiscounts {
     public static void main(String[] args) {
-        String apple = "Apple";
-        String lemon = "Lemon";
-        String mango = "Mango";
-        String book = "Book";
+        ShoppingCartBad cartBad = new ShoppingCartBad();
+        cartBad.addItem("Apple");
+        assert(cartBad.getDiscountPercentage() == 0);
 
-        // STEP 0: first implementation
-        ShoppingCartBad cart1 = new ShoppingCartBad();
-        assert(cart1.addItem(apple) == 0);
-        assert(cart1.addItem(lemon) == 0);
-        assert(cart1.addItem(book) == 5);
-        assert(cart1.addItem(mango) == 5);
+        cartBad.addItem("Lemon");
+        assert(cartBad.getDiscountPercentage() == 0);
 
-        // PROBLEM 1: We cannot do any FP if function does more than one thing
+        cartBad.addItem("Book");
+        assert(cartBad.getDiscountPercentage() == 5);
 
-        // STEP 1: SINGLE RESPONSIBILITY
-        ShoppingCartResponsibility cart2 = new ShoppingCartResponsibility();
-        cart2.addItem(apple);
-        assert(cart2.getDiscountPercentage() == 0);
+        // PROBLEM 1:
+        List<String> itemsBad = cartBad.getItems();
+        itemsBad.remove("Book");
 
-        cart2.addItem(lemon);
-        assert(cart2.getDiscountPercentage() == 0);
+        assert(!cartBad.getItems().contains("Book")); // no book is in the cart
+        assert(cartBad.getDiscountPercentage() == 5); // BUT DISCOUNT IS 5!
 
-        cart2.addItem(book);
-        assert(cart2.getDiscountPercentage() == 5);
+        // SOLUTION 1: COPYING
+        ShoppingCartCopying cartCopying = new ShoppingCartCopying();
+        cartCopying.addItem("Apple");
+        assert(cartCopying.getDiscountPercentage() == 0);
+
+        cartCopying.addItem("Lemon");
+        assert(cartCopying.getDiscountPercentage() == 0);
+
+        cartCopying.addItem("Book");
+        assert(cartCopying.getDiscountPercentage() == 5);
+
+        List<String> itemsCopying = cartCopying.getItems();
+        itemsCopying.remove("Book");
+
+        assert(cartCopying.getItems().contains("Book")); // book is in the cart
+        assert(cartCopying.getDiscountPercentage() == 5); // so the discount is 5
 
         // PROBLEM 2:
-        List<String> items2 = cart2.getItems();
-        items2.remove(book);
+        ShoppingCartWithRemove cartWithRemove = new ShoppingCartWithRemove();
+        cartWithRemove.addItem("Book");
+        cartWithRemove.addItem("Book"); // adding second book
+        assert(cartWithRemove.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
+        cartWithRemove.removeItem("Book");
 
-        assert(!cart2.getItems().contains(book)); // NO BOOK IN THE CART
-        assert(cart2.getDiscountPercentage() == 5); // SO SHOULD BE 0!
+        assert(cartWithRemove.getItems().contains("Book")); // a book is in the cart
+        assert(cartWithRemove.getDiscountPercentage() == 0); // BUT THE DISCOUNT IS 0!
 
-        // STEP 2: LESS MUTABLE STATE
-        ShoppingCartLessMutableState cart3 = new ShoppingCartLessMutableState();
-        cart3.addItem(apple);
-        assert(cart3.getDiscountPercentage() == 0);
+        // SOLUTION 2: RECALCULATING
+        ShoppingCartRecalculating cartRecalculating = new ShoppingCartRecalculating();
+        cartRecalculating.addItem("Book");
+        cartRecalculating.addItem("Book"); // adding second book
+        assert(cartRecalculating.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
+        cartRecalculating.removeItem("Book");
 
-        cart3.addItem(lemon);
-        assert(cart3.getDiscountPercentage() == 0);
+        assert(cartRecalculating.getItems().contains("Book")); // a book is in the cart
+        assert(cartRecalculating.getDiscountPercentage() == 5); // and the discount is 5
 
-        cart3.addItem(book);
-        assert(cart3.getDiscountPercentage() == 5);
+        // PROBLEM 3
+        // so much code to calculate a simple discount...
 
-        // PROBLEM 2 SOLVED:
-        List<String> items3 = cart3.getItems();
-        items3.remove(book);
-
-        assert(!cart3.getItems().contains(book)); // NO BOOK IN THE CART
-        assert(cart3.getDiscountPercentage() == 0); // SO DISCOUNT IS 0
-
-        // PROBLEM 3:
-        assert(cart3.getDiscountPercentage() == 0); // calling getDiscountPercentage() returns 0
-        cart3.addItem(book);
-        assert(cart3.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
-
-        // STEP 3: IMMUTABLE
-        ShoppingCart cart4 = new ShoppingCart();
+        // SOLUTION 3: JUST A FUNCTION
         List<String> empty = new ArrayList<>();
-        List<String> justApple = cart4.addItem(empty,apple);
-        List<String> appleAndBook = cart4.addItem(justApple,book);
-        assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5);
+        assert(ShoppingCart.getDiscountPercentage(empty) == 0);
 
-        // PROBLEM 3 SOLVED:
-        assert(ShoppingCart.getDiscountPercentage(justApple) == 0); // calling getDiscountPercentage(justApple) returns 0
-        assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5); // calling getDiscountPercentage(appleAndBook) returns 5
+        List<String> justApple = Collections.singletonList("Apple");
+        assert(ShoppingCart.getDiscountPercentage(justApple) == 0);
+
+        List<String> appleAndBook = Arrays.asList("Apple", "Book");
+        assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5);
     }
 }
