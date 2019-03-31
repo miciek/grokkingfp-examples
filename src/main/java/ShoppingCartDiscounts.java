@@ -179,10 +179,20 @@ public class ShoppingCartDiscounts {
         List<String> empty = new ArrayList<>();
         assert(ShoppingCart.getDiscountPercentage(empty) == 0);
 
-        List<String> justApple = Collections.singletonList("Apple");
+        List<String> justApple = Arrays.asList("Apple");
         assert(ShoppingCart.getDiscountPercentage(justApple) == 0);
 
         List<String> appleAndBook = Arrays.asList("Apple", "Book");
         assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5);
+
+        // imperative usage
+        List<String> items = new ArrayList<>();
+        assert(ShoppingCart.getDiscountPercentage(items) == 0);
+
+        items.add("Apple");
+        assert(ShoppingCart.getDiscountPercentage(items) == 0);
+
+        items.add("Book");
+        assert(ShoppingCart.getDiscountPercentage(items) == 5);
     }
 }
