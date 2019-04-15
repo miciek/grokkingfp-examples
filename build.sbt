@@ -18,7 +18,7 @@ lazy val root = (project in file("."))
     addCommandAlias(
       "runAll",
       ";runMain Intro" +
-      ";runMain IntroScala" +
+      ";runMain TestingPureFunctions" +
       ";runMain PureFunctions" +
       ";runMain ShoppingCartDiscounts" +
       ";runMain DeletingMutability" +
