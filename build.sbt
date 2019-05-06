@@ -24,6 +24,7 @@ lazy val root = (project in file("."))
       ";runMain DeletingMutability" +
       ";runMain TipCalculation" +
       ";runMain ShoppingCartDiscountsScala" +
+      ";runMain TipCalculationScala" +
       ";runMain Restaurant" +
       ";runMain BookAdaptations" +
       ";runMain BookFriendRecommendations" +

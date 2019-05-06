@@ -5,25 +5,6 @@ class TipCalculatorBad {
     private List<String> names = new ArrayList<>();
     private int tipPercentage = 0;
 
-    public int addPerson(String name) {
-        names.add(name);
-        if(names.size() > 5) {
-            tipPercentage = 20;
-        } else if(names.size() > 0) {
-            tipPercentage = 10;
-        }
-        return tipPercentage;
-    }
-
-    public List<String> getNames() {
-        return names;
-    }
-}
-
-class TipCalculatorResponsibility {
-    private List<String> names = new ArrayList<>();
-    private int tipPercentage = 0;
-
     public void addPerson(String name) {
         names.add(name);
         if(names.size() > 5) {
@@ -42,7 +23,29 @@ class TipCalculatorResponsibility {
     }
 }
 
-class TipCalculatorLessMutableState {
+class TipCalculatorCopying {
+    private List<String> names = new ArrayList<>();
+    private int tipPercentage = 0;
+
+    public void addPerson(String name) {
+        names.add(name);
+        if(names.size() > 5) {
+            tipPercentage = 20;
+        } else if(names.size() > 0) {
+            tipPercentage = 10;
+        }
+    }
+
+    public List<String> getNames() {
+        return new ArrayList<>(names);
+    }
+
+    public int getTipPercentage() {
+        return tipPercentage;
+    }
+}
+
+class TipCalculatorRecalculating {
     private List<String> names = new ArrayList<>();
 
     public void addPerson(String name) {
@@ -50,7 +53,7 @@ class TipCalculatorLessMutableState {
     }
 
     public List<String> getNames() {
-        return names;
+        return new ArrayList<>(names);
     }
 
     public int getTipPercentage() {
@@ -70,7 +73,7 @@ class TipCalculator {
         return updated;
     }
 
-    public int getTipPercentage(List<String> names) {
+    public static int getTipPercentage(List<String> names) {
         if(names.size() > 5) {
             return 20;
         } else if(names.size() > 0) {
@@ -82,12 +85,17 @@ class TipCalculator {
 
 public class TipCalculation {
     public static void main(String[] args) {
-        TipCalculatorBad tipCalculator = new TipCalculatorBad();
-        assert(tipCalculator.addPerson("first") == 10);
-        assert(tipCalculator.addPerson("second") == 10);
-        assert(tipCalculator.addPerson("third") == 10);
-        assert(tipCalculator.addPerson("fourth") == 10);
-        assert(tipCalculator.addPerson("fifth") == 10);
-        assert(tipCalculator.addPerson("sixth") == 20);
+        List<String> names = new ArrayList<>();
+        assert(TipCalculator.getTipPercentage(names) == 0);
+
+        names.add("Alice");
+        names.add("Bob");
+        names.add("Charlie");
+        assert(TipCalculator.getTipPercentage(names) == 10);
+
+        names.add("Daniel");
+        names.add("Emily");
+        names.add("Frank");
+        assert(TipCalculator.getTipPercentage(names) == 20);
     }
 }
