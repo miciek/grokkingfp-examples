@@ -14,9 +14,9 @@ public class LapTimes {
     }
 
     static double avgTime(List<Double> lapTimes) {
+        double time = totalTime(lapTimes);
         int laps = lapTimes.size();
-        if(laps <= 1) return 0; // just warm-up lap
-        return totalTime(lapTimes) / laps;
+        return time / laps;
     }
 
     public static void main(String[] args) {
@@ -24,9 +24,9 @@ public class LapTimes {
         lapTimes.add(31.0); // warm-up lap
         lapTimes.add(20.9);
         lapTimes.add(21.1);
-        lapTimes.add(20.3);
+        lapTimes.add(21.3);
 
-        System.out.println(totalTime(lapTimes));
-        System.out.println(avgTime(lapTimes));
+        System.out.printf("Total: %.1fs\n", totalTime(lapTimes));
+        System.out.printf("Avg: %.1fs", avgTime(lapTimes));
     }
 }
