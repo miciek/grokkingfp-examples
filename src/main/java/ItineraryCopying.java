@@ -3,21 +3,19 @@ import java.util.List;
 
 public class ItineraryCopying {
     static List<String> replan(List<String> plan,
-                               String splitPoint,
-                               List<String> newEnding) {
-        int splitAt = plan.indexOf(splitPoint);
-        List<String> replanned = plan.subList(0, splitAt + 1);
-        replanned.addAll(newEnding);
-        return replanned;
+                               String newCity,
+                               String beforeCity) {
+        int newCityIndex = plan.indexOf(beforeCity);
+        plan.add(newCityIndex, newCity);
+        return plan;
     }
 
     static List<String> replanPure(List<String> plan,
-                               String splitPoint,
-                               List<String> newEnding) {
-        int splitAt = plan.indexOf(splitPoint);
-        List<String> replanned = new ArrayList<>();
-        replanned.addAll(plan.subList(0, splitAt + 1));
-        replanned.addAll(newEnding);
+                               String newCity,
+                               String beforeCity) {
+        int newCityIndex = plan.indexOf(beforeCity);
+        List<String> replanned = new ArrayList<>(plan);
+        replanned.add(newCityIndex, newCity);
         return replanned;
     }
 
@@ -28,24 +26,12 @@ public class ItineraryCopying {
         planA.add("Kraków");
         System.out.println("Plan A: " + planA);
 
-        List<String> endingB = new ArrayList<>();
-        endingB.add("Vienna");
-        endingB.add("Budapest");
-        List<String> planB = replan(planA, "Berlin", endingB);
+        List<String> planB = replan(planA, "Vienna", "Kraków");
+        assert(planB.toString().equals("[Paris, Berlin, Vienna, Kraków]"));
         System.out.println("Plan B: " + planB);
 
+        assert(planA.toString().equals("[Paris, Berlin, Vienna, Kraków]"));
         System.out.println("Plan A: " + planA);
-
-        List<String> alphabet = new ArrayList<>();
-        alphabet.add("A");
-        alphabet.add("B");
-        alphabet.add("C");
-
-        List<String> subList = alphabet.subList(0, 2);
-        System.out.println(subList);
-        subList.add("D");
-        System.out.println(subList);
-        System.out.println(alphabet);
 
         List<String> planAPure = new ArrayList<>();
         planAPure.add("Paris");
@@ -53,13 +39,11 @@ public class ItineraryCopying {
         planAPure.add("Kraków");
         System.out.println("Plan A (pure): " + planAPure);
 
-        List<String> endingBPure = new ArrayList<>();
-        endingBPure.add("Vienna");
-        endingBPure.add("Budapest");
-        List<String> planBPure = replanPure(planAPure, "Berlin", endingBPure);
+        List<String> planBPure = replanPure(planAPure, "Vienna", "Kraków");
+        assert(planBPure.toString().equals("[Paris, Berlin, Vienna, Kraków]"));
         System.out.println("Plan B (pure): " + planBPure);
 
+        assert(planAPure.toString().equals("[Paris, Berlin, Kraków]"));
         System.out.println("Plan A (pure): " + planAPure);
     }
-
 }

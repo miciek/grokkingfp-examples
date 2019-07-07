@@ -39,12 +39,11 @@ public class LapTimes {
 
     public static void main(String[] args) {
         ArrayList<Double> lapTimes = new ArrayList<>();
-        lapTimes.add(31.0); // warm-up lap
+        lapTimes.add(31.0);
         lapTimes.add(20.9);
         lapTimes.add(21.1);
         lapTimes.add(21.3);
 
-        System.out.printf("Total: %.1fs\n", totalTime(lapTimes));
         System.out.printf("Avg: %.1fs\n", avgTime(lapTimes));
 
         ArrayList<Double> lapTimes2 = new ArrayList<>();
