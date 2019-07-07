@@ -19,7 +19,7 @@ object PointsInsideCircles extends App {
   }
 
   def imperative = {
-    val result = mutable.MutableList[String]()
+    val result = mutable.ListBuffer[String]()
     for (r <- radiuses) {
       for (point <- points) {
         if (isInside(point, r)) {

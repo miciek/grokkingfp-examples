@@ -1,5 +1,5 @@
 import java.util
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Given the list of all interesting books,
