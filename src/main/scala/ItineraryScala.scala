@@ -1,7 +1,8 @@
 object ItineraryScala extends App {
   def replan(plan: List[String], newCity: String, beforeCity: String): List[String] = {
-    val newCityIndex = plan.indexOf(beforeCity)
-    plan.patch(newCityIndex, List(newCity), 0)
+    val newCityIndex                = plan.indexOf(beforeCity)
+    val (citiesBefore, citiesAfter) = plan.splitAt(newCityIndex)
+    citiesBefore.appended(newCity).appendedAll(citiesAfter)
   }
 
   val planA = List("Paris", "Berlin", "Kraków")
