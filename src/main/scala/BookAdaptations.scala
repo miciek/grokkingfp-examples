@@ -45,9 +45,9 @@ object BookAdaptations extends App {
   val a1 = books.map(book => book.authors)
   assert(
     a1 == List(
-      List("Chiusano", "Bjarnason"),
-      List("Tolkien")
-    )
+        List("Chiusano", "Bjarnason"),
+        List("Tolkien")
+      )
   )
 
   val a2 = books.map(book => book.authors).flatten
@@ -88,18 +88,17 @@ object BookAdaptations extends App {
 
   assert(
     c1 == List(
-      "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
-      "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit",
-    )
+        "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
+        "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
+      )
   )
 
   val c2 = for {
     book   <- books
     author <- book.authors
     movie  <- bookAdaptations(author)
-  } yield
-    s"You may like ${movie.title}, " +
-    s"because you liked $author's ${book.title}"
+  } yield s"You may like ${movie.title}, " +
+  s"because you liked $author's ${book.title}"
 
   assert(c1 == c2)
   assert(c1 == recommendationFeed(books).asScala.toList)

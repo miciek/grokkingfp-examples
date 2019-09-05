@@ -33,17 +33,16 @@ object PointsInsideCircles extends App {
   val c1 = for {
     r     <- radiuses
     point <- points
-  } yield
-    s"$point is within a radius of $r: " +
-    isInside(point, r).toString
+  } yield s"$point is within a radius of $r: " +
+  isInside(point, r).toString
   println(c1)
   assert(
     c1 == List(
-      "Point(5,2) is within a radius of 2: false",
-      "Point(1,1) is within a radius of 2: true",
-      "Point(5,2) is within a radius of 1: false",
-      "Point(1,1) is within a radius of 1: false"
-    )
+        "Point(5,2) is within a radius of 2: false",
+        "Point(1,1) is within a radius of 2: true",
+        "Point(5,2) is within a radius of 1: false",
+        "Point(1,1) is within a radius of 1: false"
+      )
   )
 
   val d1 = for {
