@@ -80,15 +80,25 @@ public class WordScoring {
         }
 
         {
-            Comparator<String> scoreWithBOnusComparator = new Comparator<String>() {
+            Comparator<String> scoreWithBonusComparator = new Comparator<String>() {
                 @Override
                 public int compare(String w1, String w2) {
                     return Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1));
                 }
             };
 
-            List<String> ranking = rankedWords(words, scoreWithBOnusComparator);
+            List<String> ranking = rankedWords(words, scoreWithBonusComparator);
             assert (ranking.toString().equals("[scala,haskell,rust,java,ada]"));
+        }
+
+        {
+            Comparator<String> scoreComparator2 = (w1, w2) -> Integer.compare(score(w2), score(w1));
+            List<String> ranking = rankedWords(words, scoreComparator2);
+            assert (ranking.toString().equals("[haskell,rust,scala,java,ada]"));
+
+            Comparator<String> scoreWithBonusComparator = (w1, w2) -> Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1));
+            List<String> rankingWithBonus = rankedWords(words, scoreWithBonusComparator);
+            assert (rankingWithBonus.toString().equals("[scala,haskell,rust,java,ada]"));
         }
 
         {
