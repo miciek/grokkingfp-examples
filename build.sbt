@@ -26,6 +26,7 @@ lazy val root = (project in file("."))
       ";runMain ItineraryCopying" +
       ";runMain LapTimes" +
       ";runMain Restaurant" +
+      ";runMain WordScoring" +
       ";runMain BookAdaptations" +
       ";runMain BookFriendRecommendations" +
       ";runMain Points2d3d" +

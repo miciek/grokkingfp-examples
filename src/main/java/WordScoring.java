@@ -19,6 +19,21 @@ public class WordScoring {
             return base;
     }
 
+    static int scoreWithBonusAndPenalty(String word) {
+        int base = score(word);
+        int bonus = word.contains("c") ? 5 : 0;
+        int penalty = word.contains("s") ? 7 : 0;
+        return base + bonus - penalty;
+    }
+
+    static int bonus(String word) {
+        return word.contains("c") ? 5 : 0;
+    }
+
+    static int penalty(String word) {
+        return word.contains("s") ? 7 : 0;
+    }
+
     static Comparator<String> scoreComparator = new Comparator<String>() {
         @Override
         public int compare(String w1, String w2) {
@@ -119,6 +134,14 @@ public class WordScoring {
             List<String> bonusRanking = rankedWords(words, w -> scoreWithBonus(w));
             System.out.println(bonusRanking);
             assert (bonusRanking.toString().equals("[scala, haskell, rust, java, ada]"));
+
+            List<String> bonusPenaltyRanking = rankedWords(words, w -> scoreWithBonusAndPenalty(w));
+            System.out.println(bonusPenaltyRanking);
+            assert (bonusPenaltyRanking.toString().equals("[java, ada, scala, haskell, rust]"));
+
+            List<String> bonusPenaltyRanking2 = rankedWords(words, w -> score(w) + bonus(w) - penalty(w));
+            System.out.println(bonusPenaltyRanking2);
+            assert (bonusPenaltyRanking2.toString().equals("[java, ada, scala, haskell, rust]"));
         }
     }
 }
