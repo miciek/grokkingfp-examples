@@ -58,10 +58,10 @@ public class WordScoring {
             List<String> words = Arrays.asList("ada", "haskell", "scala", "java", "rust");
             List<String> ranking = rankedWordsMutable(words);
             System.out.println(ranking);
-            assert (ranking.toString().equals("[haskell,rust,scala,java,ada]"));
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
             System.out.println(words);
-            assert (words.toString().equals("[haskell,rust,scala,java,ada]"));
+            assert (words.toString().equals("[haskell, rust, scala, java, ada]"));
         }
 
         List<String> words = Arrays.asList("ada", "haskell", "scala", "java", "rust");
@@ -69,14 +69,14 @@ public class WordScoring {
         {
             List<String> ranking = rankedWords(words);
             System.out.println(ranking);
-            assert (ranking.toString().equals("[haskell,rust,scala,java,ada]"));
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
             System.out.println(words);
-            assert (words.toString().equals("[ada,haskell,scala,java,rust]"));
+            assert (words.toString().equals("[ada, haskell, scala, java, rust]"));
         }
 
         {
             List<String> ranking = rankedWords(words, scoreComparator);
-            assert (ranking.toString().equals("[haskell,rust,scala,java,ada]"));
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
         }
 
         {
@@ -88,40 +88,37 @@ public class WordScoring {
             };
 
             List<String> ranking = rankedWords(words, scoreWithBonusComparator);
-            assert (ranking.toString().equals("[scala,haskell,rust,java,ada]"));
+            assert (ranking.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
         {
             Comparator<String> scoreComparator2 = (w1, w2) -> Integer.compare(score(w2), score(w1));
             List<String> ranking = rankedWords(words, scoreComparator2);
-            assert (ranking.toString().equals("[haskell,rust,scala,java,ada]"));
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
             Comparator<String> scoreWithBonusComparator = (w1, w2) -> Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1));
             List<String> rankingWithBonus = rankedWords(words, scoreWithBonusComparator);
-            assert (rankingWithBonus.toString().equals("[scala,haskell,rust,java,ada]"));
+            assert (rankingWithBonus.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
         {
-            List<String> ranking = rankedWords(words, (w1, w2) -> Integer.compare(score(w2), score(w1)));
-            assert (ranking.toString().equals("[haskell,rust,scala,java,ada]"));
+            Function<String, Integer> scoreFunction = w -> score(w);
+            List<String> ranking = rankedWords(words, scoreFunction);
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
-            Comparator<String> scoreComparator2 = (w1, w2) -> Integer.compare(score(w2), score(w1));
-        }
-
-        {
-            List<String> ranking = rankedWords(words, (w1, w2) -> Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1)));
-            System.out.println(ranking);
-            assert (ranking.toString().equals("[scala,haskell,rust,java,ada]"));
+            Function<String, Integer> scoreWithBonusFunction = w -> scoreWithBonus(w);
+            List<String> rankingWithBonus = rankedWords(words, scoreWithBonusFunction);
+            assert (rankingWithBonus.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
         {
             List<String> ranking = rankedWords(words, w -> score(w));
             System.out.println(ranking);
-            assert (ranking.toString().equals("[scala,haskell,rust,java,ada]"));
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
             List<String> bonusRanking = rankedWords(words, w -> scoreWithBonus(w));
             System.out.println(bonusRanking);
-            assert (bonusRanking.toString().equals("[scala,haskell,rust,java,ada]"));
+            assert (bonusRanking.toString().equals("[scala, haskell, rust, java, ada]"));
         }
     }
 }
