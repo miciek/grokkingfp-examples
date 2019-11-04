@@ -24,7 +24,7 @@ object ListAndStringIntuitions extends App {
   }
 
   {
-    val abcd = List("a", "b", "c", "c")
+    val abcd = List("a", "b", "c", "d")
     val bc   = abcd.slice(1, 3)
     assert(bc == List("b", "c"))
 

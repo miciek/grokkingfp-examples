@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -64,6 +61,15 @@ public class WordScoring {
         for (String word : words) {
             if (score(word) > 3)
                 result.add(word);
+        }
+        return result;
+    }
+
+    static int bonus(String word, Map<Character, Integer> bonuses) {
+        int result = 0;
+        for(Map.Entry<Character, Integer> entry: bonuses.entrySet()) {
+            if(word.contains(entry.getKey().toString()))
+                result += entry.getValue();
         }
         return result;
     }
@@ -142,6 +148,11 @@ public class WordScoring {
             List<String> bonusPenaltyRanking2 = rankedWords(words, w -> score(w) + bonus(w) - penalty(w));
             System.out.println(bonusPenaltyRanking2);
             assert (bonusPenaltyRanking2.toString().equals("[java, ada, scala, haskell, rust]"));
+        }
+
+        {
+
+
         }
     }
 }
