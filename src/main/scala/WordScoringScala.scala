@@ -5,42 +5,55 @@ object WordScoringScala extends App {
   val words = List("ada", "haskell", "scala", "java", "rust")
 
   {
-    val wordRanking = words.sortWith((w1, w2) => score(w1) > score(w2))
+    val wordRanking = words.sortBy(score).reverse
     println(wordRanking)
     assert(wordRanking == List("haskell", "rust", "scala", "java", "ada"))
   }
 
-  def rankedWords(words: List[String], wordScore: String => Int): List[String] = {
-    words.sortWith((w1, w2) => wordScore(w1) > wordScore(w2))
-  }
-
   {
+    def rankedWords(words: List[String], wordScore: String => Int): List[String] = {
+      def negativeScore(word: String): Int = -wordScore(word)
+      words.sortBy(negativeScore)
+    }
+
     val wordRanking = rankedWords(words, score)
     println(wordRanking)
     assert(wordRanking == List("haskell", "rust", "scala", "java", "ada"))
   }
 
-  def scoreWithBonus(word: String): Int = {
-    val base = score(word)
-    if (word.contains("c"))
-      base + 5
-    else
-      base
-  }
-
   {
-    val wordRanking = rankedWords(words, scoreWithBonus)
-    println(wordRanking)
-    assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
-  }
+    def rankedWords(words: List[String], wordScore: String => Int): List[String] = {
+      words.sortBy(wordScore).reverse
+    }
 
-  def bonus(word: String): Int = {
-    if (word.contains("c")) 5 else 0
-  }
+    {
+      val wordRanking = rankedWords(words, score)
+      println(wordRanking)
+      assert(wordRanking == List("haskell", "rust", "scala", "java", "ada"))
+    }
 
-  {
-    val wordRanking = rankedWords(words, w => score(w) + bonus(w))
-    println(wordRanking)
-    assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
+    def scoreWithBonus(word: String): Int = {
+      val base = score(word)
+      if (word.contains("c"))
+        base + 5
+      else
+        base
+    }
+
+    {
+      val wordRanking = rankedWords(words, scoreWithBonus)
+      println(wordRanking)
+      assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
+    }
+
+    def bonus(word: String): Int = {
+      if (word.contains("c")) 5 else 0
+    }
+
+    {
+      val wordRanking = rankedWords(words, w => score(w) + bonus(w))
+      println(wordRanking)
+      assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
+    }
   }
 }
