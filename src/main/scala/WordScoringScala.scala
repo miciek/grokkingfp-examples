@@ -34,10 +34,7 @@ object WordScoringScala extends App {
 
     def scoreWithBonus(word: String): Int = {
       val base = score(word)
-      if (word.contains("c"))
-        base + 5
-      else
-        base
+      if (word.contains("c")) base + 5 else base
     }
 
     {
