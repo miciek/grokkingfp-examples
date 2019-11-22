@@ -43,14 +43,20 @@ object WordScoringScala extends App {
       assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
     }
 
-    def bonus(word: String): Int = {
-      if (word.contains("c")) 5 else 0
-    }
+    def bonus(word: String): Int = if (word.contains("c")) 5 else 0
 
     {
       val wordRanking = rankedWords(words, w => score(w) + bonus(w))
       println(wordRanking)
       assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
+    }
+
+    def penalty(word: String): Int = if (word.contains("s")) 7 else 0
+
+    {
+      val wordRanking = rankedWords(words, w => score(w) + bonus(w) - penalty(w))
+      println(wordRanking)
+      assert(wordRanking == List("java", "scala", "ada", "haskell", "rust"))
     }
   }
 }

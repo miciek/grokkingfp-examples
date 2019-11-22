@@ -56,6 +56,18 @@ public class WordScoring {
         return words.stream().sorted(comparator).collect(Collectors.toList());
     }
 
+    static List<Integer> wordScores(List<String> words, Function<String, Integer> wordScore) {
+        List<Integer> result = new ArrayList<>();
+        for(String word : words) {
+            result.add(wordScore.apply(word));
+        }
+        return result;
+    }
+
+    static List<Integer> wordScoresStreams(List<String> words, Function<String, Integer> wordScore) {
+        return words.stream().map(wordScore).collect(Collectors.toList());
+    }
+
     static List<String> highScoringWords(List<String> words) {
         List<String> result = new ArrayList<>();
         for (String word : words) {
@@ -151,8 +163,17 @@ public class WordScoring {
         }
 
         {
+            System.out.println(words);
+            List<Integer> ranking = wordScores(words, w -> score(w) + bonus(w) - penalty(w));
+            System.out.println(ranking);
+            assert (ranking.toString().equals("[1, -1, 1, 2, -3]"));
+        }
 
-
+        {
+            System.out.println(words);
+            List<Integer> ranking = wordScoresStreams(words, w -> score(w) + bonus(w) - penalty(w));
+            System.out.println(ranking);
+            assert (ranking.toString().equals("[1, -1, 1, 2, -3]"));
         }
     }
 }
