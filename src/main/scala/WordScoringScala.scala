@@ -13,6 +13,7 @@ object WordScoringScala extends App {
   {
     def rankedWords(words: List[String], wordScore: String => Int): List[String] = {
       def negativeScore(word: String): Int = -wordScore(word)
+
       words.sortBy(negativeScore)
     }
 
@@ -57,6 +58,16 @@ object WordScoringScala extends App {
       val wordRanking = rankedWords(words, w => score(w) + bonus(w) - penalty(w))
       println(wordRanking)
       assert(wordRanking == List("java", "scala", "ada", "haskell", "rust"))
+    }
+
+    def wordScores(words: List[String], wordScore: String => Int): List[Int] = {
+      words.map(wordScore)
+    }
+
+    {
+      val scores = wordScores(words, w => score(w) + bonus(w) - penalty(w))
+      println(scores)
+      assert(scores == List(1, -1, 1, 2, -3))
     }
   }
 }
