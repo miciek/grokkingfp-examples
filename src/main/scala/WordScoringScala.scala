@@ -69,5 +69,26 @@ object WordScoringScala extends App {
       println(scores)
       assert(scores == List(1, -1, 1, 2, -3))
     }
+
+    def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+      words.filter(word => wordScore(word) > 1)
+    }
+
+    {
+      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == List("java"))
+    }
+
+    def highScoringWords2(words: List[String], wordScore: String => Int): List[String] = {
+      val decisionFunction: String => Boolean = word => wordScore(word) > 1
+      words.filter(decisionFunction)
+    }
+
+    {
+      val result = highScoringWords2(words, w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == List("java"))
+    }
   }
 }

@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -68,10 +67,10 @@ public class WordScoring {
         return words.stream().map(wordScore).collect(Collectors.toList());
     }
 
-    static List<String> highScoringWords(List<String> words) {
+    static List<String> highScoringWords(List<String> words, Function<String, Integer> wordScore) {
         List<String> result = new ArrayList<>();
         for (String word : words) {
-            if (score(word) > 3)
+            if (wordScore.apply(word) > 1)
                 result.add(word);
         }
         return result;
@@ -174,6 +173,13 @@ public class WordScoring {
             List<Integer> ranking = wordScoresStreams(words, w -> score(w) + bonus(w) - penalty(w));
             System.out.println(ranking);
             assert (ranking.toString().equals("[1, -1, 1, 2, -3]"));
+        }
+
+        {
+            System.out.println(words);
+            List<String> result = highScoringWords(words, w -> score(w) + bonus(w) - penalty(w));
+            System.out.println(result);
+            assert (result.toString().equals("[java]"));
         }
     }
 }

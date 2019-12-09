@@ -71,4 +71,32 @@ object PassingFunctions extends App {
     println(doubles)
     assert(doubles == List(10, 2, 4, 8, 0))
   }
+
+  // PRACTICING FILTER
+  {
+    def len(s: String): Int = s.length
+
+    val longWords = List("scala", "rust", "ada").filter(word => len(word) < 5)
+    println(longWords)
+    assert(longWords == List("rust", "ada"))
+
+    def numberOfS(s: String): Int =
+      s.length - s.replaceAll("s", "").length
+
+    val withLotsS = List("rust", "ada").filter(word => numberOfS(word) > 2)
+    println(withLotsS)
+    assert(withLotsS == List.empty)
+
+    def odd(i: Int): Boolean = i % 2 == 1
+
+    val odds = List(5, 1, 2, 4, 0).filter(odd)
+    println(odds)
+    assert(odds == List(5, 1))
+
+    def largerThan4(i: Int): Boolean = i > 4
+
+    val large = List(5, 1, 2, 4, 0).filter(largerThan4)
+    println(large)
+    assert(large == List(5))
+  }
 }
