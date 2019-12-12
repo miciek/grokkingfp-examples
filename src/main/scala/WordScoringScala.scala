@@ -69,26 +69,49 @@ object WordScoringScala extends App {
       println(scores)
       assert(scores == List(1, -1, 1, 2, -3))
     }
-
-    def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
-      words.filter(word => wordScore(word) > 1)
-    }
-
     {
+      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+        words.filter(word => wordScore(word) > 1)
+      }
+
       val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
       println(result)
       assert(result == List("java"))
     }
 
-    def highScoringWords2(words: List[String], wordScore: String => Int): List[String] = {
-      val decisionFunction: String => Boolean = word => wordScore(word) > 1
-      words.filter(decisionFunction)
+    {
+      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+        val decisionFunction: String => Boolean = word => wordScore(word) > 1
+        words.filter(decisionFunction)
+      }
+
+      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == List("java"))
     }
 
     {
-      val result = highScoringWords2(words, w => score(w) + bonus(w) - penalty(w))
+      def isHighScore(wordScore: String => Int): String => Boolean = { word =>
+        wordScore(word) > 1
+      }
+
+      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+        words.filter(isHighScore(wordScore))
+      }
+
+      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
       println(result)
       assert(result == List("java"))
+    }
+
+    def totalPoints(words: List[String], wordScore: String => Int): Int = {
+      words.foldLeft(0)((currentTotal, word) => currentTotal + wordScore(word))
+    }
+
+    {
+      val result = totalPoints(words, w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == 0)
     }
   }
 }
