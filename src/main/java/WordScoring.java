@@ -76,6 +76,14 @@ public class WordScoring {
         return result;
     }
 
+    static int cumulativeScore(List<String> words, Function<String, Integer> wordScore) {
+        int result = 0;
+        for (String word : words) {
+            result += wordScore.apply(word);
+        }
+        return result;
+    }
+
     static int bonus(String word, Map<Character, Integer> bonuses) {
         int result = 0;
         for(Map.Entry<Character, Integer> entry: bonuses.entrySet()) {
@@ -180,6 +188,13 @@ public class WordScoring {
             List<String> result = highScoringWords(words, w -> score(w) + bonus(w) - penalty(w));
             System.out.println(result);
             assert (result.toString().equals("[java]"));
+        }
+
+        {
+            System.out.println(words);
+            int result = cumulativeScore(words, w -> score(w) + bonus(w) - penalty(w));
+            System.out.println(result);
+            assert (result == 0);
         }
     }
 }

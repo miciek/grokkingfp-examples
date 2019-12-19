@@ -12,7 +12,6 @@ lazy val root = (project in file("."))
       ),
     fork in run := true,
     javaOptions in run += "-ea",
-    compile in Compile := (compile in Compile).dependsOn(scalafmt in Compile).dependsOn(scalafmtSbt in Compile).value,
     addCommandAlias(
       "runAll",
       ";runMain Intro" +

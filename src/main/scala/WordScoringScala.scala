@@ -104,12 +104,26 @@ object WordScoringScala extends App {
       assert(result == List("java"))
     }
 
-    def totalPoints(words: List[String], wordScore: String => Int): Int = {
+    {
+      def isHighScore(wordScore: String => Int)(word: String): Boolean = {
+        wordScore(word) > 1
+      }
+
+      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+        words.filter(isHighScore(wordScore))
+      }
+
+      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == List("java"))
+    }
+
+    def cumulativeScore(words: List[String], wordScore: String => Int): Int = {
       words.foldLeft(0)((currentTotal, word) => currentTotal + wordScore(word))
     }
 
     {
-      val result = totalPoints(words, w => score(w) + bonus(w) - penalty(w))
+      val result = cumulativeScore(words, w => score(w) + bonus(w) - penalty(w))
       println(result)
       assert(result == 0)
     }
