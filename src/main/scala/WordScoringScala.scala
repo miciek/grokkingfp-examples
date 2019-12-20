@@ -119,13 +119,22 @@ object WordScoringScala extends App {
     }
 
     def cumulativeScore(words: List[String], wordScore: String => Int): Int = {
-      words.foldLeft(0)((currentTotal, word) => currentTotal + wordScore(word))
+      words.foldLeft(0)((total, word) => {
+        println(s"$total + ${wordScore(word)} ($word) = ${total + wordScore(word)}")
+        total + wordScore(word)
+      })
     }
 
     {
       val result = cumulativeScore(words, w => score(w) + bonus(w) - penalty(w))
       println(result)
       assert(result == 0)
+    }
+
+    {
+      val result = cumulativeScore(List("rust", "java"), w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == -1)
     }
   }
 }

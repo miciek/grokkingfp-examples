@@ -99,4 +99,32 @@ object PassingFunctions extends App {
     println(large)
     assert(large == List(5))
   }
+
+  // PRACTICING FOLDLEFT
+  {
+    val sum = List(5, 1, 2, 4, 100).foldLeft(0)((sum, i) => sum + i)
+    println(sum)
+    assert(sum == 112)
+
+    def len(s: String): Int = s.length
+
+    val totalLength = List("scala", "rust", "ada").foldLeft(0)((total, s) => total + len(s))
+    println(totalLength)
+    assert(totalLength == 12)
+
+    def numberOfS(s: String): Int =
+      s.length - s.replaceAll("s", "").length
+
+    val totalS = List("scala", "haskell", "rust", "ada").foldLeft(0)((total, str) => total + numberOfS(str))
+    println(totalS)
+    assert(totalS == 3)
+
+    val max = List(5, 1, 2, 4, 15).foldLeft(Int.MinValue)((max, i) => if (i > max) i else max)
+    println(max)
+    assert(max == 15)
+
+    val max2 = List(5, 1, 2, 4, 15).foldLeft(Int.MinValue)((max, i) => Math.max(max, i))
+    println(max2)
+    assert(max2 == 15)
+  }
 }

@@ -84,15 +84,6 @@ public class WordScoring {
         return result;
     }
 
-    static int bonus(String word, Map<Character, Integer> bonuses) {
-        int result = 0;
-        for(Map.Entry<Character, Integer> entry: bonuses.entrySet()) {
-            if(word.contains(entry.getKey().toString()))
-                result += entry.getValue();
-        }
-        return result;
-    }
-
     public static void main(String[] args) {
         {
             List<String> words = Arrays.asList("ada", "haskell", "scala", "java", "rust");
