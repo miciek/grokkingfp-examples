@@ -82,13 +82,38 @@ object WordScoringScala extends App {
       assert(result == List("java"))
     }
 
-    // RETURNING FUNCTIONS #1: problem
+    // RETURNING FUNCTIONS #0: problem
+    {
+      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+        words.filter(word => wordScore(word) > 1)
+      }
+
+      def highScoringWords0(words: List[String], wordScore: String => Int): List[String] = {
+        words.filter(word => wordScore(word) > 0)
+      }
+
+      def highScoringWords5(words: List[String], wordScore: String => Int): List[String] = {
+        words.filter(word => wordScore(word) > 5)
+      }
+
+      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      println(result)
+      assert(result == List("java"))
+      val result2 = highScoringWords0(words, w => score(w) + bonus(w) - penalty(w))
+      println(result2)
+      assert(result2 == List("ada", "scala", "java"))
+      val result3 = highScoringWords5(words, w => score(w) + bonus(w) - penalty(w))
+      println(result3)
+      assert(result3 == List.empty)
+    }
+
+    // RETURNING FUNCTIONS #1: adding a new parameter
     {
       def highScoringWords(words: List[String], wordScore: String => Int, higherThan: Int): List[String] = {
         words.filter(word => wordScore(word) > higherThan)
       }
 
-      // PROBLEM:
+      // PROBLEM still there:
       val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w), 1)
       println(result)
       assert(result == List("java"))
@@ -100,37 +125,28 @@ object WordScoringScala extends App {
       assert(result3 == List.empty)
     }
 
-    // RETURNING FUNCTIONS #2: new function that returns a function
+    // RETURNING FUNCTIONS #2: function returns a function
     {
-      def scoreHigherThan(wordScore: String => Int, higherThan: Int): String => Boolean = { word =>
-        wordScore(word) > higherThan
+      def highScoringWords(words: List[String], wordScore: String => Int): Int => List[String] = { higherThan =>
+        words.filter(word => wordScore(word) > higherThan)
       }
 
-      def highScoringWords(words: List[String], highScoreWord: String => Boolean): List[String] = {
-        words.filter(highScoreWord)
-      }
+      val wordsWithScoreHigherThan: Int => List[String] = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
 
-      // PROBLEM still there:
-      val totalScoreHigherThan1: String => Boolean =
-        scoreHigherThan(w => score(w) + bonus(w) - penalty(w), 1)
-      val result = highScoringWords(words, totalScoreHigherThan1)
+      val result = wordsWithScoreHigherThan(1)
       println(result)
       assert(result == List("java"))
 
-      val totalScoreHigherThan0: String => Boolean =
-        scoreHigherThan(w => score(w) + bonus(w) - penalty(w), 0)
-      val result2 = highScoringWords(words, totalScoreHigherThan0)
+      val result2 = wordsWithScoreHigherThan(0)
       println(result2)
       assert(result2 == List("ada", "scala", "java"))
 
-      val totalScoreHigherThan5: String => Boolean =
-        scoreHigherThan(w => score(w) + bonus(w) - penalty(w), 5)
-      val result3 = highScoringWords(words, totalScoreHigherThan5)
+      val result3 = wordsWithScoreHigherThan(5)
       println(result3)
       assert(result3 == List.empty)
     }
 
-    // RETURNING FUNCTIONS #3: partially applying 1 of 2 arguments
+    // FIXME: RETURNING FUNCTIONS #3: partially applying 1 of 2 arguments
     {
       def scoreHigherThan(wordScore: String => Int, higherThan: Int): String => Boolean = { word =>
         wordScore(word) > higherThan
