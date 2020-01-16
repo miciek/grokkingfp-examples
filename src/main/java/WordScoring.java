@@ -46,16 +46,16 @@ public class WordScoring {
         return words.stream().sorted(scoreComparator).collect(Collectors.toList());
     }
 
-    static List<String> rankedWords(List<String> words, Comparator<String> comparator) {
+    static List<String> rankedWords(Comparator<String> comparator, List<String> words) {
         return words.stream().sorted(comparator).collect(Collectors.toList());
     }
 
-    static List<String> rankedWords(List<String> words, Function<String, Integer> wordScore) {
+    static List<String> rankedWords(Function<String, Integer> wordScore, List<String> words) {
         Comparator<String> comparator = (w1, w2) -> Integer.compare(wordScore.apply(w2), wordScore.apply(w1));
         return words.stream().sorted(comparator).collect(Collectors.toList());
     }
 
-    static List<Integer> wordScores(List<String> words, Function<String, Integer> wordScore) {
+    static List<Integer> wordScores(Function<String, Integer> wordScore, List<String> words) {
         List<Integer> result = new ArrayList<>();
         for(String word : words) {
             result.add(wordScore.apply(word));
@@ -63,11 +63,11 @@ public class WordScoring {
         return result;
     }
 
-    static List<Integer> wordScoresStreams(List<String> words, Function<String, Integer> wordScore) {
+    static List<Integer> wordScoresStreams(Function<String, Integer> wordScore, List<String> words) {
         return words.stream().map(wordScore).collect(Collectors.toList());
     }
 
-    static List<String> highScoringWords(List<String> words, Function<String, Integer> wordScore) {
+    static List<String> highScoringWords(Function<String, Integer> wordScore, List<String> words) {
         List<String> result = new ArrayList<>();
         for (String word : words) {
             if (wordScore.apply(word) > 1)
@@ -76,7 +76,7 @@ public class WordScoring {
         return result;
     }
 
-    static int cumulativeScore(List<String> words, Function<String, Integer> wordScore) {
+    static int cumulativeScore(Function<String, Integer> wordScore, List<String> words) {
         int result = 0;
         for (String word : words) {
             result += wordScore.apply(word);
@@ -106,7 +106,7 @@ public class WordScoring {
         }
 
         {
-            List<String> ranking = rankedWords(words, scoreComparator);
+            List<String> ranking = rankedWords(scoreComparator, words);
             assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
         }
 
@@ -118,72 +118,72 @@ public class WordScoring {
                 }
             };
 
-            List<String> ranking = rankedWords(words, scoreWithBonusComparator);
+            List<String> ranking = rankedWords(scoreWithBonusComparator, words);
             assert (ranking.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
         {
             Comparator<String> scoreComparator2 = (w1, w2) -> Integer.compare(score(w2), score(w1));
-            List<String> ranking = rankedWords(words, scoreComparator2);
+            List<String> ranking = rankedWords(scoreComparator2, words);
             assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
             Comparator<String> scoreWithBonusComparator = (w1, w2) -> Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1));
-            List<String> rankingWithBonus = rankedWords(words, scoreWithBonusComparator);
+            List<String> rankingWithBonus = rankedWords(scoreWithBonusComparator, words);
             assert (rankingWithBonus.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
         {
             Function<String, Integer> scoreFunction = w -> score(w);
-            List<String> ranking = rankedWords(words, scoreFunction);
+            List<String> ranking = rankedWords(scoreFunction, words);
             assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
             Function<String, Integer> scoreWithBonusFunction = w -> scoreWithBonus(w);
-            List<String> rankingWithBonus = rankedWords(words, scoreWithBonusFunction);
+            List<String> rankingWithBonus = rankedWords(scoreWithBonusFunction, words);
             assert (rankingWithBonus.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
         {
-            List<String> ranking = rankedWords(words, w -> score(w));
+            List<String> ranking = rankedWords(w -> score(w), words);
             System.out.println(ranking);
             assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
-            List<String> bonusRanking = rankedWords(words, w -> scoreWithBonus(w));
+            List<String> bonusRanking = rankedWords(w -> scoreWithBonus(w), words);
             System.out.println(bonusRanking);
             assert (bonusRanking.toString().equals("[scala, haskell, rust, java, ada]"));
 
-            List<String> bonusPenaltyRanking = rankedWords(words, w -> scoreWithBonusAndPenalty(w));
+            List<String> bonusPenaltyRanking = rankedWords(w -> scoreWithBonusAndPenalty(w), words);
             System.out.println(bonusPenaltyRanking);
             assert (bonusPenaltyRanking.toString().equals("[java, ada, scala, haskell, rust]"));
 
-            List<String> bonusPenaltyRanking2 = rankedWords(words, w -> score(w) + bonus(w) - penalty(w));
+            List<String> bonusPenaltyRanking2 = rankedWords(w -> score(w) + bonus(w) - penalty(w), words);
             System.out.println(bonusPenaltyRanking2);
             assert (bonusPenaltyRanking2.toString().equals("[java, ada, scala, haskell, rust]"));
         }
 
         {
             System.out.println(words);
-            List<Integer> ranking = wordScores(words, w -> score(w) + bonus(w) - penalty(w));
+            List<Integer> ranking = wordScores(w -> score(w) + bonus(w) - penalty(w), words);
             System.out.println(ranking);
             assert (ranking.toString().equals("[1, -1, 1, 2, -3]"));
         }
 
         {
             System.out.println(words);
-            List<Integer> ranking = wordScoresStreams(words, w -> score(w) + bonus(w) - penalty(w));
+            List<Integer> ranking = wordScoresStreams(w -> score(w) + bonus(w) - penalty(w), words);
             System.out.println(ranking);
             assert (ranking.toString().equals("[1, -1, 1, 2, -3]"));
         }
 
         {
             System.out.println(words);
-            List<String> result = highScoringWords(words, w -> score(w) + bonus(w) - penalty(w));
+            List<String> result = highScoringWords(w -> score(w) + bonus(w) - penalty(w), words);
             System.out.println(result);
             assert (result.toString().equals("[java]"));
         }
 
         {
             System.out.println(words);
-            int result = cumulativeScore(words, w -> score(w) + bonus(w) - penalty(w));
+            int result = cumulativeScore(w -> score(w) + bonus(w) - penalty(w), words);
             System.out.println(result);
             assert (result == 0);
         }

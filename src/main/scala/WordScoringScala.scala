@@ -11,24 +11,24 @@ object WordScoringScala extends App {
   }
 
   {
-    def rankedWords(words: List[String], wordScore: String => Int): List[String] = {
+    def rankedWords(wordScore: String => Int, words: List[String]): List[String] = {
       def negativeScore(word: String): Int = -wordScore(word)
 
       words.sortBy(negativeScore)
     }
 
-    val wordRanking = rankedWords(words, score)
+    val wordRanking = rankedWords(score, words)
     println(wordRanking)
     assert(wordRanking == List("haskell", "rust", "scala", "java", "ada"))
   }
 
   {
-    def rankedWords(words: List[String], wordScore: String => Int): List[String] = {
+    def rankedWords(wordScore: String => Int, words: List[String]): List[String] = {
       words.sortBy(wordScore).reverse
     }
 
     {
-      val wordRanking = rankedWords(words, score)
+      val wordRanking = rankedWords(score, words)
       println(wordRanking)
       assert(wordRanking == List("haskell", "rust", "scala", "java", "ada"))
     }
@@ -39,7 +39,7 @@ object WordScoringScala extends App {
     }
 
     {
-      val wordRanking = rankedWords(words, scoreWithBonus)
+      val wordRanking = rankedWords(scoreWithBonus, words)
       println(wordRanking)
       assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
     }
@@ -47,7 +47,7 @@ object WordScoringScala extends App {
     def bonus(word: String): Int = if (word.contains("c")) 5 else 0
 
     {
-      val wordRanking = rankedWords(words, w => score(w) + bonus(w))
+      val wordRanking = rankedWords(w => score(w) + bonus(w), words)
       println(wordRanking)
       assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
     }
@@ -55,83 +55,83 @@ object WordScoringScala extends App {
     def penalty(word: String): Int = if (word.contains("s")) 7 else 0
 
     {
-      val wordRanking = rankedWords(words, w => score(w) + bonus(w) - penalty(w))
+      val wordRanking = rankedWords(w => score(w) + bonus(w) - penalty(w), words)
       println(wordRanking)
       assert(wordRanking == List("java", "scala", "ada", "haskell", "rust"))
     }
 
     // MAP
-    def wordScores(words: List[String], wordScore: String => Int): List[Int] = {
+    def wordScores(wordScore: String => Int, words: List[String]): List[Int] = {
       words.map(wordScore)
     }
 
     {
-      val scores = wordScores(words, w => score(w) + bonus(w) - penalty(w))
+      val scores = wordScores(w => score(w) + bonus(w) - penalty(w), words)
       println(scores)
       assert(scores == List(1, -1, 1, 2, -3))
     }
 
     // FILTER
     {
-      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+      def highScoringWords(wordScore: String => Int, words: List[String]): List[String] = {
         words.filter(word => wordScore(word) > 1)
       }
 
-      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      val result = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
       println(result)
       assert(result == List("java"))
     }
 
     // RETURNING FUNCTIONS #0: problem
     {
-      def highScoringWords(words: List[String], wordScore: String => Int): List[String] = {
+      def highScoringWords(wordScore: String => Int, words: List[String]): List[String] = {
         words.filter(word => wordScore(word) > 1)
       }
 
-      def highScoringWords0(words: List[String], wordScore: String => Int): List[String] = {
+      def highScoringWords0(wordScore: String => Int, words: List[String]): List[String] = {
         words.filter(word => wordScore(word) > 0)
       }
 
-      def highScoringWords5(words: List[String], wordScore: String => Int): List[String] = {
+      def highScoringWords5(wordScore: String => Int, words: List[String]): List[String] = {
         words.filter(word => wordScore(word) > 5)
       }
 
-      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      val result = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
       println(result)
       assert(result == List("java"))
-      val result2 = highScoringWords0(words, w => score(w) + bonus(w) - penalty(w))
+      val result2 = highScoringWords0(w => score(w) + bonus(w) - penalty(w), words)
       println(result2)
       assert(result2 == List("ada", "scala", "java"))
-      val result3 = highScoringWords5(words, w => score(w) + bonus(w) - penalty(w))
+      val result3 = highScoringWords5(w => score(w) + bonus(w) - penalty(w), words)
       println(result3)
       assert(result3 == List.empty)
     }
 
     // RETURNING FUNCTIONS #1: adding a new parameter
     {
-      def highScoringWords(words: List[String], wordScore: String => Int, higherThan: Int): List[String] = {
+      def highScoringWords(wordScore: String => Int, words: List[String], higherThan: Int): List[String] = {
         words.filter(word => wordScore(word) > higherThan)
       }
 
       // PROBLEM still there:
-      val result = highScoringWords(words, w => score(w) + bonus(w) - penalty(w), 1)
+      val result = highScoringWords(w => score(w) + bonus(w) - penalty(w), words, 1)
       println(result)
       assert(result == List("java"))
-      val result2 = highScoringWords(words, w => score(w) + bonus(w) - penalty(w), 0)
+      val result2 = highScoringWords(w => score(w) + bonus(w) - penalty(w), words, 0)
       println(result2)
       assert(result2 == List("ada", "scala", "java"))
-      val result3 = highScoringWords(words, w => score(w) + bonus(w) - penalty(w), 5)
+      val result3 = highScoringWords(w => score(w) + bonus(w) - penalty(w), words, 5)
       println(result3)
       assert(result3 == List.empty)
     }
 
     // RETURNING FUNCTIONS #2: function returns a function
     {
-      def highScoringWords(words: List[String], wordScore: String => Int): Int => List[String] = { higherThan =>
+      def highScoringWords(wordScore: String => Int, words: List[String]): Int => List[String] = { higherThan =>
         words.filter(word => wordScore(word) > higherThan)
       }
 
-      val wordsWithScoreHigherThan: Int => List[String] = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      val wordsWithScoreHigherThan: Int => List[String] = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
 
       val result = wordsWithScoreHigherThan(1)
       println(result)
@@ -148,16 +148,16 @@ object WordScoringScala extends App {
 
     // RETURNING FUNCTIONS #3: PROBLEM
     {
-      def highScoringWords(words: List[String], wordScore: String => Int): Int => List[String] = { higherThan =>
+      def highScoringWords(wordScore: String => Int, words: List[String]): Int => List[String] = { higherThan =>
         words.filter(word => wordScore(word) > higherThan)
       }
 
       val words2 = List("football", "f1", "hockey", "basketball")
 
-      val wordsWithScoreHigherThan: Int => List[String] = highScoringWords(words, w => score(w) + bonus(w) - penalty(w))
+      val wordsWithScoreHigherThan: Int => List[String] = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
 
       val words2WithScoreHigherThan: Int => List[String] =
-        highScoringWords(words2, w => score(w) + bonus(w) - penalty(w))
+        highScoringWords(w => score(w) + bonus(w) - penalty(w), words2)
 
       val result = wordsWithScoreHigherThan(1)
       println(result)
@@ -258,20 +258,20 @@ object WordScoringScala extends App {
       assert(result6 == List("football", "hockey"))
     }
 
-    def cumulativeScore(words: List[String], wordScore: String => Int): Int = {
+    def cumulativeScore(wordScore: String => Int, words: List[String]): Int = {
       words.foldLeft(0)((total, word) => {
         total + wordScore(word)
       })
     }
 
     {
-      val result = cumulativeScore(words, w => score(w) + bonus(w) - penalty(w))
+      val result = cumulativeScore(w => score(w) + bonus(w) - penalty(w), words)
       println(result)
       assert(result == 0)
     }
 
     {
-      val result = cumulativeScore(List("rust", "java"), w => score(w) + bonus(w) - penalty(w))
+      val result = cumulativeScore(w => score(w) + bonus(w) - penalty(w), List("rust", "java"))
       println(result)
       assert(result == -1)
     }
