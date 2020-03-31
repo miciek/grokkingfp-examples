@@ -35,6 +35,7 @@ lazy val root = (project in file("."))
       ";runMain PointsInsideCircles" +
       ";runMain SequencedNestedFlatMaps" +
       ";runMain Events" +
+      ";runMain TvShows" +
       ";runMain RandomForComprehensions"
     )
   )
