@@ -30,6 +30,7 @@ lazy val root = (project in file("."))
       ";runMain PassingFunctions" +
       ";runMain ReturningFunctions" +
       ";runMain BookAdaptations" +
+      ";runMain BookFriendRecommendationsJava" +
       ";runMain BookFriendRecommendations" +
       ";runMain Points2d3d" +
       ";runMain PointsInsideCircles" +
