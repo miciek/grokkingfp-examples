@@ -51,7 +51,7 @@ object TvShows extends App {
       val dash         = rawShow.indexOf('-')
 
       for {
-        name <- Option.when(bracketOpen != -1)(rawShow.substring(0, bracketOpen).trim)
+        name <- Option.when(bracketOpen > 0)(rawShow.substring(0, bracketOpen).trim)
         yearStart <- Option.when(bracketOpen != -1 && dash > bracketOpen + 1)(
                       rawShow.substring(bracketOpen + 1, dash).toInt
                     )
@@ -71,7 +71,7 @@ object TvShows extends App {
 
     def extractName(rawShow: String): Option[String] = {
       val bracketOpen = rawShow.indexOf('(')
-      Option.when(bracketOpen != -1)(rawShow.substring(0, bracketOpen).trim)
+      Option.when(bracketOpen > 0)(rawShow.substring(0, bracketOpen).trim)
     }
 
     def extractYearStart(rawShow: String): Option[Int] = {
@@ -120,6 +120,33 @@ object TvShows extends App {
 
     println(chernobyl2)
     assert(chernobyl2.contains(TvShow("Chernobyl", 2019, 2019)))
+
+    { // Practicing functional error handling
+      def extractSingleYearOrYearEnd(rawShow: String): Option[Int] =
+        extractSingleYear(rawShow).orElse(extractYearEnd(rawShow))
+
+      def extractAnyYear(rawShow: String): Option[Int] =
+        extractYearStart(rawShow).orElse(extractYearEnd(rawShow)).orElse(extractSingleYear(rawShow))
+
+      def extractYearIfNameExists(rawShow: String): Option[Int] =
+        extractName(rawShow).flatMap(name => extractSingleYear(rawShow))
+
+      def extractAnyYearyIfNameExists(rawShow: String): Option[Int] =
+        extractName(rawShow).flatMap(name => extractAnyYear(rawShow))
+
+      println(extractSingleYearOrYearEnd("A (-2019)"))
+      println(extractSingleYearOrYearEnd("A (2018)"))
+      println(extractSingleYearOrYearEnd("B (2016-)"))
+      println(extractAnyYear("B (2019)"))
+      println(extractAnyYear("B (-2017)"))
+      println(extractAnyYear("B (2016-)"))
+      println(extractAnyYear("B (-)"))
+      println(extractYearIfNameExists("C (2020)"))
+      println(extractYearIfNameExists("(2020)"))
+      println(extractYearIfNameExists("(2020-)"))
+      println(extractAnyYearyIfNameExists("A(2021)"))
+      println(extractAnyYearyIfNameExists("(2021)"))
+    }
 
     def parseShows(rawShows: List[String]): List[TvShow] = {
       rawShows // List[String]

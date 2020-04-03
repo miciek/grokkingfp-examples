@@ -24,7 +24,7 @@ public class BookFriendRecommendationsJava {
     }
 
     public static void main(String[] args) {
-        var books = Arrays.asList(new Book("FP in Scala", Arrays.asList("Chiusano", "Bjarnason")),
+        List<Book> books = Arrays.asList(new Book("FP in Scala", Arrays.asList("Chiusano", "Bjarnason")),
                 new Book("The Hobbit", Arrays.asList("Tolkien")));
         System.out.println(recommendationFeed(books));
     }

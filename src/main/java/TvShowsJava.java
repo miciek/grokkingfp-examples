@@ -1,7 +1,7 @@
 public class TvShowsJava {
     public static String extractName(String rawShow) throws Exception {
         int bracketOpen = rawShow.indexOf('(');
-        if(bracketOpen != -1) return rawShow.substring(0, bracketOpen).trim();
+        if(bracketOpen > 0) return rawShow.substring(0, bracketOpen).trim();
         else throw new Exception();
     }
 
