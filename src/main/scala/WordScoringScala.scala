@@ -192,9 +192,8 @@ object WordScoringScala extends App {
 
       val words2 = List("football", "f1", "hockey", "basketball")
 
-      val wordsWithScoreHigherThan: Int => List[String] => List[String] = highScoringWords(
-        w => score(w) + bonus(w) - penalty(w)
-      ) // just one function!
+      val wordsWithScoreHigherThan: Int => List[String] => List[String] =
+        highScoringWords(w => score(w) + bonus(w) - penalty(w)) // just one function!
 
       val result = wordsWithScoreHigherThan(1)(words) // more readable
       println(result)
@@ -229,9 +228,8 @@ object WordScoringScala extends App {
 
       val words2 = List("football", "f1", "hockey", "basketball")
 
-      val wordsWithScoreHigherThan: Int => List[String] => List[String] = highScoringWords(
-        w => score(w) + bonus(w) - penalty(w)
-      ) // just one function!
+      val wordsWithScoreHigherThan: Int => List[String] => List[String] =
+        highScoringWords(w => score(w) + bonus(w) - penalty(w)) // just one function!
 
       val result = wordsWithScoreHigherThan(1)(words) // more readable
       println(result)

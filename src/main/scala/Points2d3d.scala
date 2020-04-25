@@ -9,11 +9,7 @@
 object Points2d3d extends App {
   case class Point(x: Int, y: Int)
 
-  val p = List(1).flatMap { x =>
-    List(-2, 7).map { y =>
-      Point(x, y)
-    }
-  }
+  val p = List(1).flatMap { x => List(-2, 7).map { y => Point(x, y) } }
   println(p)
   assert(p == List(Point(1, -2), Point(1, 7)))
 
@@ -30,12 +26,6 @@ object Points2d3d extends App {
   } yield Point3d(x, y, z)
   println(p3d)
 
-  val p3dfm = xs.flatMap { x =>
-    ys.flatMap { y =>
-      zs.map { z =>
-        Point3d(x, y, z)
-      }
-    }
-  }
+  val p3dfm = xs.flatMap { x => ys.flatMap { y => zs.map { z => Point3d(x, y, z) } } }
   assert(p3dfm == p3d)
 }
