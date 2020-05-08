@@ -1,7 +1,18 @@
 object check {
-  def apply[A](result: A)(expect: A): A = {
+  def apply[A](result: A): Assert[A] = {
     println(result)
-    assert(result == expect)
-    result
+    new Assert(result)
+  }
+
+  class Assert[A](result: A) {
+    def expect(expected: A): A = {
+      assert(result == expected)
+      result
+    }
+
+    def expect(checkResult: A => Boolean): A = {
+      assert(checkResult(result))
+      result
+    }
   }
 }
