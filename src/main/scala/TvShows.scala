@@ -220,6 +220,29 @@ object TvShows extends App {
 
   // Either
   {
+    { // Understanding Either.map, flatten, toRight
+      check(Right("1985").map(_.toIntOption)).expect(Right(Some(1985)))
+      val yearStrEither: Either[String, String] = Left("Error")
+      check(yearStrEither.map(_.toIntOption)).expect(Left("Error"))
+
+      check {
+        val e: Either[String, String] = Right("1985")
+        e.map(_.toIntOption)
+      }.expect(Right(Some(1985)))
+
+      check {
+        val e: Either[String, String] = Left("Error")
+        e.map(_.toIntOption)
+      }.expect(Left("Error"))
+
+      check(Some(1985).toRight("Can't parse it")).expect(Right(1985))
+      check(None.toRight("Can't parse it")).expect(Left("Can't parse it"))
+
+      check(List(List(1985)).flatten).expect(List(1985))
+      check(List(List()).flatten).expect(List())
+      check(Some(None).flatten).expect(None)
+      check(Right(Left("Error")).flatten).expect(Left("Error"))
+    }
 
     def extractName(rawShow: String): Either[String, String] = {
       val bracketOpen = rawShow.indexOf('(')
@@ -239,6 +262,11 @@ object TvShows extends App {
         year <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
     }
+
+    check(extractYearStart("The Wire (2002-2008)")).expect(Right(2002))
+    check(extractYearStart("The Wire (-2008)")).expect(Left("Can't extract start year from The Wire (-2008)"))
+    check(extractYearStart("The Wire (oops-2008)")).expect(Left("Can't parse oops"))
+    check(extractYearStart("The Wire (2002-)")).expect(Right(2002))
 
     def extractYearEnd(rawShow: String): Either[String, Int] = {
       val dash         = rawShow.indexOf('-')
@@ -272,15 +300,10 @@ object TvShows extends App {
       } yield TvShow(name, yearStart, yearEnd)
     }
 
-    val chernobyl = parseShow("Chernobyl (2019)")
-
-    check(chernobyl).expect(_.contains(TvShow("Chernobyl", 2019, 2019)))
-
-    { // Understanding Either.map
-      check(Right("1985").map(_.toIntOption)).expect(Right(Some(1985)))
-      val yearStrEither: Either[String, String] = Left("Error")
-      check(yearStrEither.map(_.toIntOption)).expect(Left("Error"))
-    }
+    check(parseShow("The Wire (-)")).expect(Left("Can't extract single year from The Wire (-)"))
+    check(parseShow("The Wire (oops)")).expect(Left("Can't parse oops"))
+    check(parseShow("(2002-2008)")).expect(Left("Can't extract name from (2002-2008)"))
+    check(parseShow("The Wire (2002-2008)")).expect(Right(TvShow("The Wire", 2002, 2008)))
 
     { // Practicing functional error handling with Either
       def extractSingleYearOrYearEnd(rawShow: String): Either[String, Int] =
@@ -345,5 +368,63 @@ object TvShows extends App {
 
     check(parseShows(List("The Wire (2002-2008)", "Chernobyl (2019)")))
       .expect(Right(List(TvShow("The Wire", 2002, 2008), TvShow("Chernobyl", 2019, 2019))))
+  }
+
+  { // Working with Option and Either: Option
+    val year: Option[Int]   = Some(996)
+    val noYear: Option[Int] = None
+
+    // map
+    check(year.map(_ * 2)).expect(Some(1992))
+    check(noYear.map(_ * 2)).expect(None)
+
+    // flatten
+    check(Some(year).flatten).expect(Some(996))
+    check(Some(noYear).flatten).expect(None)
+
+    // flatMap
+    check(year.flatMap(y => Some(y * 2))).expect(Some(1992))
+    check(noYear.flatMap(y => Some(y * 2))).expect(None)
+    check(year.flatMap(y => None)).expect(None)
+    check(noYear.flatMap(y => None)).expect(None)
+
+    // orElse
+    check(year.orElse(Some(2020))).expect(Some(996))
+    check(noYear.orElse(Some(2020))).expect(Some(2020))
+    check(year.orElse(None)).expect(Some(996))
+    check(noYear.orElse(None)).expect(None)
+
+    // toRight
+    check(year.toRight("no year given")).expect(Right(996))
+    check(noYear.toRight("no year given")).expect(Left("no year given"))
+  }
+
+  { // Working with Option and Either: Either
+    val year: Either[String, Int]   = Right(996)
+    val noYear: Either[String, Int] = Left("no year")
+
+    // map
+    check(year.map(_ * 2)).expect(Right(1992))
+    check(noYear.map(_ * 2)).expect(Left("no year"))
+
+    // flatten
+    check(Right(year).flatten).expect(Right(996))
+    check(Right(noYear).flatten).expect(Left("no year"))
+
+    // flatMap
+    check(year.flatMap(y => Right(y * 2))).expect(Right(1992))
+    check(noYear.flatMap(y => Right(y * 2))).expect(Left("no year"))
+    check(year.flatMap(y => Left("can't progress"))).expect(Left("can't progress"))
+    check(noYear.flatMap(y => Left("can't progress"))).expect(Left("no year"))
+
+    // orElse
+    check(year.orElse(Right(2020))).expect(Right(996))
+    check(noYear.orElse(Right(2020))).expect(Right(2020))
+    check(year.orElse(Left("can't recover"))).expect(Right(996))
+    check(noYear.orElse(Left("can't recover"))).expect(Left("can't recover"))
+
+    // toOption
+    check(year.toOption).expect(Some(996))
+    check(noYear.toOption).expect(None)
   }
 }
