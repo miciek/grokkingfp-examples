@@ -99,11 +99,11 @@ object MusicArtistsSearch extends App {
 
     case class Location(name: String)
 
-    case class Period(start: Int, end: Int)
+    case class ActivePeriod(start: Int, end: Int)
 
     sealed trait YearsActive
-    case class ActiveNow(since: Int, previousPeriods: List[Period] = List.empty) extends YearsActive
-    case class Inactive(periods: List[Period])                                   extends YearsActive
+    case class ActiveNow(since: Int, previousActivePeriods: List[ActivePeriod] = List.empty) extends YearsActive
+    case class Inactive(activePeriods: List[ActivePeriod])                                   extends YearsActive
 
     case class Artist(name: String, genre: MusicGenre, origin: Location, yearsActive: YearsActive)
 
@@ -112,6 +112,22 @@ object MusicArtistsSearch extends App {
     case class PossibleLocations(locations: List[Location]) extends SearchCondition
     case class ActiveBefore(year: Int)                      extends SearchCondition
     case class ActiveAfter(year: Int)                       extends SearchCondition
+
+    def wasArtistActiveBefore(artist: Artist, year: Int): Boolean = {
+      artist.yearsActive match {
+        case ActiveNow(activeSince, previousActivePeriods) =>
+          activeSince < year || previousActivePeriods.exists(_.start < year)
+        case Inactive(activePeriods) => activePeriods.exists(_.start < year)
+      }
+    }
+
+    def wasArtistActiveAfter(artist: Artist, year: Int): Boolean = {
+      artist.yearsActive match {
+        case ActiveNow(_, _) => true
+        case Inactive(activePeriods) =>
+          activePeriods.exists(_.end > year)
+      }
+    }
 
     def searchArtists(
         artists: List[Artist],
@@ -122,18 +138,8 @@ object MusicArtistsSearch extends App {
           satisfiedSoFar && (nextCondition match {
             case PossibleGenres(genres)       => genres.contains(artist.genre) // type checked!
             case PossibleLocations(locations) => locations.contains(artist.origin)
-            case ActiveBefore(year) =>
-              artist.yearsActive match {
-                case ActiveNow(artistActiveSince, artistPreviousActivityPeriods) =>
-                  artistActiveSince < year || artistPreviousActivityPeriods.exists(_.start < year)
-                case Inactive(artistActivityPeriods) => artistActivityPeriods.exists(_.start < year)
-              }
-            case ActiveAfter(year) =>
-              artist.yearsActive match {
-                case ActiveNow(_, _) => true
-                case Inactive(artistActivityPeriods) =>
-                  artistActivityPeriods.exists(period => period.start > year || period.end > year)
-              }
+            case ActiveBefore(year)           => wasArtistActiveBefore(artist, year)
+            case ActiveAfter(year)            => wasArtistActiveAfter(artist, year)
           })
         }
       )
@@ -141,8 +147,8 @@ object MusicArtistsSearch extends App {
 
     val artists = List(
       Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-      Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(Period(1968, 1980)))),
-      Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+      Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(ActivePeriod(1968, 1980)))),
+      Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
     )
 
     check(
@@ -157,7 +163,7 @@ object MusicArtistsSearch extends App {
       )
     ).expect {
       List(
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
       )
     }
 
@@ -172,8 +178,8 @@ object MusicArtistsSearch extends App {
       )
     ).expect {
       List(
-        Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(Period(1968, 1980)))),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+        Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(ActivePeriod(1968, 1980)))),
+        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
       )
     }
 
@@ -188,8 +194,8 @@ object MusicArtistsSearch extends App {
     ).expect {
       List(
         Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-        Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(Period(1968, 1980)))),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+        Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(ActivePeriod(1968, 1980)))),
+        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
       )
     }
 
@@ -204,7 +210,7 @@ object MusicArtistsSearch extends App {
     ).expect {
       List(
         Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
       )
     }
 
@@ -232,7 +238,7 @@ object MusicArtistsSearch extends App {
       )
     ).expect {
       List(
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
       )
     }
 
@@ -249,7 +255,7 @@ object MusicArtistsSearch extends App {
     ).expect {
       List(
         Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(Period(1958, 2003), Period(2009, 2012))))
+        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
       )
     }
   }
