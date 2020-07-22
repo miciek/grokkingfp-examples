@@ -1,169 +1,336 @@
 object MusicArtistsSearch extends App {
 
-  /**
-    * TODO:
-    * - .copy
-    * - songs by artist
-    * - albums?
-    * - types: Song vs Artist as String (stringly-typed)
-    *  - Map
-    *  - can you pick a song before the artist?
-    *  - coffee breaks: modeling user, POI? tv show?
-    *  - maybe something more dynamic, like event sourcing?
-    *  - concert/festival?
-    *   - conditions: foldLeft! instead of raw boolean error-prone expressions
-    *   - artist type: band/singer?
-    *   - genres/subgenres?
-    */
-  // STEP 1: Design using what we know (modeling with Option/String)
+  // STEP 1: Design using what we know
   {
     case class Artist(
         name: String,
         genre: String,
         origin: String,
         yearsActiveStart: Int,
-        yearsActiveEnd: Option[Int]
+        isActive: Boolean,
+        yearsActiveEnd: Int
     )
 
     def searchArtists(
         artists: List[Artist],
         genres: List[String],
         locations: List[String],
+        searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
     ): List[Artist] = {
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre)) &&
         (locations.isEmpty || locations.contains(artist.origin)) &&
-        ((artist.yearsActiveEnd
-          .forall(_ > activeAfter) && artist.yearsActiveStart < activeBefore) || (artist.yearsActiveStart < activeBefore && artist.yearsActiveStart > activeAfter))
+        (!searchByActiveYears || ((artist.isActive || artist.yearsActiveEnd >= activeAfter) &&
+        (artist.yearsActiveStart <= activeBefore)))
       )
     }
 
     val artists = List(
-      Artist("Metallica", "Thrash Metal", "U.S.", 1983, None),
-      Artist("Led Zeppelin", "Hard Rock", "England", 1968, Some(1980)),
-      Artist("Bee Gees", "Pop", "England", 1958, Some(2003))
+      Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+      Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
+      Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
     )
 
-    check(searchArtists(artists, List("Pop"), List("England"), 1950, 2020)).expect {
-      List(Artist("Bee Gees", "Pop", "England", 1958, Some(2003)))
+    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2020) }.expect {
+      List(Artist("Bee Gees", "Pop", "England", 1958, false, 2003))
     }
-    check(searchArtists(artists, List.empty, List("England"), 1950, 2020)).expect {
+    check { searchArtists(artists, List.empty, List("England"), true, 1950, 2020) }.expect {
       List(
-        Artist("Led Zeppelin", "Hard Rock", "England", 1968, Some(1980)),
-        Artist("Bee Gees", "Pop", "England", 1958, Some(2003))
+        Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
+        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
     }
-    check(searchArtists(artists, List.empty, List.empty, 1950, 2020)).expect {
+    check { searchArtists(artists, List.empty, List.empty, true, 1950, 2020) }.expect {
       List(
-        Artist("Metallica", "Thrash Metal", "U.S.", 1983, None),
-        Artist("Led Zeppelin", "Hard Rock", "England", 1968, Some(1980)),
-        Artist("Bee Gees", "Pop", "England", 1958, Some(2003))
+        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+        Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
+        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
     }
-    check(searchArtists(artists, List.empty, List.empty, 1983, 2003)).expect {
+    check { searchArtists(artists, List.empty, List.empty, true, 1983, 2003) }.expect {
       List(
-        Artist("Metallica", "Thrash Metal", "U.S.", 1983, None),
-        Artist("Bee Gees", "Pop", "England", 1958, Some(2003))
+        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
     }
-    check(searchArtists(artists, List.empty, List.empty, 2019, 2020)).expect {
+    check { searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2020) }.expect {
       List(
-        Artist("Metallica", "Thrash Metal", "U.S.", 1983, None)
+        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0)
       )
     }
-    check(searchArtists(artists, List.empty, List.empty, 1950, 1959)).expect {
+    check { searchArtists(artists, List.empty, List.empty, true, 1950, 1959) }.expect {
       List(
-        Artist("Bee Gees", "Pop", "England", 1958, Some(2003))
+        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
+      )
+    }
+    check { searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) }.expect {
+      List.empty
+    }
+    check { searchArtists(artists, List.empty, List("U.S."), false, 0, 0) }.expect {
+      List(
+        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0)
+      )
+    }
+    check { searchArtists(artists, List.empty, List.empty, false, 2019, 2021) }.expect {
+      List(
+        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+        Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
+        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
     }
   }
-  // PROBLEM:
 
   // TODO: next steps
 
-  // intermediate:
-  // sealed trait Period
-  // case class ActivePeriod(start: Int) extends Period
-  // case class PreviousPeriod(start: Int, end: Int) extends Period
-
-  // case class YearsActive(currentPeriod: ActivePeriod, previousPeriods: List[PreviousPeriod] = List.empty)
+  case class Location(name: String) extends AnyVal
 
   // LAST STEP:
   {
     sealed trait MusicGenre
-    case object ThrashMetal extends MusicGenre
-    case object Pop         extends MusicGenre
-    case object HardRock    extends MusicGenre
-
-    case class Location(name: String)
-
-    case class ActivePeriod(start: Int, end: Int)
+    case object HeavyMetal extends MusicGenre
+    case object Pop        extends MusicGenre
+    case object HardRock   extends MusicGenre
 
     sealed trait YearsActive
-    case class ActiveNow(since: Int, previousActivePeriods: List[ActivePeriod] = List.empty) extends YearsActive
-    case class Inactive(activePeriods: List[ActivePeriod])                                   extends YearsActive
+    case class StillActive(since: Int)               extends YearsActive
+    case class ActiveBetween(start: Int, until: Int) extends YearsActive
 
     case class Artist(name: String, genre: MusicGenre, origin: Location, yearsActive: YearsActive)
 
+    def wasArtistActive(artist: Artist, yearStart: Int, yearEnd: Int): Boolean = {
+      artist.yearsActive match {
+        case StillActive(since)        => since <= yearEnd
+        case ActiveBetween(start, end) => start <= yearEnd && end >= yearStart
+      }
+    }
+
+    def searchArtistsRaw(
+        artists: List[Artist],
+        genres: List[MusicGenre],
+        locations: List[Location],
+        searchByActiveYears: Boolean,
+        activeAfter: Int,
+        activeBefore: Int
+    ): List[Artist] = {
+      artists.filter(artist =>
+        (genres.isEmpty || genres.contains(artist.genre)) &&
+        (locations.isEmpty || locations.contains(artist.origin)) &&
+        (!searchByActiveYears || wasArtistActive(artist, activeAfter, activeBefore))
+      )
+    }
+
+    // Modeling conditions as ADT:
     sealed trait SearchCondition
-    case class PossibleGenres(genres: List[MusicGenre])     extends SearchCondition
-    case class PossibleLocations(locations: List[Location]) extends SearchCondition
-    case class ActiveBefore(year: Int)                      extends SearchCondition
-    case class ActiveAfter(year: Int)                       extends SearchCondition
-
-    def wasArtistActiveBefore(artist: Artist, year: Int): Boolean = {
-      artist.yearsActive match {
-        case ActiveNow(activeSince, previousActivePeriods) =>
-          activeSince < year || previousActivePeriods.exists(_.start < year)
-        case Inactive(activePeriods) => activePeriods.exists(_.start < year)
-      }
-    }
-
-    def wasArtistActiveAfter(artist: Artist, year: Int): Boolean = {
-      artist.yearsActive match {
-        case ActiveNow(_, _) => true
-        case Inactive(activePeriods) =>
-          activePeriods.exists(_.end > year)
-      }
-    }
+    case class SearchByGenre(genres: List[MusicGenre])   extends SearchCondition
+    case class SearchByOrigin(locations: List[Location]) extends SearchCondition
+    case class SearchByActiveYears(start: Int, end: Int) extends SearchCondition
 
     def searchArtists(
         artists: List[Artist],
         requiredConditions: List[SearchCondition]
     ): List[Artist] = {
       artists.filter(artist =>
-        requiredConditions.foldLeft(true) { (satisfiedSoFar, nextCondition) =>
-          satisfiedSoFar && (nextCondition match {
-            case PossibleGenres(genres)       => genres.contains(artist.genre) // type checked!
-            case PossibleLocations(locations) => locations.contains(artist.origin)
-            case ActiveBefore(year)           => wasArtistActiveBefore(artist, year)
-            case ActiveAfter(year)            => wasArtistActiveAfter(artist, year)
-          })
-        }
+        requiredConditions.forall(condition =>
+          condition match {
+            case SearchByGenre(genres)           => genres.contains(artist.genre)
+            case SearchByOrigin(locations)       => locations.contains(artist.origin)
+            case SearchByActiveYears(start, end) => wasArtistActive(artist, start, end)
+          }
+        )
       )
     }
 
     val artists = List(
-      Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-      Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(ActivePeriod(1968, 1980)))),
-      Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)),
+      Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
+      Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+    )
+
+    // searchArtistsRaw check
+    check(
+      searchArtistsRaw(
+        artists,
+        List(Pop),
+        List(Location("England")),
+        true,
+        1950,
+        2020
+      )
+    ).expect {
+      List(
+        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByGenre(List(Pop)),
+          SearchByOrigin(List(Location("England"))),
+          SearchByActiveYears(1950, 2020)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByOrigin(List(Location("England"))),
+          SearchByActiveYears(1950, 2020)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
+        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByActiveYears(1950, 2020)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)),
+        Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
+        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByActiveYears(1983, 2003)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)),
+        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByGenre(List(HeavyMetal)),
+          SearchByActiveYears(2019, 2020)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByActiveYears(1950, 1959)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByOrigin(List(Location("U.S."))),
+          SearchByActiveYears(1950, 1959)
+        )
+      )
+    ).expect {
+      List.empty
+    }
+
+  }
+
+  // NEW REQUIREMENTS:
+  {
+    sealed trait MusicGenre
+    case object HeavyMetal extends MusicGenre
+    case object Pop        extends MusicGenre
+    case object HardRock   extends MusicGenre
+
+    case class Location(name: String)
+
+    case class PeriodInYears(start: Int, end: Option[Int])
+
+    case class Artist(name: String, genre: MusicGenre, origin: Location, active: List[PeriodInYears])
+
+    sealed trait SearchCondition
+    case class SearchByGenre(genres: List[MusicGenre])          extends SearchCondition
+    case class SearchByOrigin(locations: List[Location])        extends SearchCondition
+    case class SearchByActiveYears(start: Int, end: Int)        extends SearchCondition
+    case class SearchByActivityLength(howLong: Int, until: Int) extends SearchCondition
+
+    def searchArtists(
+        artists: List[Artist],
+        requiredConditions: List[SearchCondition]
+    ): List[Artist] = {
+      artists.filter(artist =>
+        requiredConditions.forall(nextCondition =>
+          nextCondition match {
+            case SearchByGenre(genres)     => genres.contains(artist.genre)
+            case SearchByOrigin(locations) => locations.contains(artist.origin)
+            case SearchByActiveYears(start, end) =>
+              artist.active.exists(period => period.start <= end && period.end.forall(_ >= start))
+            case SearchByActivityLength(howLong, until) =>
+              val totalActive =
+                artist.active.map(period => period.end.getOrElse(until) - period.start).foldLeft(0)(_ + _)
+              totalActive >= howLong
+          }
+        )
+      )
+    }
+
+    val artists = List(
+      Artist("Metallica", HeavyMetal, Location("U.S."), List(PeriodInYears(1983, None))),
+      Artist("Led Zeppelin", HardRock, Location("England"), List(PeriodInYears(1968, Some(1980)))),
+      Artist(
+        "Bee Gees",
+        Pop,
+        Location("England"),
+        List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+      )
     )
 
     check(
       searchArtists(
         artists,
         List(
-          PossibleGenres(List(Pop)),
-          PossibleLocations(List(Location("England"))),
-          ActiveAfter(1950),
-          ActiveBefore(2020)
+          SearchByGenre(List(Pop)),
+          SearchByOrigin(List(Location("England"))),
+          SearchByActiveYears(1950, 2020)
         )
       )
     ).expect {
       List(
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
       )
     }
 
@@ -171,15 +338,19 @@ object MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          PossibleLocations(List(Location("England"))),
-          ActiveAfter(1950),
-          ActiveBefore(2020)
+          SearchByOrigin(List(Location("England"))),
+          SearchByActiveYears(1950, 2020)
         )
       )
     ).expect {
       List(
-        Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(ActivePeriod(1968, 1980)))),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+        Artist("Led Zeppelin", HardRock, Location("England"), List(PeriodInYears(1968, Some(1980)))),
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
       )
     }
 
@@ -187,15 +358,19 @@ object MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          ActiveAfter(1950),
-          ActiveBefore(2020)
+          SearchByActiveYears(1950, 2020)
         )
       )
     ).expect {
       List(
-        Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-        Artist("Led Zeppelin", HardRock, Location("England"), Inactive(List(ActivePeriod(1968, 1980)))),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+        Artist("Metallica", HeavyMetal, Location("U.S."), List(PeriodInYears(1983, None))),
+        Artist("Led Zeppelin", HardRock, Location("England"), List(PeriodInYears(1968, Some(1980)))),
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
       )
     }
 
@@ -203,14 +378,18 @@ object MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          ActiveAfter(1983),
-          ActiveBefore(2003)
+          SearchByActiveYears(1983, 2003)
         )
       )
     ).expect {
       List(
-        Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+        Artist("Metallica", HeavyMetal, Location("U.S."), List(PeriodInYears(1983, None))),
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
       )
     }
 
@@ -218,13 +397,12 @@ object MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          ActiveAfter(2019),
-          ActiveBefore(2020)
+          SearchByActiveYears(2019, 2020)
         )
       )
     ).expect {
       List(
-        Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983))
+        Artist("Metallica", HeavyMetal, Location("U.S."), List(PeriodInYears(1983, None)))
       )
     }
 
@@ -232,33 +410,98 @@ object MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          ActiveAfter(1950),
-          ActiveBefore(1959)
+          SearchByActiveYears(1950, 1959)
         )
       )
     ).expect {
       List(
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
       )
     }
-
-    // we have more possibilities:
-    // 1. inactive periods support:
 
     check(
       searchArtists(
         artists,
         List(
-          ActiveAfter(2004)
+          SearchByActivityLength(48, 2020)
         )
       )
     ).expect {
       List(
-        Artist("Metallica", ThrashMetal, Location("U.S."), ActiveNow(since = 1983)),
-        Artist("Bee Gees", Pop, Location("England"), Inactive(List(ActivePeriod(1958, 2003), ActivePeriod(2009, 2012))))
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByActivityLength(48, 2020)
+        )
+      )
+    ).expect {
+      List(
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
+      )
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByOrigin(List(Location("U.S."))),
+          SearchByActivityLength(40, 2020)
+        )
+      )
+    ).expect {
+      List.empty
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByOrigin(List(Location("U.S."))),
+          SearchByActivityLength(37, 2020)
+        )
+      )
+    ).expect {
+      List(Artist("Metallica", HeavyMetal, Location("U.S."), List(PeriodInYears(1983, None))))
+    }
+
+    check(
+      searchArtists(
+        artists,
+        List(
+          SearchByOrigin(List(Location("U.S."), Location("England"))),
+          SearchByActivityLength(37, 2020)
+        )
+      )
+    ).expect {
+      List(
+        Artist("Metallica", HeavyMetal, Location("U.S."), List(PeriodInYears(1983, None))),
+        Artist(
+          "Bee Gees",
+          Pop,
+          Location("England"),
+          List(PeriodInYears(1958, Some(2003)), PeriodInYears(2009, Some(2012)))
+        )
       )
     }
   }
-
-  // TODO: 2. adding a condition is just adding a new case class and compiler will tell us what's missing!
 }
