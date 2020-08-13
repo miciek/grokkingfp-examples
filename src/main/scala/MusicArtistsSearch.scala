@@ -335,12 +335,12 @@ object MusicArtistsSearch extends App {
     }
   }
 
-  // LAST STEP:
-  {
-    sealed trait YearsActive
-    case class StillActive(since: Int)               extends YearsActive
-    case class ActiveBetween(start: Int, until: Int) extends YearsActive
+  // STEP 4: ADT
+  sealed trait YearsActive
+  case class StillActive(since: Int)             extends YearsActive
+  case class ActiveBetween(start: Int, end: Int) extends YearsActive
 
+  {
     case class Artist(name: String, genre: MusicGenre, origin: Location, yearsActive: YearsActive)
 
     def wasArtistActive(artist: Artist, yearStart: Int, yearEnd: Int): Boolean = {
