@@ -506,6 +506,24 @@ object MusicArtistsSearch extends App {
       List.empty
     }
 
+    { // Practicing pattern matching
+      def activeLength(artist: Artist, currentYear: Int): Int = {
+        artist.yearsActive match {
+          case StillActive(since)        => currentYear - since
+          case ActiveBetween(start, end) => end - start
+        }
+      }
+
+      check {
+        activeLength(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)), 2020)
+      }.expect(37)
+      check {
+        activeLength(Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)), 2020)
+      }.expect(12)
+      check {
+        activeLength(Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003)), 2020)
+      }.expect(45)
+    }
   }
 
   // NEW REQUIREMENTS:
