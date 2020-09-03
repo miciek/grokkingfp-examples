@@ -15,20 +15,28 @@ lazy val root = (project in file("."))
     addCommandAlias(
       "runAll",
       ";runMain Intro" +
+      ";runMain IntroScala" +
       ";runMain TestingPureFunctions" +
       ";runMain PureFunctions" +
+      ";runMain JavaFunctionIntro" +
       ";runMain ShoppingCartDiscounts" +
       ";runMain DeletingMutability" +
       ";runMain TipCalculation" +
       ";runMain ShoppingCartDiscountsScala" +
       ";runMain TipCalculationScala" +
       ";runMain ItineraryCopying" +
+      ";runMain Itinerary" +
+      ";runMain ItineraryScala" +
       ";runMain LapTimes" +
-      ";runMain Restaurant" +
+      ";runMain ListVsString" +
+      ";runMain ListAndStringIntuitions" +
+      ";runMain SlicingAndAppending" +
+      ";runMain AbbreviateNames" +
       ";runMain WordScoring" +
       ";runMain WordScoringScala" +
       ";runMain PassingFunctions" +
       ";runMain ReturningFunctions" +
+      ";runMain ProgrammingLanguages" +
       ";runMain BookAdaptations" +
       ";runMain BookFriendRecommendationsJava" +
       ";runMain BookFriendRecommendations" +
@@ -38,6 +46,7 @@ lazy val root = (project in file("."))
       ";runMain Events" +
       ";runMain RandomForComprehensions" +
       ";runMain TvShows" +
+      ";runMain TvShowsJava" +
       ";runMain MusicArtistsSearch" +
       ";runMain Playlist"
     )

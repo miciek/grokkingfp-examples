@@ -51,6 +51,11 @@ public class TvShowsJava {
         }
         return new TvShow(name, yearStart, yearEnd);
     }
+
+    public static void main(String[] args) throws Exception {
+        System.out.println(parseShow("The Wire (2002-2008)"));
+        System.out.println(parseShow2("The Wire (2002-2008)"));
+    }
 }
 
 class TvShow {

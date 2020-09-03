@@ -27,7 +27,7 @@ public class Itinerary {
         System.out.println("Plan: " + plan.getPlan());
 
         plan.replan("Vienna", "Kraków");
-        assert(plan.getPlan().toString().equals("[Paris, Berlin, Vienna, Budapest]"));
+        assert(plan.getPlan().toString().equals("[Paris, Berlin, Vienna, Kraków]"));
         System.out.println("Plan: " + plan.getPlan());
     }
 }

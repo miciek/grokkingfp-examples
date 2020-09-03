@@ -43,7 +43,7 @@ public class Intro {
     }
 
     public static int score2(String word)  {
-        return word.replaceAll("a", "").length();
+        return word.replace("a", "").length();
     }
 
     public static int score3(String word)  {
@@ -51,7 +51,7 @@ public class Intro {
     }
 
     public static String stringWithoutChar(String s, char c) {
-        return s.replaceAll(Character.toString(c), "");
+        return s.replace(Character.toString(c), "");
     }
 
     public static void main(String[] args) {
