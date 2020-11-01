@@ -10,6 +10,7 @@ lazy val root = (project in file("."))
         "-language:higherKinds",
         "-Xlint"
       ),
+    libraryDependencies += "org.typelevel" %% "cats-effect" % "2.2.0",
     fork in run := true,
     javaOptions in run += "-ea",
     addCommandAlias(
@@ -48,6 +49,7 @@ lazy val root = (project in file("."))
       ";runMain TvShows" +
       ";runMain TvShowsJava" +
       ";runMain MusicArtistsSearch" +
-      ";runMain Playlist"
+      ";runMain Playlist" +
+      ";runMain ch8_SchedulingMeetings"
     )
   )
