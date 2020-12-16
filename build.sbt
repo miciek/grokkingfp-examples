@@ -50,6 +50,7 @@ lazy val root = (project in file("."))
       ";runMain TvShowsJava" +
       ";runMain MusicArtistsSearch" +
       ";runMain Playlist" +
-      ";runMain ch8_SchedulingMeetings"
+      ";runMain ch8_SchedulingMeetings" +
+      ";runMain ch8_CastingDie"
     )
   )

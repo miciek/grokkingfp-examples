@@ -1,6 +1,6 @@
 object MusicArtistsSearch extends App {
 
-  // STEP 1: Design using what we know
+  // STEP 0: Design using what we know
   {
     case class Artist(
         name: String,
