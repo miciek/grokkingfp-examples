@@ -7,3 +7,4 @@ out
 .metals
 project/metals.sbt
 .bloop
+.bsp
