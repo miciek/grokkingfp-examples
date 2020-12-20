@@ -1,4 +1,4 @@
-object IntroScala extends App {
+object ch01_IntroScala extends App {
   def increment(x: Int): Int = {
     x + 1
   }
@@ -7,7 +7,7 @@ object IntroScala extends App {
     s.charAt(0)
   }
 
-  def score(word: String): Int = {
+  def wordScore(word: String): Int = {
     word.length()
   }
 
@@ -17,6 +17,6 @@ object IntroScala extends App {
   assert(getFirstCharacter("Ola") == 'O')
   println(getFirstCharacter("Ola"))
 
-  assert(score("Scala") == 5)
-  println(score("Scala"))
+  assert(wordScore("Scala") == 5)
+  println(wordScore("Scala"))
 }

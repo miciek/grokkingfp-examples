@@ -15,8 +15,8 @@ lazy val root = (project in file("."))
     javaOptions in run += "-ea",
     addCommandAlias(
       "runAll",
-      ";runMain Intro" +
-      ";runMain IntroScala" +
+      ";runMain ch01_Intro" +
+      ";runMain ch01_IntroScala" +
       ";runMain TestingPureFunctions" +
       ";runMain PureFunctions" +
       ";runMain JavaFunctionIntro" +
@@ -50,7 +50,7 @@ lazy val root = (project in file("."))
       ";runMain TvShowsJava" +
       ";runMain MusicArtistsSearch" +
       ";runMain Playlist" +
-      ";runMain ch8_SchedulingMeetings" +
-      ";runMain ch8_CastingDie"
+      ";runMain ch08_SchedulingMeetings" +
+      ";runMain ch08_CastingDie"
     )
   )
