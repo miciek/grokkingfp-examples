@@ -1,4 +1,4 @@
-object ItineraryScala extends App {
+object ch03_ItineraryScala extends App {
   def replan(plan: List[String], newCity: String, beforeCity: String): List[String] = {
     val beforeCityIndex = plan.indexOf(beforeCity)
     val citiesBefore    = plan.slice(0, beforeCityIndex)

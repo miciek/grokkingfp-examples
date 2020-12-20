@@ -1,4 +1,4 @@
-object ListAndStringIntuitions extends App {
+object ch03_ListVsStringScala extends App {
   {
     val ab   = List("a", "b")
     val cd   = List("c", "d")

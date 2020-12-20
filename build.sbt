@@ -23,16 +23,16 @@ lazy val root = (project in file("."))
       ";runMain ch02_ShoppingCartDiscountsScala" +
       ";runMain ch02_TipCalculationScala" +
       ";runMain ch02_TestingPureFunctions" +
+      ";runMain ch03_Itinerary" +
+      ";runMain ch03_ItineraryCopying" +
+      ";runMain ch03_LapTimes" +
+      ";runMain ch03_ListVsString" +
+      ";runMain ch03_ListVsStringScala" +
+      ";runMain ch03_AbbreviateNames" +
+      ";runMain ch03_ItineraryScala" +
+      ";runMain ch03_SlicingAndAppending" +
+      //      ";runMain DeletingMutability" +
       ";runMain JavaFunctionIntro" +
-      ";runMain DeletingMutability" +
-      ";runMain ItineraryCopying" +
-      ";runMain Itinerary" +
-      ";runMain ItineraryScala" +
-      ";runMain LapTimes" +
-      ";runMain ListVsString" +
-      ";runMain ListAndStringIntuitions" +
-      ";runMain SlicingAndAppending" +
-      ";runMain AbbreviateNames" +
       ";runMain WordScoring" +
       ";runMain WordScoringScala" +
       ";runMain PassingFunctions" +

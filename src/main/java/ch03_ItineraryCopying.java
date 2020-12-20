@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class ItineraryCopying {
+public class ch03_ItineraryCopying {
     static List<String> replan(List<String> plan,
                                String newCity,
                                String beforeCity) {

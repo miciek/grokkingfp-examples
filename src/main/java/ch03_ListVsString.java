@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ListVsString {
+public class ch03_ListVsString {
     public static void main(String[] args) {
         List<String> listA = new ArrayList<>();
         listA.add("A");

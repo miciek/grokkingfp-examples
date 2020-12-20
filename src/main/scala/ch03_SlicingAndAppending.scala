@@ -1,4 +1,4 @@
-object SlicingAndAppending extends App {
+object ch03_SlicingAndAppending extends App {
   def firstTwo(list: List[String]): List[String] = list.slice(0, 2)
 
   def lastTwo(list: List[String]): List[String] = list.slice(list.size - 2, list.size)
