@@ -6,7 +6,7 @@ object TipCalculatorScala {
   }
 }
 
-object TipCalculationScala extends App {
+object ch02_TipCalculationScala extends App {
   assert(TipCalculatorScala.getTipPercentage(List.empty) == 0)
 
   val smallGroup = List("Alice", "Bob", "Charlie")

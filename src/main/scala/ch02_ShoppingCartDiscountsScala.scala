@@ -8,7 +8,7 @@ object ShoppingCartScala {
   }
 }
 
-object ShoppingCartDiscountsScala extends App {
+object ch02_ShoppingCartDiscountsScala extends App {
   assert(ShoppingCartScala.getDiscountPercentage(List.empty) == 0)
 
   val justApple = List("Apple")

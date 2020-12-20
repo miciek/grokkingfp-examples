@@ -17,14 +17,14 @@ lazy val root = (project in file("."))
       "runAll",
       ";runMain ch01_Intro" +
       ";runMain ch01_IntroScala" +
-      ";runMain TestingPureFunctions" +
-      ";runMain PureFunctions" +
+      ";runMain ch02_ShoppingCartDiscounts" +
+      ";runMain ch02_TipCalculation" +
+      ";runMain ch02_PureFunctions" +
+      ";runMain ch02_ShoppingCartDiscountsScala" +
+      ";runMain ch02_TipCalculationScala" +
+      ";runMain ch02_TestingPureFunctions" +
       ";runMain JavaFunctionIntro" +
-      ";runMain ShoppingCartDiscounts" +
       ";runMain DeletingMutability" +
-      ";runMain TipCalculation" +
-      ";runMain ShoppingCartDiscountsScala" +
-      ";runMain TipCalculationScala" +
       ";runMain ItineraryCopying" +
       ";runMain Itinerary" +
       ";runMain ItineraryScala" +

@@ -83,7 +83,7 @@ class TipCalculator {
     }
 }
 
-public class TipCalculation {
+public class ch02_TipCalculation {
     public static void main(String[] args) {
         List<String> names = new ArrayList<>();
         assert(TipCalculator.getTipPercentage(names) == 0);

@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class PureFunctions {
+public class ch02_PureFunctions {
     static double f(double x) {
         return x * 95.0 / 100.0;
     }

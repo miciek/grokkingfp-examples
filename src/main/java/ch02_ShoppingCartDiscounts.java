@@ -1,6 +1,5 @@
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 class ShoppingCartBad {
@@ -116,7 +115,7 @@ class ShoppingCart {
     }
 }
 
-public class ShoppingCartDiscounts {
+public class ch02_ShoppingCartDiscounts {
     public static void main(String[] args) {
         ShoppingCartBad cartBad = new ShoppingCartBad();
         cartBad.addItem("Apple");

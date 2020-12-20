@@ -1,4 +1,4 @@
-object TestingPureFunctions extends App {
+object ch02_TestingPureFunctions extends App {
   def increment(x: Int): Int = {
     x + 1
   }
@@ -15,13 +15,13 @@ object TestingPureFunctions extends App {
   assert(add(2, 5) == 7)
   assert(add(-2, 5) == 3)
 
-  def score(word: String): Int = {
+  def wordScore(word: String): Int = {
     word.replaceAll("a", "").length
   }
 
-  assert(score("Scala") == 3)
-  assert(score("function") == 8)
-  assert(score("") == 0)
+  assert(wordScore("Scala") == 3)
+  assert(wordScore("function") == 8)
+  assert(wordScore("") == 0)
 
   def getTipPercentage(names: List[String]): Int = {
     if (names.size > 5) 20
