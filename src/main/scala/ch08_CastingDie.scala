@@ -1,9 +1,9 @@
 import cats.effect.IO
 import cats.implicits._
 
-object ch8_CastingDie extends App {
+object ch08_CastingDie extends App {
   {
-    import ch8_CastingDieImpure.getIntUnsafely
+    import ch08_CastingDieImpure.getIntUnsafely
     val existingInt: IO[Int]        = IO.pure(6)
     val intFromUnsafePlace: IO[Int] = IO.delay(getIntUnsafely())
     check(existingInt.unsafeRunSync()).expect(6)
@@ -11,14 +11,14 @@ object ch8_CastingDie extends App {
   }
 
   {
-    import ch8_CastingDieImpure.NoFailures._
+    import ch08_CastingDieImpure.NoFailures._
     println(castTheDieImpure())
     println(castTheDieImpure())
   }
 
   // Introducing IO
   {
-    import ch8_CastingDieImpure.NoFailures._
+    import ch08_CastingDieImpure.NoFailures._
 
     def castTheDie(): IO[Int] = IO.delay(castTheDieImpure())
     println(castTheDie())
@@ -34,7 +34,7 @@ object ch8_CastingDie extends App {
 
   // Introducing unsafe side-effectful actions
   {
-    import ch8_CastingDieImpure.WithFailures._
+    import ch08_CastingDieImpure.WithFailures._
 
     def castTheDie(): IO[Int] = IO.delay(castTheDieImpure())
     println(castTheDie()) // no error thrown, because nothing is executed
@@ -49,7 +49,7 @@ object ch8_CastingDie extends App {
 
   // Combining two IO results (+ Option recap)
   {
-    import ch8_CastingDieImpure.WithFailures._
+    import ch08_CastingDieImpure.WithFailures._
 
     val aOption: Option[Int] = Some(2)
     val bOption: Option[Int] = Some(4)
@@ -83,8 +83,8 @@ object ch8_CastingDie extends App {
 
   { // Practicing failure recovery in IO values
     // Cast the die and if it fails to produce a result, return 0.
-    def castTheDie(): Int = ch8_CastingDieImpure.WithFailures.castTheDieImpure()
-    import ch8_CastingDieImpure.drawAPointCard
+    def castTheDie(): Int = ch08_CastingDieImpure.WithFailures.castTheDieImpure()
+    import ch08_CastingDieImpure.drawAPointCard
 
     IO.delay(castTheDie()).orElse(IO.pure(0))
 

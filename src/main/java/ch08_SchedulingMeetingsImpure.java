@@ -1,6 +1,6 @@
 import java.util.*;
 
-public class ch8_SchedulingMeetingsImpure {
+public class ch08_SchedulingMeetingsImpure {
     /**
      * PREREQUISITE 1: MeetingTime model
      * <p>

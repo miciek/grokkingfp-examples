@@ -1,6 +1,6 @@
 import java.util.Random;
 
-public class ch8_CastingDieImpure {
+public class ch08_CastingDieImpure {
     static int getIntUnsafely() {
         Random rand = new Random();
         if (rand.nextBoolean()) throw new RuntimeException();

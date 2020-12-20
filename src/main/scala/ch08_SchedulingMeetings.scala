@@ -2,16 +2,16 @@
 import cats.effect.IO
 import cats.implicits._
 
-object ch8_SchedulingMeetings extends App {
+object ch08_SchedulingMeetings extends App {
 
   /**
     * PREREQUISITE 1: MeetingTime model
     *
-    * We use MeetingTime defined in Java: [[ch8_SchedulingMeetingsImpure.MeetingTime]]
+    * We use MeetingTime defined in Java: [[ch08_SchedulingMeetingsImpure.MeetingTime]]
     * We add apply method to be able to use it exactly like we would use a case class in Scala:
     * case class MeetingTime(start: Int, end: Int)
     */
-  import ch8_SchedulingMeetingsImpure.MeetingTime
+  import ch08_SchedulingMeetingsImpure.MeetingTime
   object MeetingTime {
     def apply(start: Int, end: Int): MeetingTime = new MeetingTime(start, end)
     // we can now write MeetingTime(6, 10) instead of new MeetingTime(6, 10)
@@ -19,24 +19,24 @@ object ch8_SchedulingMeetings extends App {
 
   /**
     * PREREQUISITE 2: Impure, unsafe and side-effectful API calls
-    * See [[ch8_SchedulingMeetingsImpure.calendarEntriesApiCall()]]
-    * and [[ch8_SchedulingMeetingsImpure.createMeetingApiCall()]]
+    * See [[ch08_SchedulingMeetingsImpure.calendarEntriesApiCall()]]
+    * and [[ch08_SchedulingMeetingsImpure.createMeetingApiCall()]]
     *
     * We wrap them here to be able to use Scala immutable collections.
     */
   def calendarEntriesApiCall(name: String): List[MeetingTime] = {
     import scala.jdk.CollectionConverters._
-    ch8_SchedulingMeetingsImpure.calendarEntriesApiCall(name).asScala.toList
+    ch08_SchedulingMeetingsImpure.calendarEntriesApiCall(name).asScala.toList
   }
 
   def createMeetingApiCall(names: List[String], meetingTime: MeetingTime): Unit = {
     import scala.jdk.CollectionConverters._
-    ch8_SchedulingMeetingsImpure.createMeetingApiCall(names.asJava, meetingTime)
+    ch08_SchedulingMeetingsImpure.createMeetingApiCall(names.asJava, meetingTime)
   }
 
   // STEP 0: imperative implementation of the happy path (assuming no failures)
   {
-    import ch8_SchedulingMeetingsImpure.scheduleNoFailures
+    import ch08_SchedulingMeetingsImpure.scheduleNoFailures
 
     check { scheduleNoFailures("Alice", "Bob", 1) }.expect {
       MeetingTime(10, 11)
@@ -60,7 +60,7 @@ object ch8_SchedulingMeetings extends App {
 
   /**
     * STEP 1: Introduce IO to disentangle concerns
-    * See [[ch8_CastingDie]] first
+    * See [[ch08_CastingDie]] first
     */
   def calendarEntries(name: String): IO[List[MeetingTime]] = {
     IO.delay(calendarEntriesApiCall(name))
@@ -126,7 +126,7 @@ object ch8_SchedulingMeetings extends App {
   // PROBLEMS: no failure handling, signature lies
   {
     // handling possible failures imperatively:
-    import ch8_SchedulingMeetingsImpure.schedule
+    import ch08_SchedulingMeetingsImpure.schedule
     check.potentiallyFailing { schedule("Alice", "Bob", 1) }.expect {
       MeetingTime(10, 11)
     }
@@ -301,8 +301,8 @@ object ch8_SchedulingMeetings extends App {
 
     // note that schedulingProgram doesn't know anything about consoleGet/Print
     // we import then now:
-    import ch8_SchedulingMeetingsImpure.consoleGet
-    import ch8_SchedulingMeetingsImpure.consolePrint
+    import ch08_SchedulingMeetingsImpure.consoleGet
+    import ch08_SchedulingMeetingsImpure.consolePrint
 
     // and use them to "configure" schedulingProgram to use console as IO
     schedulingProgram(IO.delay(consoleGet()), meeting => IO.delay(consolePrint(meeting.toString)))

@@ -3,14 +3,14 @@ lazy val root = (project in file("."))
     name := "grokkingfp-examples",
     organization := "Michał Płachta (Manning)",
     version := "1.0",
-    scalaVersion := "2.13.3",
+    scalaVersion := "2.13.4",
     scalacOptions ++= List(
         "-unchecked",
         "-Xfatal-warnings",
         "-language:higherKinds",
         "-Xlint"
       ),
-    libraryDependencies += "org.typelevel" %% "cats-effect" % "2.2.0",
+    libraryDependencies += "org.typelevel" %% "cats-effect" % "2.3.0",
     fork in run := true,
     javaOptions in run += "-ea",
     addCommandAlias(
