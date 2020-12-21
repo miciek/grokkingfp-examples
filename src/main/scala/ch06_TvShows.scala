@@ -1,4 +1,4 @@
-object TvShows extends App {
+object ch06_TvShows extends App {
   case class TvShow(title: String, start: Int, end: Int)
 
   {

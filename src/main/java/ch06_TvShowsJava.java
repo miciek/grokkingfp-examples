@@ -1,4 +1,4 @@
-public class TvShowsJava {
+public class ch06_TvShowsJava {
     public static String extractName(String rawShow) throws Exception {
         int bracketOpen = rawShow.indexOf('(');
         if(bracketOpen > 0) return rawShow.substring(0, bracketOpen).trim();
