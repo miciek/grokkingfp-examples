@@ -31,7 +31,6 @@ lazy val root = (project in file("."))
       ";runMain ch03_AbbreviateNames" +
       ";runMain ch03_ItineraryScala" +
       ";runMain ch03_SlicingAndAppending" +
-      //      ";runMain DeletingMutability" +
       ";runMain ch04_WordScoring" +
       ";runMain ch04_WordScoringScala" +
       ";runMain ch04_JavaFunctionIntro" +
