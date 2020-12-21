@@ -1,4 +1,4 @@
-object MusicArtistsSearch extends App {
+object ch07_MusicArtistsSearch extends App {
 
   // STEP 0: Design using what we know
   {

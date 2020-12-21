@@ -15,7 +15,7 @@ case class BasedOnGenres(genres: Set[MusicGenre]) extends PlaylistKind
 
 case class Playlist(name: String, kind: PlaylistKind, songs: List[Song])
 
-object Playlist extends App {
+object ch07_Playlist extends App {
   val fooFighters = Artist("Foo Fighters")
   val playlist1 = Playlist(
     "This is Foo Fighters",
