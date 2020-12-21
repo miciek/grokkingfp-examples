@@ -1,6 +1,6 @@
 import java.util.function.Function;
 
-public class JavaFunctionIntro {
+public class ch04_JavaFunctionIntro {
     static int score(String word) {
         return word.replaceAll("a", "").length();
     }

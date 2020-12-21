@@ -1,4 +1,4 @@
-object WordScoringScala extends App {
+object ch04_WordScoringScala extends App {
 
   def score(word: String): Int = word.replaceAll("a", "").length
 

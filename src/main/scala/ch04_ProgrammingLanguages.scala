@@ -1,4 +1,4 @@
-object ProgrammingLanguages extends App {
+object ch04_ProgrammingLanguages extends App {
   case class ProgrammingLanguage(name: String, year: Int)
 
   val java  = ProgrammingLanguage("Java", 1995)

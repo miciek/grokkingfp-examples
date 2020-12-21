@@ -1,4 +1,4 @@
-object ReturningFunctions extends App {
+object ch04_ReturningFunctions extends App {
   {
     def largerThan(n: Int): Int => Boolean = i => i > n
 

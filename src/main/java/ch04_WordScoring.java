@@ -2,7 +2,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class WordScoring {
+public class ch04_WordScoring {
     static int score(String word) {
         return word.replaceAll("a", "").length();
     }

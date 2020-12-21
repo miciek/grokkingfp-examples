@@ -1,4 +1,4 @@
-object PassingFunctions extends App {
+object ch04_PassingFunctions extends App {
   {
     def inc(x: Int): Int = x + 1
 

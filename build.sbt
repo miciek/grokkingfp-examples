@@ -32,12 +32,12 @@ lazy val root = (project in file("."))
       ";runMain ch03_ItineraryScala" +
       ";runMain ch03_SlicingAndAppending" +
       //      ";runMain DeletingMutability" +
-      ";runMain JavaFunctionIntro" +
-      ";runMain WordScoring" +
-      ";runMain WordScoringScala" +
-      ";runMain PassingFunctions" +
-      ";runMain ReturningFunctions" +
-      ";runMain ProgrammingLanguages" +
+      ";runMain ch04_WordScoring" +
+      ";runMain ch04_WordScoringScala" +
+      ";runMain ch04_JavaFunctionIntro" +
+      ";runMain ch04_PassingFunctions" +
+      ";runMain ch04_ReturningFunctions" +
+      ";runMain ch04_ProgrammingLanguages" +
       ";runMain BookAdaptations" +
       ";runMain BookFriendRecommendationsJava" +
       ";runMain BookFriendRecommendations" +
