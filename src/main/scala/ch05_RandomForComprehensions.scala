@@ -1,4 +1,4 @@
-object RandomForComprehensions extends App {
+object ch05_RandomForComprehensions extends App {
   val r = for {
     a <- List[Int](1, 2)
     b <- List[Int](10, 100)

@@ -10,7 +10,7 @@ import scala.jdk.CollectionConverters._
   * b) writing algorithms using flatMap instead of for loops
   * c) writing algorithms in a readable way using for comprehensions
   */
-object BookAdaptations extends App {
+object ch05_BookAdaptations extends App {
   case class Book(title: String, authors: List[String])
   case class Movie(title: String)
 

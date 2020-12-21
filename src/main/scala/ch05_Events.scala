@@ -1,4 +1,4 @@
-object Events extends App {
+object ch05_Events extends App {
   case class Event(name: String, start: Int, end: Int)
 
   def parseEventAdHoc(name: String, start: Int, end: Int): Event = {

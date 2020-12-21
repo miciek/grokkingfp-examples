@@ -6,7 +6,7 @@
   * b) writing algorithms using flatMap instead of for loops
   * c) writing algorithms in a readable way using for comprehensions
   */
-object Points2d3d extends App {
+object ch05_Points2d3d extends App {
   case class Point(x: Int, y: Int)
 
   val p = List(1).flatMap { x => List(-2, 7).map { y => Point(x, y) } }

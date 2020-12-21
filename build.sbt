@@ -37,14 +37,14 @@ lazy val root = (project in file("."))
       ";runMain ch04_PassingFunctions" +
       ";runMain ch04_ReturningFunctions" +
       ";runMain ch04_ProgrammingLanguages" +
-      ";runMain BookAdaptations" +
-      ";runMain BookFriendRecommendationsJava" +
-      ";runMain BookFriendRecommendations" +
-      ";runMain Points2d3d" +
-      ";runMain PointsInsideCircles" +
-      ";runMain SequencedNestedFlatMaps" +
-      ";runMain Events" +
-      ";runMain RandomForComprehensions" +
+      ";runMain ch05_BookAdaptations" +
+      ";runMain ch05_BookFriendRecommendationsJava" +
+      ";runMain ch05_BookFriendRecommendations" +
+      ";runMain ch05_SequencedNestedFlatMaps" +
+      ";runMain ch05_Points2d3d" +
+      ";runMain ch05_RandomForComprehensions" +
+      ";runMain ch05_PointsInsideCircles" +
+      ";runMain ch05_Events" +
       ";runMain TvShows" +
       ";runMain TvShowsJava" +
       ";runMain MusicArtistsSearch" +

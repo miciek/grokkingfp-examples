@@ -8,7 +8,7 @@ import scala.collection.mutable
   * c) writing algorithms in a readable way using for comprehensions
   * d) using conditions in algorithms inside for comprehensions
   */
-object PointsInsideCircles extends App {
+object ch05_PointsInsideCircles extends App {
   case class Point(x: Int, y: Int)
 
   val points   = List(Point(5, 2), Point(1, 1))

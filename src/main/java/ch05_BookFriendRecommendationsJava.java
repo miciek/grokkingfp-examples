@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class BookFriendRecommendationsJava {
+public class ch05_BookFriendRecommendationsJava {
     public static List<Movie> bookAdaptations(String author) {
         if (author.equals("Tolkien")) {
             return Arrays.asList(new Movie("An Unexpected Journey"),

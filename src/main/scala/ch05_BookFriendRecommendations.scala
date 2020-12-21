@@ -2,7 +2,7 @@
   * SKILLS:
   * b) writing algorithms using flatMap instead of for loops
   */
-object BookFriendRecommendations extends App {
+object ch05_BookFriendRecommendations extends App {
   case class Book(title: String, authors: List[String])
 
   def recommendedBooks(friend: String): List[Book] = {
