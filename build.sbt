@@ -6,11 +6,13 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.4",
     scalacOptions ++= List(
         "-unchecked",
-        "-Xfatal-warnings",
         "-language:higherKinds",
         "-Xlint"
       ),
-    libraryDependencies += "org.typelevel" %% "cats-effect" % "2.3.0",
+    libraryDependencies ++= Seq(
+        "org.typelevel" %% "cats-effect" % "2.3.0",
+        "co.fs2"        %% "fs2-core"    % "2.5.0"
+      ),
     fork in run := true,
     javaOptions in run += "-ea",
     addCommandAlias(
@@ -50,6 +52,9 @@ lazy val root = (project in file("."))
       ";runMain ch07_MusicArtistsSearch" +
       ";runMain ch07_Playlist" +
       ";runMain ch08_SchedulingMeetings" +
-      ";runMain ch08_CastingDie"
+      ";runMain ch08_CastingDie" +
+      ";runMain ch09_CurrencyExchange" +
+      ";runMain ch09_Stream123s" +
+      ";runMain ch09_CastingDieStream"
     )
   )
