@@ -285,7 +285,8 @@ object ch06_TvShows extends App {
       val bracketClose = rawShow.indexOf(')')
 
       for {
-        yearStr <- if (dash == -1 && bracketOpen != -1 && bracketClose != -1)
+        yearStr <- if (dash == -1 && bracketOpen != -1 &&
+                       bracketClose > bracketOpen)
                     Right(rawShow.substring(bracketOpen + 1, bracketClose))
                   else Left(s"Can't extract single year from $rawShow")
         year <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
