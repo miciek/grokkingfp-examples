@@ -347,11 +347,37 @@ object ch08_SchedulingMeetings extends App {
   }
   // PROBLEM SOLVED: signature lies
 
-  // TODO: STEP 4: cache, sync vs async
+  trait Caching {
+    def cachedCalendarEntries(name: String): IO[List[MeetingTime]]
+    def updateCachedEntries(name: String, newEntries: List[MeetingTime]): IO[Unit]
 
-  // STEP 5/Coffee Break: configurable number of retries
+    def calendarEntriesWithCache(name: String): IO[List[MeetingTime]] = {
+      val getEntriesAndUpdateCache: IO[List[MeetingTime]] = for {
+        currentEntries <- calendarEntries(name)
+        _              <- updateCachedEntries(name, currentEntries)
+      } yield currentEntries
+
+      getEntriesAndUpdateCache.orElse(cachedCalendarEntries(name))
+    }
+  }
+
+  // STEP 4: configurable number of retries
   def retry[A](action: IO[A], maxRetries: Int): IO[A] = {
-    List.range(0, maxRetries).foldLeft(action)((program, _) => program.orElse(action))
+    List
+      .range(0, maxRetries)
+      .map(_ => action)
+      .foldLeft(action)((program, nextAction) => {
+        program.orElse(nextAction)
+      })
+  }
+
+  { // retry test
+    var calls = 0
+    retry(IO.delay {
+      calls = calls + 1
+      throw new Exception("failed")
+    }, 10).attempt.unsafeRunSync()
+    check(calls).expect(11)
   }
 
   {
@@ -382,11 +408,19 @@ object ch08_SchedulingMeetings extends App {
     }
   }
 
-  // STEP 6: any number of people attending
-  object Version6 {
+  // STEP 5: any number of people attending
+  object Version5 {
     def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
-      attendees.flatTraverse(attendee => retry(calendarEntries(attendee), 10))
+      attendees
+        .map(attendee => retry(calendarEntries(attendee), 10))
+        .sequence
+        .map(_.flatten)
     }
+
+    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
+      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
 
     // TODO:
     object FinalVersion { // presented at the beginning of the chapter (without failure handling on writes)
@@ -415,7 +449,7 @@ object ch08_SchedulingMeetings extends App {
   }
 
   {
-    import Version6.schedule
+    import Version5.schedule
 
     // note we can assert on fixed results here because
     // there is only a very very small chance we'll use a fallback
@@ -436,5 +470,67 @@ object ch08_SchedulingMeetings extends App {
     check { schedule(List("Alice", "Bob", "Charlie"), 1).unsafeRunSync() }.expect { r =>
       r.forall(m => m.endHour - m.startHour == 1)
     }
+  }
+
+  // BONUS: scheduledMeetings using foldLeft instead of sequence:
+  {
+    def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
+      attendees
+        .map(attendee => retry(calendarEntries(attendee), 10))
+        .foldLeft(IO.pure(List.empty[MeetingTime]))((allMeetingsProgram, attendeeMeetingsProgram) => {
+          for {
+            allMeetings      <- allMeetingsProgram
+            attendeeMeetings <- attendeeMeetingsProgram
+          } yield allMeetings.appendedAll(attendeeMeetings)
+        })
+    }
+
+    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
+      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+
+    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+  }
+
+  // BONUS: scheduledMeetings using traverse
+  {
+    def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
+      attendees
+        .traverse(attendee => retry(calendarEntries(attendee), 10))
+        .map(_.flatten)
+    }
+
+    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
+      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+
+    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+  }
+
+  // BONUS: scheduledMeetings using flatTraverse
+  {
+    def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
+      attendees.flatTraverse(attendee => retry(calendarEntries(attendee), 10))
+    }
+
+    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
+      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+
+    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+  }
+
+  // BONUS: sequence works on other types as well! e.g. on List[Option]
+  {
+    val years: List[Option[Int]]      = List(Some(2019), None, Some(2021))
+    val resultNone: Option[List[Int]] = years.sequence
+    check(resultNone).expect(None)
+
+    val goodYears: List[Option[Int]]  = List(Some(2019), Some(2021))
+    val resultSome: Option[List[Int]] = goodYears.sequence
+    check(resultSome).expect(Some(List(2019, 2021)))
   }
 }
