@@ -62,6 +62,32 @@ object ch09_CurrencyExchange extends App {
     // get
     check(usdRates.get(Currency("EUR"))).expect(Some(BigDecimal(0.82)))
     check(usdRates.get(Currency("JPY"))).expect(None)
+
+    { // Practicing immutable maps
+      // a map which contains a single pair: "key" -> "value":
+      val m1: Map[String, String] = Map("key" -> "value")
+      check(m1).expect(Map("key" -> "value"))
+
+      // a map which updates m1 and stores "value2" under "key2"
+      val m2: Map[String, String] = m1.updated("key2", "value2")
+      check(m2).expect(Map("key" -> "value", "key2" -> "value2"))
+
+      // a map which updates m2 and stores "another2" under "key2"
+      val m3: Map[String, String] = m2.updated("key2", "another2")
+      check(m3).expect(Map("key" -> "value", "key2" -> "another2"))
+
+      // a map which updates m2 and removes the "key"
+      val m4: Map[String, String] = m3.removed("key")
+      check(m4).expect(Map("key2" -> "another2"))
+
+      // a String value stored under "key" in m3
+      val valueFromM3: Option[String] = m3.get("key")
+      check(valueFromM3).expect(Some("value"))
+
+      // a String value stored under "key" in m4
+      val valueFromM4: Option[String] = m4.get("key")
+      check(valueFromM4).expect(None)
+    }
   }
 
   // Bottom-up design
@@ -81,6 +107,19 @@ object ch09_CurrencyExchange extends App {
       (BigDecimal(0.81), BigDecimal(0.82)),
       (BigDecimal(0.82), BigDecimal(0.83))
     )
+
+    { // analogical to a case class
+      case class RatePair(previousRate: BigDecimal, rate: BigDecimal)
+      val tuple: (BigDecimal, BigDecimal) = (BigDecimal(2), BigDecimal(1))
+      val caseClass: RatePair             = RatePair(BigDecimal(2), BigDecimal(1))
+
+      println(tuple)
+      println(caseClass)
+    }
+
+    val ints: List[Int]       = List(1, 2, 3)
+    val strings: List[String] = List("a", "b", "c")
+    check(ints.zip(strings)).expect(List((1, "a"), (2, "b"), (3, "c")))
 
     check(rates.zip(rates)).expect(
       List(
@@ -123,12 +162,12 @@ object ch09_CurrencyExchange extends App {
       .headOption
   }
 
-  val exchangeTables = List(
+  val usdExchangeTables = List(
     Map(Currency("EUR") -> BigDecimal(0.82)),
     Map(Currency("EUR") -> BigDecimal(0.83)),
     Map(Currency("JPY") -> BigDecimal(104))
   )
-  check(exchangeTables.map(extractSingleCurrencyRate(Currency("EUR"))))
+  check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("EUR"))))
     .expect(List(Some(BigDecimal(0.82)), Some(BigDecimal(0.83)), None))
 
   /**
