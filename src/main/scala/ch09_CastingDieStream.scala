@@ -17,12 +17,27 @@ object ch09_CastingDieStream extends App {
     check(oddNumbers.map(_ + 17).take(1).toList).expect(List(18))
   }
 
+  { // append & take
+    val stream1 = Stream(1, 2, 3)
+    val stream2 = Stream(4, 5, 6)
+
+    val stream3 = stream1.append(stream2)
+    check(stream3.toList).expect(List(1, 2, 3, 4, 5, 6))
+
+    val stream4 = stream1.append(stream1)
+    check(stream4.toList).expect(List(1, 2, 3, 1, 2, 3))
+
+    val stream5 = stream4.take(4)
+    check(stream5.toList).expect(List(1, 2, 3, 1))
+  }
+
   { // infinite streams
     def numbers(): Stream[Pure, Int] = {
       Stream(1, 2, 3).append(numbers())
     }
 
-    check(numbers().take(8).toList).expect(List(1, 2, 3, 1, 2, 3, 1, 2))
+    val infinite123s = numbers()
+    check(infinite123s.take(8).toList).expect(List(1, 2, 3, 1, 2, 3, 1, 2))
   }
 
   { // infinite streams using .repeat

@@ -11,6 +11,7 @@ public class ch09_Stream123s {
         Stream<Integer> oddNumbers = oddNumbers(numbers);
         List<Integer> result = oddNumbers.collect(Collectors.toList());
         check.apply(result).expect(List.of(1, 3));
+        // System.out.println(numbers.count()); // not possible because we can't reuse Java Streams
 
         Stream<Integer> infiniteNumbers = Stream.iterate(0, i -> i + 1);
         Stream<Integer> infiniteOddNumbers = oddNumbers(infiniteNumbers);
@@ -20,11 +21,12 @@ public class ch09_Stream123s {
         List<Integer> limitedResult = limitedStream.collect(Collectors.toList());
         check.apply(limitedResult).expect(List.of(1, 3, 5));
 
+        // Stream<Integer> oddNumbersStream = numbers.filter(n -> n % 2 != 0); // not possible because we can't reuse Java Streams
+
         Stream<Integer> randomNumbers = Stream.generate(new Random()::nextInt);
         List<Integer> randomResult = oddNumbers(randomNumbers).limit(3).collect(Collectors.toList());
         System.out.println(randomResult);
 
-        // TODO: add Kotlin example
         Stream<Map<String, BigDecimal>> usdRates = Stream.generate(() -> ch09_CurrencyExchangeImpure.exchangeRatesTableApiCall("USD"));
         try {
             System.out.println("The following will throw: ");

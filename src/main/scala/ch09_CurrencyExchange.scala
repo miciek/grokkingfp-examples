@@ -169,6 +169,29 @@ object ch09_CurrencyExchange extends App {
   )
   check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("EUR"))))
     .expect(List(Some(BigDecimal(0.82)), Some(BigDecimal(0.83)), None))
+  check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("JPY"))))
+    .expect(List(None, None, Some(BigDecimal(104))))
+  check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("BTC"))))
+    .expect(List(None, None, None))
+  check(List.empty.map(extractSingleCurrencyRate(Currency("EUR"))))
+    .expect(List.empty)
+
+  { // alternative implementation
+    def extractSingleCurrencyRate2(
+        currencyToExtract: Currency
+    )(table: Map[Currency, BigDecimal]): Option[BigDecimal] = {
+      table.get(currencyToExtract)
+    }
+
+    check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("EUR"))))
+      .expect(List(Some(BigDecimal(0.82)), Some(BigDecimal(0.83)), None))
+    check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("JPY"))))
+      .expect(List(None, None, Some(BigDecimal(104))))
+    check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("BTC"))))
+      .expect(List(None, None, None))
+    check(List.empty.map(extractSingleCurrencyRate2(Currency("EUR"))))
+      .expect(List.empty)
+  }
 
   /**
     * STEP 1: Using IO
@@ -229,22 +252,36 @@ object ch09_CurrencyExchange extends App {
   { // laziness and infinity
     import Version1.lastRates
 
-    def exchangeIfTrendingCrash(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
-      exchangeIfTrendingCrash(amount, from, to)
+    def exchangeCrash(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
+      exchangeCrash(amount, from, to)
     }
 
     // crashes:
-    // println(exchangeIfTrendingCrash(BigDecimal(100), Currency("USD"), Currency("EUR")))
+    // println(exchangeCrash(BigDecimal(100), Currency("USD"), Currency("EUR")))
 
-    def exchangeIfTrendingInfinity(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
+    def exchangeInfinitely(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
       for {
         rates  <- lastRates(from, to) // here we use flatMap, so no code below will be executed until we get rates
-        result <- exchangeIfTrendingInfinity(amount, from, to)
+        result <- exchangeInfinitely(amount, from, to)
       } yield result
     }
 
     // doesn't crash (returns IO):
-    println(exchangeIfTrendingInfinity(BigDecimal(100), Currency("USD"), Currency("EUR")))
+    println(exchangeInfinitely(BigDecimal(100), Currency("USD"), Currency("EUR")))
+  }
+
+  { // getting rid of Option
+    import Version1.lastRates
+
+    def exchangeIfTrending(amount: BigDecimal, from: Currency, to: Currency): IO[BigDecimal] = {
+      for {
+        rates  <- lastRates(from, to)
+        result <- if (trending(rates)) IO.pure(amount * rates.last) else exchangeIfTrending(amount, from, to)
+      } yield result
+    }
+
+    check(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
+      .expect(_ > 750)
   }
 
   def currencyRate(from: Currency, to: Currency): IO[BigDecimal] = {
