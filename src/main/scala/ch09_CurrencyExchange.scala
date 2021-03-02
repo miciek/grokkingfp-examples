@@ -1,4 +1,4 @@
-import cats.effect.IO
+import cats.effect.{IO, Timer}
 import cats.implicits._
 import fs2.Stream
 
@@ -336,10 +336,30 @@ object ch09_CurrencyExchange extends App {
   def rates(from: Currency, to: Currency): Stream[IO, BigDecimal] = {
     Stream
       .eval(exchangeTable(from))
+      .repeat
       .map(extractSingleCurrencyRate(to))
       .unNone
-      .repeat
       .orElse(rates(from, to))
+  }
+
+  { // Introduce orElse
+    val year: Stream[IO, Int]   = Stream.eval(IO.pure(996))
+    val noYear: Stream[IO, Int] = Stream.raiseError[IO](new Exception("no year"))
+
+    val stream1 = year.orElse(Stream.eval(IO.delay(2020)))
+    val stream2 = noYear.orElse(Stream.eval(IO.delay(2020)))
+    val stream3 = year.orElse(Stream.raiseError[IO](new Exception("can't recover")))
+    val stream4 = noYear.orElse(Stream.raiseError[IO](new Exception("can't recover")))
+
+    check(stream1.compile.toList.unsafeRunSync()).expect(List(996))
+    check(stream2.compile.toList.unsafeRunSync()).expect(List(2020))
+    check(stream3.compile.toList.unsafeRunSync()).expect(List(996))
+
+    try {
+      stream4.compile.toList.unsafeRunSync()
+    } catch {
+      case e: Throwable => assert(e.getMessage == "can't recover")
+    }
   }
 
   val firstThreeRates: IO[List[BigDecimal]] = rates(Currency("USD"), Currency("EUR")).take(3).compile.toList
@@ -351,9 +371,8 @@ object ch09_CurrencyExchange extends App {
         .sliding(3)
         .map(_.toList)
         .filter(trending)
-        .map(_.lastOption)
-        .unNone
-        .head
+        .map(_.last)
+        .take(1)
         .compile
         .lastOrError
         .map(_ * amount)
@@ -368,8 +387,9 @@ object ch09_CurrencyExchange extends App {
     * TODO: timer/EC intro, timeout in the next chapter
     */
   object Version4 {
-    val timer                   = IO.timer(ExecutionContext.global)
-    val ticks: Stream[IO, Unit] = Stream.fixedRate[IO](FiniteDuration(1, TimeUnit.SECONDS))(timer)
+    val timer: Timer[IO]        = IO.timer(ExecutionContext.global)
+    val delay: FiniteDuration   = FiniteDuration(1, TimeUnit.SECONDS)
+    val ticks: Stream[IO, Unit] = Stream.fixedRate[IO](delay)(timer)
 
     {
       val firstThreeRates: IO[List[(BigDecimal, Unit)]] =
@@ -389,19 +409,14 @@ object ch09_CurrencyExchange extends App {
         .sliding(3)
         .map(_.toList)
         .filter(trending)
-        .map(_.lastOption)
-        .unNone
-        .head
-        .map(_ * amount)
+        .map(_.last)
+        .take(1)
         .compile
         .lastOrError
+        .map(_ * amount)
     }
   }
 
   check(Version4.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
     .expect(_ > 750)
-
-  // STRETCH:
-  // - stream program as a small building block in larger IO program (stream-based architecture)
-  //
 }
