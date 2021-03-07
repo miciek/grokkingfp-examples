@@ -1,11 +1,6 @@
 import cats.effect.IO
-import cats.implicits._
+import cats.effect.unsafe.implicits.global
 import fs2.{Pure, Stream}
-
-import java.util.concurrent.TimeUnit
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
-import scala.jdk.CollectionConverters.MapHasAsScala
 
 object ch09_CastingDieStream extends App {
   { // creating values

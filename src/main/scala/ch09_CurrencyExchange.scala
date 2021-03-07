@@ -1,9 +1,9 @@
-import cats.effect.{IO, Timer}
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import fs2.Stream
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.CollectionConverters.MapHasAsScala
 
@@ -294,13 +294,13 @@ object ch09_CurrencyExchange extends App {
     } yield rate
   }
 
-  object Version2 {
-    def lastRatesCh8(from: Currency, to: Currency, n: Int): IO[List[BigDecimal]] = {
-      List.range(0, n).map(_ => currencyRate(from, to)).sequence
-    }
-    check(lastRatesCh8(Currency("USD"), Currency("EUR"), 0)).expect(_.unsafeRunSync().size == 0)
-    check(lastRatesCh8(Currency("USD"), Currency("EUR"), 10)).expect(_.unsafeRunSync().size == 10)
+  def lastRatesCh8(from: Currency, to: Currency, n: Int): IO[List[BigDecimal]] = {
+    List.range(0, n).map(_ => currencyRate(from, to)).sequence
+  }
+  check(lastRatesCh8(Currency("USD"), Currency("EUR"), 0)).expect(_.unsafeRunSync().size == 0)
+  check(lastRatesCh8(Currency("USD"), Currency("EUR"), 10)).expect(_.unsafeRunSync().size == 10)
 
+  object Version2 {
     def lastRates(from: Currency, to: Currency, n: Int): IO[List[BigDecimal]] = {
       if (n < 1) {
         IO.pure(List.empty)
@@ -312,9 +312,6 @@ object ch09_CurrencyExchange extends App {
       }
     }
 
-    check(lastRates(Currency("USD"), Currency("EUR"), 0)).expect(_.unsafeRunSync().size == 0)
-    check(lastRates(Currency("USD"), Currency("EUR"), 10)).expect(_.unsafeRunSync().size == 10)
-
     def exchangeIfTrending(amount: BigDecimal, from: Currency, to: Currency): IO[BigDecimal] = {
       for {
         rates  <- lastRates(from, to, 3)
@@ -323,8 +320,14 @@ object ch09_CurrencyExchange extends App {
     }
   }
 
-  check(Version2.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-    .expect(_ > 750)
+  {
+    import Version2._
+    check(lastRates(Currency("USD"), Currency("EUR"), 0)).expect(_.unsafeRunSync().size == 0)
+    check(lastRates(Currency("USD"), Currency("EUR"), 10)).expect(_.unsafeRunSync().size == 10)
+
+    check(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
+      .expect(_ > 750)
+  }
 
   // PROBLEMS: we analyse three elements and discard them, we don't use a sliding window, each computation is isolated, no time between calls
 
@@ -384,25 +387,23 @@ object ch09_CurrencyExchange extends App {
 
   /**
     * STEP 4: Combining streams
-    * TODO: timer/EC intro, timeout in the next chapter
     */
+  val delay: FiniteDuration   = FiniteDuration(1, TimeUnit.SECONDS)
+  val ticks: Stream[IO, Unit] = Stream.fixedRate[IO](delay)
+
+  {
+    val firstThreeRates: IO[List[(BigDecimal, Unit)]] =
+      rates(Currency("USD"), Currency("EUR")).zip(ticks).take(3).compile.toList
+    check(firstThreeRates.unsafeRunSync).expect(_.size == 3)
+  }
+
+  {
+    val firstThreeRates: IO[List[BigDecimal]] =
+      rates(Currency("USD"), Currency("EUR")).zipLeft(ticks).take(3).compile.toList
+    check(firstThreeRates.unsafeRunSync).expect(_.size == 3)
+  }
+
   object Version4 {
-    val timer: Timer[IO]        = IO.timer(ExecutionContext.global)
-    val delay: FiniteDuration   = FiniteDuration(1, TimeUnit.SECONDS)
-    val ticks: Stream[IO, Unit] = Stream.fixedRate[IO](delay)(timer)
-
-    {
-      val firstThreeRates: IO[List[(BigDecimal, Unit)]] =
-        rates(Currency("USD"), Currency("EUR")).zip(ticks).take(3).compile.toList
-      check(firstThreeRates.unsafeRunSync).expect(_.size == 3)
-    }
-
-    {
-      val firstThreeRates: IO[List[BigDecimal]] =
-        rates(Currency("USD"), Currency("EUR")).zipLeft(ticks).take(3).compile.toList
-      check(firstThreeRates.unsafeRunSync).expect(_.size == 3)
-    }
-
     def exchangeIfTrending(amount: BigDecimal, from: Currency, to: Currency): IO[BigDecimal] = {
       rates(from, to)
         .zipLeft(ticks)

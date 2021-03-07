@@ -1,5 +1,6 @@
 import cats.effect.IO
 import cats.implicits._
+import cats.effect.unsafe.implicits.global
 
 object check {
   def apply[A](result: A): Assert[A] = {

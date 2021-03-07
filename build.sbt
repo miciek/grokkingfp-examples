@@ -3,15 +3,15 @@ lazy val root = (project in file("."))
     name := "grokkingfp-examples",
     organization := "Michał Płachta (Manning)",
     version := "1.0",
-    scalaVersion := "2.13.4",
+    scalaVersion := "2.13.5",
     scalacOptions ++= List(
         "-unchecked",
         "-language:higherKinds",
         "-Xlint"
       ),
     libraryDependencies ++= Seq(
-        "org.typelevel" %% "cats-effect" % "2.3.0",
-        "co.fs2"        %% "fs2-core"    % "2.5.0"
+        "org.typelevel" %% "cats-effect" % "3.0.0-RC2",
+        "co.fs2"        %% "fs2-core"    % "3.0.0-M9"
       ),
     fork in run := true,
     javaOptions in run += "-ea",

@@ -1,6 +1,7 @@
 // note that we need two imports (see build.sbt for details)
 import cats.effect.IO
 import cats.implicits._
+import cats.effect.unsafe.implicits.global
 
 object ch08_SchedulingMeetings extends App {
 
@@ -63,7 +64,11 @@ object ch08_SchedulingMeetings extends App {
     * See [[ch08_CastingDie]] first
     */
   def calendarEntries(name: String): IO[List[MeetingTime]] = {
-    IO.delay(calendarEntriesApiCall(name))
+    println(s"calendar entries: $name")
+    IO.delay {
+      println(s"IO calendar entries: $name")
+      calendarEntriesApiCall(name)
+    }
   }
 
   def createMeeting(names: List[String], meeting: MeetingTime): IO[Unit] = {
@@ -409,39 +414,25 @@ object ch08_SchedulingMeetings extends App {
   }
 
   // STEP 5: any number of people attending
-  object Version5 {
-    def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
-      attendees
-        .map(attendee => retry(calendarEntries(attendee), 10))
-        .sequence
-        .map(_.flatten)
-    }
+  def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
+    attendees
+      .map(attendee => retry(calendarEntries(attendee), 10))
+      .sequence
+      .map(_.flatten)
+  }
 
-    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
-      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
-    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+  check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
+    .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+  check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+  check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
 
-    // TODO:
-    object FinalVersion { // presented at the beginning of the chapter (without failure handling on writes)
-      def schedule(attendees: List[String], lengthHours: Int): IO[Option[MeetingTime]] = {
-        for {
-          existingMeetings <- scheduledMeetings(attendees)
-          possibleMeeting  = possibleMeetings(existingMeetings, 8, 16, lengthHours).headOption
-          _ <- possibleMeeting match {
-                case Some(meeting) => createMeeting(attendees, meeting)
-                case None          => IO.unit
-              }
-        } yield possibleMeeting
-      }
-    }
-
+  object Version5 { // FINAL VERSION: also presented at the beginning of the chapter
     def schedule(attendees: List[String], lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- scheduledMeetings(attendees)
         possibleMeeting  = possibleMeetings(existingMeetings, 8, 16, lengthHours).headOption
         _ <- possibleMeeting match {
-              case Some(meeting) => retry(createMeeting(attendees, meeting), 10)
+              case Some(meeting) => createMeeting(attendees, meeting)
               case None          => IO.unit
             }
       } yield possibleMeeting
