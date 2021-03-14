@@ -8,9 +8,21 @@ object check {
     new Assert(result)
   }
 
+  def withoutPrinting[A](result: A): Assert[A] = {
+    new Assert(result)
+  }
+
   def potentiallyFailing[A](code: => A): Assert[A] = {
     val result = retry(IO(code), 100).unsafeRunSync()
     println(result)
+    new Assert(result)
+  }
+
+  def timed[A](code: => A): Assert[A] = {
+    val start  = System.currentTimeMillis()
+    val result = code
+    val end    = System.currentTimeMillis()
+    println(s"$result (took ${end - start}ms)")
     new Assert(result)
   }
 
