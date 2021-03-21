@@ -1,4 +1,5 @@
 import cats.effect.{IO, Ref}
+import cats.implicits._
 
 object ch10_CastingDieConcurrently extends App {
   import ch08_CastingDieImpure.NoFailures.castTheDieImpure
@@ -25,31 +26,21 @@ object ch10_CastingDieConcurrently extends App {
     casts       <- storedCasts.get
   } yield casts)
 
-  // 3. return the sum of the first three casts
-//  check(infiniteDieCasts.take(3).compile.toList.map(_.sum).unsafeRunSync()).expect { result =>
-//    result >= 3 && result <= 18
-//  }
+  // 3. cast three dies concurrently and store each result in a mutable reference that holds a List (use sequence for both starting and joining to make it concise)
+  check.executedIO(for {
+    storedCasts <- Ref.of[IO, List[Int]](List.empty)
+    singleCast  = castTheDie().flatMap(result => storedCasts.update(_.appended(result))).start
+    fibers      <- List.fill(3)(singleCast).sequence // introduce fill
+    _           <- fibers.map(_.join).sequence
+    casts       <- storedCasts.get
+  } yield casts)
 
-  // 4. cast the die until there is a five and then cast it two more times, returning three last results back
-//  check(infiniteDieCasts.filter(_ == 5).take(1).append(infiniteDieCasts.take(2)).compile.toList.unsafeRunSync())
-//    .expect { result => result.size == 3 && result.head == 5 }
-
-  // 5. make sure the die is cast one hundred times and values are discarded
-//  check(infiniteDieCasts.take(100).compile.drain).expect(_.isInstanceOf[IO[Unit]])
-
-  // 6. return first three casts unchanged and next three casts tripled (six in total)
-//  check(infiniteDieCasts.take(3).append(infiniteDieCasts.take(3).map(_ * 3)).compile.toList.unsafeRunSync()).expect {
-//    result => result.size == 6 && result.slice(0, 3).forall(_ <= 6) && result.slice(3, 6).forall(_ >= 3)
-//  }
-
-  // 7. cast the die until there are two sixes in a row
-//  check(
-//    infiniteDieCasts
-//      .scan(0)((sixesInRow, current) => if (current == 6) sixesInRow + 1 else 0)
-//      .filter(_ == 2)
-//      .take(1)
-//      .compile
-//      .toList
-//      .unsafeRunSync()
-//  ).expect(List(2))
+  // 4. cast one hundred dies concurrently and return the total number of sixes
+  check.executedIO(for {
+    storedCasts <- Ref.of[IO, Int](0)
+    singleCast  = castTheDie().flatMap(result => if (result == 6) storedCasts.update(_ + 1) else IO.unit).start
+    fibers      <- List.fill(100)(singleCast).sequence
+    _           <- fibers.map(_.join).sequence
+    casts       <- storedCasts.get
+  } yield casts)
 }
