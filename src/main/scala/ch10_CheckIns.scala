@@ -18,15 +18,15 @@ object ch10_CheckIns extends App {
     * PREREQUISITE: a stream of user check-ins
     */
   val checkIns: Stream[IO, City] =
-    Stream(City("Tokyo"), City("London"), City("Moscow"), City("Lima"), City("São Paulo"))
+    Stream(City("Sydney"), City("Dublin"), City("Cape Town"), City("Lima"), City("Singapore"))
       .repeatN(100_000)
       .append(Stream.range(0, 100_000).map(i => City(s"City $i")))
-      .append(Stream(City("Tokyo"), City("Tokyo"), City("Lima")))
+      .append(Stream(City("Sydney"), City("Sydney"), City("Lima")))
       .covary[IO]
 
   check.withoutPrinting(checkIns.map(_.name).compile.toList.unsafeRunSync()).expect { allCheckIns =>
-    allCheckIns.size == 600_003 && allCheckIns.count(_ == "Tokyo") == 100_002 && allCheckIns
-      .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Moscow") == 100_000 && allCheckIns
+    allCheckIns.size == 600_003 && allCheckIns.count(_ == "Sydney") == 100_002 && allCheckIns
+      .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Cape Town") == 100_000 && allCheckIns
       .count(_ == "City 27") == 1
   }
 
@@ -42,6 +42,32 @@ object ch10_CheckIns extends App {
       .sortBy(_.checkIns)
       .reverse
       .take(3)
+  }
+
+  { // Coffee Break: Many things in a single thread
+    val checkInsSmall: Stream[IO, City] =
+      Stream(
+        City("Sydney"),
+        City("Sydney"),
+        City("Cape Town"),
+        City("Singapore"),
+        City("Cape Town"),
+        City("Sydney")
+      ).covary[IO]
+
+    def processCheckIns(checkIns: Stream[IO, City]): IO[Unit] = {
+      checkIns
+        .scan(Map.empty[City, Int])((cityCheckIns, city) =>
+          cityCheckIns.updatedWith(city)(_.map(_ + 1).orElse(Some(1)))
+        ) // introduce updated
+        .map(topCities)
+        .foreach(ranking => IO.delay(println(ranking))) // introduce IO.println
+        .compile
+        .drain
+    }
+
+    check.timed(processCheckIns(checkInsSmall).unsafeRunSync())
+    // check.timed(processCheckIns(checkIns).unsafeRunSync()) // a long, long time...
   }
 
   object Version1 {
@@ -70,27 +96,64 @@ object ch10_CheckIns extends App {
   /**
     * STEP 2: concurrent & up-to-date, no chunking
     */
-  case class ProcessingCheckIns(currentRanking: IO[List[CityStats]], stop: IO[Unit])
-
   def storeCheckIn(storedCheckIns: Ref[IO, Map[City, Int]])(city: City): IO[Unit] = {
-    storedCheckIns.update(_.updatedWith(city)(_ match {
+    storedCheckIns.update(_.updatedWith(city)(_ match { // introduce updatedWith
       case None           => Some(1)
       case Some(checkIns) => Some(checkIns + 1)
     }))
   }
 
+  { // Ref intro
+    val example: IO[Int] = for {
+      counter <- Ref.of[IO, Int](0)
+      _       <- counter.update(_ + 3)
+      result  <- counter.get
+    } yield result
+
+    check(example.unsafeRunSync()).expect(3)
+
+    def processCheckIns(checkIns: Stream[IO, City]): IO[Map[City, Int]] = {
+      for {
+        storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
+        _              <- checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain // introduce evalMap
+        checkIns       <- storedCheckIns.get
+      } yield checkIns
+    }
+
+    check.withoutPrinting(processCheckIns(checkIns).unsafeRunSync()).expect(_.get(City("Sydney")).contains(100_002))
+  }
+
+  /**
+    * See [[ch10_CastingDieConcurrently]] for fiber exercises
+    */
+  { // Fiber intro
+    val example: IO[Int] = for {
+      counter <- Ref.of[IO, Int](0)
+      fiber1  <- counter.update(_ + 2).start
+      fiber2  <- IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 3)).start
+      fiber3  <- counter.update(_ + 4).start
+      _       <- fiber1.join.flatMap(_ => fiber2.join).flatMap(_ => fiber3.join) // this is needed to get 9!
+      result  <- counter.get
+    } yield result
+
+    check(example.unsafeRunSync()).expect(9)
+  }
+
+  case class ProcessingCheckIns(currentRanking: IO[List[CityStats]], stop: IO[Unit])
+
   object Version2 {
     def updateRanking(
-        storedCities: Ref[IO, Map[City, Int]],
+        storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]]
-    ): IO[Unit] = {
+    ): IO[Unit] = { // TODO: introduce Nothing
       for {
-        newRanking <- storedCities.get.map(topCities)
+        newRanking <- storedCheckIns.get.map(topCities)
         _          <- storedRanking.set(newRanking)
-        _          <- updateRanking(storedCities, storedRanking)
+        _          <- updateRanking(storedCheckIns, storedRanking)
       } yield ()
     }
 
+    // Coffee Break
     def processCheckIns(checkIns: Stream[IO, City]): IO[ProcessingCheckIns] = {
       for {
         storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
@@ -143,16 +206,15 @@ object ch10_CheckIns extends App {
 
     // new version:
     def updateRanking(
-        storedCities: Ref[IO, Map[City, Int]],
+        storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]],
         fetchedConfig: Deferred[IO, RankingConfig]
-    ): IO[Unit] = {
-      for {
+    ): IO[Nothing] = {
+      (for {
         config     <- fetchedConfig.get
-        newRanking <- storedCities.get.map(topCities(config))
+        newRanking <- storedCheckIns.get.map(topCities(config))
         _          <- storedRanking.set(newRanking)
-        _          <- updateRanking(storedCities, storedRanking, fetchedConfig)
-      } yield ()
+      } yield ()).foreverM // introduce foreverM
     }
 
     def processCheckIns(checkIns: Stream[IO, City]): IO[ProcessingCheckIns] = {

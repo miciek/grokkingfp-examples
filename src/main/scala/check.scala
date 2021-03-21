@@ -8,6 +8,12 @@ object check {
     new Assert(result)
   }
 
+  def executedIO[A](io: IO[A]): Assert[A] = {
+    val result = io.unsafeRunSync()
+    println(result)
+    new Assert(result)
+  }
+
   def withoutPrinting[A](result: A): Assert[A] = {
     new Assert(result)
   }
