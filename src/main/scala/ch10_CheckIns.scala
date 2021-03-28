@@ -4,7 +4,7 @@ import cats.effect.unsafe.implicits.global
 import fs2.Stream
 
 import java.util.concurrent.TimeUnit
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
 object ch10_CheckIns extends App {
 
@@ -59,7 +59,7 @@ object ch10_CheckIns extends App {
       checkIns
         .scan(Map.empty[City, Int])((cityCheckIns, city) =>
           cityCheckIns.updatedWith(city)(_.map(_ + 1).orElse(Some(1)))
-        ) // introduce updated
+        ) // introduce updatedWith
         .map(topCities)
         .foreach(ranking => IO.delay(println(ranking))) // introduce IO.println
         .compile
@@ -94,7 +94,7 @@ object ch10_CheckIns extends App {
   // PROBLEMS: the current version is updated only every 100k elements (if you make it lower, it takes a lot longer)
 
   /**
-    * STEP 2: concurrent & up-to-date, no chunking
+    * STEP 2: concurrent & up-to-date (real time, no batching)
     */
   def storeCheckIn(storedCheckIns: Ref[IO, Map[City, Int]])(city: City): IO[Unit] = {
     storedCheckIns.update(_.updatedWith(city)(_ match { // introduce updatedWith
@@ -123,29 +123,40 @@ object ch10_CheckIns extends App {
     check.withoutPrinting(processCheckIns(checkIns).unsafeRunSync()).expect(_.get(City("Sydney")).contains(100_002))
   }
 
-  /**
-    * See [[ch10_CastingDieConcurrently]] for fiber exercises
-    */
-  { // Fiber intro
-    val example: IO[Int] = for {
-      counter <- Ref.of[IO, Int](0)
-      fiber1  <- counter.update(_ + 2).start
-      fiber2  <- IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 3)).start
-      fiber3  <- counter.update(_ + 4).start
-      _       <- fiber1.join.flatMap(_ => fiber2.join).flatMap(_ => fiber3.join) // this is needed to get 9!
-      result  <- counter.get
+  { // parSequence intro
+    val exampleSequential: IO[Int] = for {
+      counter  <- Ref.of[IO, Int](0)
+      program1 = counter.update(_ + 2)
+      program2 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 3)) // introduce IO.sleep
+      program3 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 4))
+      _        <- List(program1, program2, program3).sequence
+      result   <- counter.get
     } yield result
 
-    check(example.unsafeRunSync()).expect(9)
+    println("The following will run for around 2 seconds")
+    check.timed(exampleSequential.unsafeRunSync()).expect(9)
+
+    val exampleConcurrent: IO[Int] = for {
+      counter  <- Ref.of[IO, Int](0)
+      program1 = counter.update(_ + 2)
+      program2 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 3))
+      program3 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 4))
+      _        <- List(program1, program2, program3).parSequence
+      result   <- counter.get
+    } yield result
+
+    println("The following will run for around 1 second")
+    check.timed(exampleConcurrent.unsafeRunSync()).expect(9)
   }
 
-  case class ProcessingCheckIns(currentRanking: IO[List[CityStats]], stop: IO[Unit])
-
-  object Version2 {
-    def updateRanking(
+  /**
+    * See [[ch10_CastingDieConcurrently]] for parSequence exercises
+    */
+  {
+    def updateRankingRecursion(
         storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]]
-    ): IO[Unit] = { // TODO: introduce Nothing
+    ): IO[Unit] = {
       for {
         newRanking <- storedCheckIns.get.map(topCities)
         _          <- storedRanking.set(newRanking)
@@ -153,93 +164,95 @@ object ch10_CheckIns extends App {
       } yield ()
     }
 
-    // Coffee Break
-    def processCheckIns(checkIns: Stream[IO, City]): IO[ProcessingCheckIns] = {
+    def updateRankingRecursionNothing(
+        storedCheckIns: Ref[IO, Map[City, Int]],
+        storedRanking: Ref[IO, List[CityStats]]
+    ): IO[Nothing] = { // TODO: introduce Nothing
       for {
-        storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
-        storedRanking  <- Ref.of[IO, List[CityStats]](List.empty)
-        rankingFiber   <- updateRanking(storedCheckIns, storedRanking).start
-        checkInsFiber  <- checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain.start
-      } yield ProcessingCheckIns(storedRanking.get, rankingFiber.cancel.flatMap(_ => checkInsFiber.cancel))
+        newRanking <- storedCheckIns.get.map(topCities)
+        _          <- storedRanking.set(newRanking)
+        result     <- updateRanking(storedCheckIns, storedRanking)
+      } yield result
+    }
+
+    def updateRankingForeverM(
+        storedCheckIns: Ref[IO, Map[City, Int]],
+        storedRanking: Ref[IO, List[CityStats]]
+    ): IO[Nothing] = { // TODO: introduce foreverM
+      (for {
+        newRanking <- storedCheckIns.get.map(topCities)
+        _          <- storedRanking.set(newRanking)
+      } yield ()).foreverM
     }
   }
 
-  check
-    .timed {
+  def updateRanking(
+      storedCheckIns: Ref[IO, Map[City, Int]],
+      storedRanking: Ref[IO, List[CityStats]]
+  ): IO[Nothing] = {
+    storedCheckIns.get
+      .map(topCities)
+      .flatMap(storedRanking.set)
+      .foreverM
+  }
+
+  object Version2 {
+    // Coffee Break: Concurrent programs
+    def processCheckIns(checkIns: Stream[IO, City]): IO[Nothing] = {
       (for {
-        processing <- Version2.processCheckIns(checkIns)
-        _          <- IO.sleep(FiniteDuration(1, TimeUnit.SECONDS))
+        storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
+        storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
+        rankingProgram  = updateRanking(storedCheckIns, storedRanking)
+        checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
+        outputProgram   = IO.sleep(1.second).flatMap(_ => storedRanking.get).flatMap(IO.println).foreverM
+        _               <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
+      } yield ()).foreverM
+    }
+  }
+
+  println("The following should print ranking every 1 second")
+  // check(Version2.processCheckIns(checkIns).unsafeRunSync()) // won't finish because it's an infinite program
+  check(Version2.processCheckIns(checkIns).unsafeRunTimed(3.seconds)) // run for max 3 seconds
+
+  // PROBLEM: our program doesn't return so we need to decide the way we want to consume rankings (here, println every 1 second)
+
+  /**
+    * STEP 3: concurrent & up-to-date, return immediately and pass the controls to the caller
+    */
+  case class ProcessingCheckIns(currentRanking: IO[List[CityStats]], stop: IO[Unit])
+
+  object Version3 {
+    def processCheckIns(checkIns: Stream[IO, City]): IO[ProcessingCheckIns] = {
+      for {
+        storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
+        storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
+        rankingProgram  = updateRanking(storedCheckIns, storedRanking)
+        checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
+        fiber           <- List(rankingProgram, checkInsProgram).parSequence.start
+      } yield ProcessingCheckIns(storedRanking.get, fiber.cancel)
+    }
+  }
+
+  println("The following should print two rankings")
+  check
+    .executedIO {
+      for {
+        processing <- Version3.processCheckIns(checkIns)
         ranking    <- processing.currentRanking
+        _          <- IO.println(ranking)
+        _          <- IO.sleep(1.second)
+        newRanking <- processing.currentRanking
         _          <- processing.stop
-      } yield ranking).unsafeRunSync()
+      } yield newRanking
     }
     .expect(_.size == 3)
 
-  // PROBLEM: ranking fiber spins a lot unnecessarily waiting for a first check-in
-
-  /**
-    * STEP 3: concurrent, up-to-date, asynchronous waiting for a possibly long prerequisite
-    */
-  object Version3 {
-
-    /**
-      * PREREQUISITE: API call to fetch the current RankingConfig
-      * (potentially a long one)
-      */
-    case class RankingConfig(minCheckIns: Int, topN: Int)
-
-    def fetchRankingConfig(): IO[RankingConfig] = {
-      IO.sleep(FiniteDuration(100, TimeUnit.MILLISECONDS)).map(_ => RankingConfig(100_001, 2))
-    }
-
-    // new version:
-    def topCities(config: RankingConfig)(cityCheckIns: Map[City, Int]): List[CityStats] = {
-      cityCheckIns.toList
-        .map {
-          case (city, checkIns) => CityStats(city, checkIns)
-        }
-        .filter(_.checkIns >= config.minCheckIns)
-        .sortBy(_.checkIns)
-        .reverse
-        .take(config.topN)
-    }
-
-    // new version:
-    def updateRanking(
-        storedCheckIns: Ref[IO, Map[City, Int]],
-        storedRanking: Ref[IO, List[CityStats]],
-        fetchedConfig: Deferred[IO, RankingConfig]
-    ): IO[Nothing] = {
-      (for {
-        config     <- fetchedConfig.get
-        newRanking <- storedCheckIns.get.map(topCities(config))
-        _          <- storedRanking.set(newRanking)
-      } yield ()).foreverM // introduce foreverM
-    }
-
-    def processCheckIns(checkIns: Stream[IO, City]): IO[ProcessingCheckIns] = {
-      for {
-        storedCheckIns   <- Ref.of[IO, Map[City, Int]](Map.empty)
-        storedRanking    <- Ref.of[IO, List[CityStats]](List.empty)
-        fetchedConfig    <- Deferred[IO, RankingConfig]
-        fetchConfigFiber <- fetchRankingConfig().flatMap(fetchedConfig.complete).start
-        rankingFiber     <- updateRanking(storedCheckIns, storedRanking, fetchedConfig).start
-        checkInsFiber    <- checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain.start
-      } yield ProcessingCheckIns(
-        storedRanking.get,
-        List(fetchConfigFiber, rankingFiber, checkInsFiber).traverse_(_.cancel)
-      )
-    }
-  }
-
-  check
-    .timed {
-      (for {
-        processing <- Version3.processCheckIns(checkIns.repeat) // note repeat (infinite!)
-        _          <- IO.sleep(FiniteDuration(1, TimeUnit.SECONDS))
-        ranking    <- processing.currentRanking
-        _          <- processing.stop
-      } yield ranking).unsafeRunSync()
-    }
-    .expect(_.size == 2)
+  // Quick quiz: fibers
+  // What will this program do? How long will it run?
+  check.executedIO(for {
+    fiber <- IO.sleep(300.millis).flatMap(_ => IO.println("hello")).foreverM.start
+    _     <- IO.sleep(1.second)
+    _     <- fiber.cancel
+    _     <- IO.sleep(1.second)
+  } yield ())
 }

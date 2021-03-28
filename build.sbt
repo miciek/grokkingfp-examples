@@ -10,7 +10,7 @@ lazy val root = (project in file("."))
         "-Xlint"
       ),
     libraryDependencies ++= Seq(
-        "org.typelevel" %% "cats-effect" % "3.0.0-RC2",
+        "org.typelevel" %% "cats-effect" % "3.0.0-RC3",
         "co.fs2"        %% "fs2-core"    % "3.0.0-M9"
       ),
     fork in run := true,
