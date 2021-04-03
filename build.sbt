@@ -10,8 +10,9 @@ lazy val root = (project in file("."))
         "-Xlint"
       ),
     libraryDependencies ++= Seq(
-        "org.typelevel" %% "cats-effect" % "3.0.0-RC3",
-        "co.fs2"        %% "fs2-core"    % "3.0.0-M9"
+        "org.typelevel"     %% "cats-effect" % "3.0.0-RC3",
+        "co.fs2"            %% "fs2-core"    % "3.0.0-M9",
+        "com.typesafe.akka" %% "akka-actor"  % "2.6.13"
       ),
     fork in run := true,
     javaOptions in run += "-ea",
@@ -57,6 +58,7 @@ lazy val root = (project in file("."))
       ";runMain ch09_Stream123s" +
       ";runMain ch09_CastingDieStream" +
       ";runMain ch10_CheckIns" +
+      ";runMain ch10_CheckInsImperative" +
       ";runMain ch10_CastingDieConcurrently"
     )
   )

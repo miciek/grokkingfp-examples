@@ -1,6 +1,6 @@
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import cats.implicits._
-import cats.effect.unsafe.implicits.global
 
 object check {
   def apply[A](result: A): Assert[A] = {
@@ -8,7 +8,7 @@ object check {
     new Assert(result)
   }
 
-  def executedIO[A](io: IO[A]): Assert[A] = {
+  def executedIO[A](io: IO[A])(implicit runtime: IORuntime = IORuntime.global): Assert[A] = {
     timed(io.unsafeRunSync())
   }
 
@@ -16,7 +16,7 @@ object check {
     new Assert(result)
   }
 
-  def potentiallyFailing[A](code: => A): Assert[A] = {
+  def potentiallyFailing[A](code: => A)(implicit runtime: IORuntime = IORuntime.global): Assert[A] = {
     val result = retry(IO(code), 100).unsafeRunSync()
     println(result)
     new Assert(result)

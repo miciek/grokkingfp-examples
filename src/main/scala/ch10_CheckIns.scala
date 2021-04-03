@@ -55,13 +55,30 @@ object ch10_CheckIns extends App {
         City("Sydney")
       ).covary[IO]
 
+    def processCheckInsRaw(checkIns: Stream[IO, City]): IO[Unit] = {
+      checkIns
+        .scan(Map.empty[City, Int])((cityCheckIns, city) => {
+          val newCheckIns = cityCheckIns.get(city) match {
+            case None           => 1
+            case Some(checkIns) => checkIns + 1
+          }
+          cityCheckIns.updated(city, newCheckIns)
+        })
+        .map(topCities)
+        .foreach(ranking => IO.delay(println(ranking)))
+        .compile
+        .drain
+    }
+
+    check.timed(processCheckInsRaw(checkInsSmall).unsafeRunSync())
+
     def processCheckIns(checkIns: Stream[IO, City]): IO[Unit] = {
       checkIns
         .scan(Map.empty[City, Int])((cityCheckIns, city) =>
           cityCheckIns.updatedWith(city)(_.map(_ + 1).orElse(Some(1)))
         ) // introduce updatedWith
         .map(topCities)
-        .foreach(ranking => IO.delay(println(ranking))) // introduce IO.println
+        .foreach(IO.println) // introduce IO.println
         .compile
         .drain
     }
@@ -96,34 +113,48 @@ object ch10_CheckIns extends App {
   /**
     * STEP 2: concurrent & up-to-date (real time, no batching)
     */
-  def storeCheckIn(storedCheckIns: Ref[IO, Map[City, Int]])(city: City): IO[Unit] = {
-    storedCheckIns.update(_.updatedWith(city)(_ match { // introduce updatedWith
-      case None           => Some(1)
-      case Some(checkIns) => Some(checkIns + 1)
-    }))
-  }
+  {   // Ref intro
+    { // update intro
+      // we don't know how to create and use Refs
+      // so let's use unsafeRunSync, but note it's not a proper usage, just for demonstration purpose
+      val ref = Ref.of[IO, Int](0).unsafeRunSync()
 
-  { // Ref intro
+      // run concurrently
+      ref.update(_ + 1).unsafeToFuture() // again, we use Future to run it concurrently
+      ref.update(_ + 2).unsafeToFuture() // because we don't know fibers yet
+      Thread.sleep(100)
+
+      check(ref.get.unsafeRunSync()).expect(3)
+    }
+
     val example: IO[Int] = for {
       counter <- Ref.of[IO, Int](0)
-      _       <- counter.update(_ + 3)
+      _       <- counter.update(_ + 1)
+      _       <- counter.update(_ + 2)
       result  <- counter.get
     } yield result
 
     check(example.unsafeRunSync()).expect(3)
-
-    def processCheckIns(checkIns: Stream[IO, City]): IO[Map[City, Int]] = {
-      for {
-        storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
-        _              <- checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain // introduce evalMap
-        checkIns       <- storedCheckIns.get
-      } yield checkIns
-    }
-
-    check.withoutPrinting(processCheckIns(checkIns).unsafeRunSync()).expect(_.get(City("Sydney")).contains(100_002))
   }
 
   { // parSequence intro
+    val exampleSequential: IO[Int] = for {
+      counter <- Ref.of[IO, Int](0)
+      _       <- List(counter.update(_ + 2), counter.update(_ + 3), counter.update(_ + 4)).sequence
+      result  <- counter.get
+    } yield result
+
+    check.timed(exampleSequential.unsafeRunSync()).expect(9)
+
+    val exampleConcurrent: IO[Int] = for {
+      counter <- Ref.of[IO, Int](0)
+      _       <- List(counter.update(_ + 2), counter.update(_ + 3), counter.update(_ + 4)).parSequence
+      result  <- counter.get
+    } yield result
+    check.timed(exampleConcurrent.unsafeRunSync()).expect(9)
+  }
+
+  { // parSequence with sleeping intro
     val exampleSequential: IO[Int] = for {
       counter  <- Ref.of[IO, Int](0)
       program1 = counter.update(_ + 2)
@@ -152,6 +183,14 @@ object ch10_CheckIns extends App {
   /**
     * See [[ch10_CastingDieConcurrently]] for parSequence exercises
     */
+  // final version
+  def storeCheckIn(storedCheckIns: Ref[IO, Map[City, Int]])(city: City): IO[Unit] = {
+    storedCheckIns.update(_.updatedWith(city)(_ match { // introduce updatedWith
+      case None           => Some(1)
+      case Some(checkIns) => Some(checkIns + 1)
+    }))
+  }
+
   {
     def updateRankingRecursion(
         storedCheckIns: Ref[IO, Map[City, Int]],
@@ -160,7 +199,7 @@ object ch10_CheckIns extends App {
       for {
         newRanking <- storedCheckIns.get.map(topCities)
         _          <- storedRanking.set(newRanking)
-        _          <- updateRanking(storedCheckIns, storedRanking)
+        _          <- updateRankingRecursion(storedCheckIns, storedRanking)
       } yield ()
     }
 
@@ -171,8 +210,8 @@ object ch10_CheckIns extends App {
       for {
         newRanking <- storedCheckIns.get.map(topCities)
         _          <- storedRanking.set(newRanking)
-        result     <- updateRanking(storedCheckIns, storedRanking)
-      } yield result
+        nothing    <- updateRankingRecursionNothing(storedCheckIns, storedRanking)
+      } yield nothing
     }
 
     def updateRankingForeverM(
@@ -186,6 +225,7 @@ object ch10_CheckIns extends App {
     }
   }
 
+  // final version
   def updateRanking(
       storedCheckIns: Ref[IO, Map[City, Int]],
       storedRanking: Ref[IO, List[CityStats]]
@@ -197,16 +237,27 @@ object ch10_CheckIns extends App {
   }
 
   object Version2 {
+    // before Coffee Break:
+    def processCheckInsNoOutput(checkIns: Stream[IO, City]): IO[Unit] = {
+      for {
+        storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
+        storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
+        rankingProgram  = updateRanking(storedCheckIns, storedRanking)
+        checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
+        _               <- List(rankingProgram, checkInsProgram).parSequence
+      } yield ()
+    }
+
     // Coffee Break: Concurrent programs
-    def processCheckIns(checkIns: Stream[IO, City]): IO[Nothing] = {
-      (for {
+    def processCheckIns(checkIns: Stream[IO, City]): IO[Unit] = {
+      for {
         storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
         storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
         rankingProgram  = updateRanking(storedCheckIns, storedRanking)
         checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
         outputProgram   = IO.sleep(1.second).flatMap(_ => storedRanking.get).flatMap(IO.println).foreverM
-        _               <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
-      } yield ()).foreverM
+        result          <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
+      } yield result
     }
   }
 
