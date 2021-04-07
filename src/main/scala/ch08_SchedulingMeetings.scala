@@ -64,11 +64,7 @@ object ch08_SchedulingMeetings extends App {
     * See [[ch08_CastingDie]] first
     */
   def calendarEntries(name: String): IO[List[MeetingTime]] = {
-    println(s"calendar entries: $name")
-    IO.delay {
-      println(s"IO calendar entries: $name")
-      calendarEntriesApiCall(name)
-    }
+    IO.delay(calendarEntriesApiCall(name))
   }
 
   def createMeeting(names: List[String], meeting: MeetingTime): IO[Unit] = {
