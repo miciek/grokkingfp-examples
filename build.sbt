@@ -11,11 +11,11 @@ lazy val root = (project in file("."))
       ),
     libraryDependencies ++= Seq(
         "org.typelevel"     %% "cats-effect" % "3.0.0",
-        "co.fs2"            %% "fs2-core"    % "3.0.0-M9",
+        "co.fs2"            %% "fs2-core"    % "3.0.0",
         "com.typesafe.akka" %% "akka-actor"  % "2.6.13"
       ),
-    fork in run := true,
-    javaOptions in run += "-ea",
+    run / fork := true,
+    run / javaOptions += "-ea",
     addCommandAlias(
       "runAll",
       ";runMain ch01_Intro" +
