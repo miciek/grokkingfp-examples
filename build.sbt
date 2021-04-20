@@ -10,9 +10,10 @@ lazy val root = (project in file("."))
         "-Xlint"
       ),
     libraryDependencies ++= Seq(
-        "org.typelevel"     %% "cats-effect" % "3.0.0",
-        "co.fs2"            %% "fs2-core"    % "3.0.0",
-        "com.typesafe.akka" %% "akka-actor"  % "2.6.13"
+        "org.typelevel"     %% "cats-effect"     % "3.0.0",
+        "co.fs2"            %% "fs2-core"        % "3.0.0",
+        "com.typesafe.akka" %% "akka-actor"      % "2.6.13",
+        "org.apache.jena"   % "apache-jena-libs" % "4.0.0"
       ),
     run / fork := true,
     run / javaOptions += "-ea",
