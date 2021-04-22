@@ -13,7 +13,8 @@ lazy val root = (project in file("."))
         "org.typelevel"     %% "cats-effect"     % "3.0.0",
         "co.fs2"            %% "fs2-core"        % "3.0.0",
         "com.typesafe.akka" %% "akka-actor"      % "2.6.13",
-        "org.apache.jena"   % "apache-jena-libs" % "4.0.0"
+        "org.apache.jena"   % "apache-jena-libs" % "4.0.0",
+        "org.scalatest"     %% "scalatest"       % "3.2.7" % Test
       ),
     run / fork := true,
     run / javaOptions += "-ea",

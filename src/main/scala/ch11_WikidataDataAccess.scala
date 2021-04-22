@@ -90,7 +90,6 @@ object ch11_WikidataDataAccess extends App {
     }
 
     def fetchMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] = {
-      // TODO: Q1085 Prague, Montenegro, Casino Royale?
       val query = s"""
         |$prefixes
         |SELECT DISTINCT ?subject ?subjectLabel ?boxOffice WHERE {
