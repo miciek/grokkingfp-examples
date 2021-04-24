@@ -17,25 +17,25 @@ object ch11_TravelGuide extends App {
     * to have separate ones for data access and business domain (see the book).
     */
   case class LocationId(value: String) extends AnyVal
-  case class Location(id: LocationId, name: String, population: Int)
-  case class Place(name: String, description: Option[String], location: Location)
+  case class Location(id: LocationId, name: String, population: Long)
+  case class Attraction(name: String, description: Option[String], location: Location)
 
   sealed trait PopCultureSubject
-  case class Artist(name: String, followers: Int) extends PopCultureSubject
-  case class Movie(name: String, boxOffice: Long) extends PopCultureSubject
+  case class Artist(name: String, followers: Long) extends PopCultureSubject
+  case class Movie(name: String, boxOffice: Long)  extends PopCultureSubject
 
-  case class TravelGuide(place: Place, subjects: List[PopCultureSubject])
+  case class TravelGuide(attraction: Attraction, subjects: List[PopCultureSubject])
 
   /**
     * STEP 2
     * DATA ACCESS (just an interface providing pure functions, implementation completely separated)
     */
-  sealed trait PlaceOrdering
-  case object ByName               extends PlaceOrdering
-  case object ByLocationPopulation extends PlaceOrdering
+  sealed trait AttractionOrdering
+  case object ByName               extends AttractionOrdering
+  case object ByLocationPopulation extends AttractionOrdering
 
   trait DataAccess {
-    def fetchPlaces(name: String, ordering: PlaceOrdering, limit: Int): IO[List[Place]]
+    def fetchAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]]
     def fetchArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
     def fetchMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
   }
@@ -44,16 +44,16 @@ object ch11_TravelGuide extends App {
     * STEP 3: first version of a TravelGuide fetcher
     */
   object Version1 {
-    def travelGuide(data: DataAccess, placeName: String): IO[Option[TravelGuide]] = {
+    def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
-        places <- data.fetchPlaces(placeName, ByLocationPopulation, 1)
-        guide <- places.headOption match {
+        attractions <- data.fetchAttractions(attractionName, ByLocationPopulation, 1)
+        guide <- attractions.headOption match {
                   case None => IO.pure(None)
-                  case Some(place) =>
+                  case Some(attraction) =>
                     for {
-                      artists <- data.fetchArtistsFromLocation(place.location.id, 2)
-                      movies  <- data.fetchMoviesAboutLocation(place.location.id, 2)
-                    } yield Some(TravelGuide(place, artists ++ movies))
+                      artists <- data.fetchArtistsFromLocation(attraction.location.id, 2)
+                      movies  <- data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                    } yield Some(TravelGuide(attraction, artists ++ movies))
                 }
       } yield guide
     }
@@ -95,7 +95,7 @@ object ch11_TravelGuide extends App {
     * - 1 point for each 10_000_000 dollars in box-office totals (all movies combined, max 15pts)
     */
   def guideScore(guide: TravelGuide): Int = {
-    val descriptionScore = guide.place.description.map(_ => 30).getOrElse(0)
+    val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
     val quantityScore    = Math.min(40, guide.subjects.size * 10)
     val totalFollowers = guide.subjects
       .map(_ match {
@@ -110,21 +110,21 @@ object ch11_TravelGuide extends App {
       })
       .sum
 
-    val followersScore = Math.min(15, totalFollowers / 100_000)
+    val followersScore = Math.min(15, totalFollowers / 100_000).toInt
     val boxOfficeScore = Math.min(15, totalBoxOffice / 10_000_000).toInt
     descriptionScore + quantityScore + followersScore + boxOfficeScore
   }
 
   object Version2 {
-    def travelGuide(data: DataAccess, placeName: String): IO[Option[TravelGuide]] = {
+    def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
-        places <- data.fetchPlaces(placeName, ByLocationPopulation, 3)
-        guides <- places
-                   .map(place =>
+        attractions <- data.fetchAttractions(attractionName, ByLocationPopulation, 3)
+        guides <- attractions
+                   .map(attraction =>
                      for {
-                       artists <- data.fetchArtistsFromLocation(place.location.id, 2)
-                       movies  <- data.fetchMoviesAboutLocation(place.location.id, 2)
-                     } yield TravelGuide(place, artists ++ movies)
+                       artists <- data.fetchArtistsFromLocation(attraction.location.id, 2)
+                       movies  <- data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                     } yield TravelGuide(attraction, artists ++ movies)
                    )
                    .sequence
       } yield guides.sortBy(guideScore).reverse.headOption
@@ -147,22 +147,22 @@ object ch11_TravelGuide extends App {
 
   check.executedIO(Version2.travelGuide(sparql, "Yellowstone")) // this will not leak, even if there are errors
 
-  // PROBLEM: we can make parallel queries in two places
+  // PROBLEM: we can make parallel queries in two attractions
 
   /**
     * STEP 8: make it concurrent (and fast)
     */
   object Version3 {
     // Coffee Break: making it concurrent
-    def travelGuide(data: DataAccess, placeName: String): IO[Option[TravelGuide]] = {
+    def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
-        places <- data.fetchPlaces(placeName, ByLocationPopulation, 3)
-        guides <- places
-                   .map(place =>
+        attractions <- data.fetchAttractions(attractionName, ByLocationPopulation, 3)
+        guides <- attractions
+                   .map(attraction =>
                      List(
-                       data.fetchArtistsFromLocation(place.location.id, 2),
-                       data.fetchMoviesAboutLocation(place.location.id, 2)
-                     ).parSequence.map(_.flatten).map(TravelGuide(place, _))
+                       data.fetchArtistsFromLocation(attraction.location.id, 2),
+                       data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                     ).parSequence.map(_.flatten).map(TravelGuide(attraction, _))
                    )
                    .parSequence
       } yield guides.sortBy(guideScore).reverse.headOption
@@ -211,24 +211,28 @@ object ch11_TravelGuide extends App {
   object Version4 {
     def findGoodGuide(
         data: DataAccess,
-        places: List[Place],
+        attractions: List[Attraction],
         report: SearchReport
     ): IO[Either[SearchReport, TravelGuide]] = {
-      places.headOption match {
-        case Some(place) =>
+      attractions.headOption match {
+        case Some(attraction) =>
           for {
-            placeResult <- List(
-                            data.fetchArtistsFromLocation(place.location.id, 2),
-                            data.fetchMoviesAboutLocation(place.location.id, 2)
-                          ).parSequence.map(_.flatten).map(TravelGuide(place, _)).attempt
-            result <- placeResult match {
+            attractionResult <- List(
+                                 data.fetchArtistsFromLocation(attraction.location.id, 2),
+                                 data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                               ).parSequence.map(_.flatten).map(TravelGuide(attraction, _)).attempt
+            result <- attractionResult match {
                        case Left(error) =>
-                         findGoodGuide(data, places.tail, report.copy(errors = report.errors.appended(error)))
+                         findGoodGuide(data, attractions.tail, report.copy(errors = report.errors.appended(error)))
                        case Right(guide) =>
                          if (guideScore(guide) > 55) { // we found a good-enough guide, we return it without searching for better ones
                            IO.pure(Right(guide))
                          } else {
-                           findGoodGuide(data, places.tail, report.copy(badGuides = report.badGuides.appended(guide)))
+                           findGoodGuide(
+                             data,
+                             attractions.tail,
+                             report.copy(badGuides = report.badGuides.appended(guide))
+                           )
                          }
                      }
           } yield result
@@ -236,10 +240,10 @@ object ch11_TravelGuide extends App {
       }
     }
 
-    def travelGuide(data: DataAccess, placeName: String): IO[Either[SearchReport, TravelGuide]] = {
+    def travelGuide(data: DataAccess, attractionName: String): IO[Either[SearchReport, TravelGuide]] = {
       for {
-        places          <- data.fetchPlaces(placeName, ByLocationPopulation, 3)
-        guideOrProblems <- findGoodGuide(data, places, SearchReport(List.empty, List.empty))
+        attractions     <- data.fetchAttractions(attractionName, ByLocationPopulation, 3)
+        guideOrProblems <- findGoodGuide(data, attractions, SearchReport(List.empty, List.empty))
       } yield guideOrProblems
     }
     // TODO: BONUS: can you do it using foldLeft?
@@ -268,7 +272,7 @@ object ch11_TravelGuide extends App {
       Resource.fromAutoCloseable(IO.blocking(connection.query(QueryFactory.create(query))))
     }
 
-    def travelGuideProgram(placeName: String): IO[Either[SearchReport, TravelGuide]] =
+    def travelGuideProgram(attractionName: String): IO[Either[SearchReport, TravelGuide]] =
       connectionResource.use(connection => {
         def execQuery(query: String): IO[List[QuerySolution]] = {
           queryExecutionResource(connection, query).use(execution =>
@@ -276,9 +280,9 @@ object ch11_TravelGuide extends App {
           )
         }
         val sparql = new SparqlDataAccess(execQuery)
-        Version4.travelGuide(sparql, placeName)
+        Version4.travelGuide(sparql, attractionName)
       })
 
-    check.executedIO(travelGuideProgram("Yellowstone"))
+    check.executedIO(travelGuideProgram("Bridge of Sighs"))
   }
 }

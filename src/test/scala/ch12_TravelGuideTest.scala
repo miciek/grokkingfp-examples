@@ -7,7 +7,7 @@ import org.scalatest.funsuite.AnyFunSuite
 class ch12_TravelGuideTest extends AnyFunSuite {
   test("guide attractiveness including a description, 0 artists, and 2 popular movies should be 65") {
     val guide = TravelGuide(
-      Place(
+      Attraction(
         "Yellowstone National Park",
         Some("first national park in the world, located in Wyoming, Montana and Idaho, United States"),
         Location(LocationId("Q1214"), "Wyoming", 586107)

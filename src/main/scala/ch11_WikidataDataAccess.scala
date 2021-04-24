@@ -16,22 +16,22 @@ object ch11_WikidataDataAccess extends App {
         |PREFIX schema: <http://schema.org/>
         |""".stripMargin
 
-    def fetchPlaces(name: String, ordering: PlaceOrdering, limit: Int): IO[List[Place]] = {
+    def fetchAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] = {
       val orderBy = ordering match {
-        case ByName               => "?placeLabel"
+        case ByName               => "?attractionLabel"
         case ByLocationPopulation => "DESC(?population)"
       }
 
       val query = s"""
         |$prefixes
-        |SELECT DISTINCT ?place ?placeLabel ?description ?location ?locationLabel ?population WHERE {
-        |  ?place wdt:P31 wd:Q570116;
-        |         rdfs:label ?placeLabel;
-        |         wdt:P131 ?location.
-        |  FILTER(LANG(?placeLabel) = "en").
+        |SELECT DISTINCT ?attraction ?attractionLabel ?description ?location ?locationLabel ?population WHERE {
+        |  ?attraction wdt:P31 wd:Q570116;
+        |              rdfs:label ?attractionLabel;
+        |              wdt:P131 ?location.
+        |  FILTER(LANG(?attractionLabel) = "en").
         |
         |  OPTIONAL {
-        |    ?place schema:description ?description.
+        |    ?attraction schema:description ?description.
         |    FILTER(LANG(?description) = "en").
         |  }
         |
@@ -39,26 +39,26 @@ object ch11_WikidataDataAccess extends App {
         |            rdfs:label ?locationLabel;
         |  FILTER(LANG(?locationLabel) = "en").
         |
-        |  FILTER(CONTAINS(?placeLabel, "$name")).
+        |  FILTER(CONTAINS(?attractionLabel, "$name")).
         |} ORDER BY $orderBy LIMIT $limit
         |""".stripMargin
 
       for {
         solutions <- execQuery(query)
-        places <- IO.delay(
-                   solutions.map(s =>
-                     Place( // introduce named parameters
-                       name = s.getLiteral("placeLabel").getString,
-                       description = Try(s.getLiteral("description").getString).toOption,
-                       location = Location(
-                         LocationId(s.getResource("location").getLocalName),
-                         s.getLiteral("locationLabel").getString,
-                         s.getLiteral("population").getInt
-                       )
-                     )
-                   )
-                 )
-      } yield places
+        attractions <- IO.delay(
+                        solutions.map(s =>
+                          Attraction( // introduce named parameters
+                            name = s.getLiteral("attractionLabel").getString,
+                            description = Try(s.getLiteral("description").getString).toOption,
+                            location = Location(
+                              LocationId(s.getResource("location").getLocalName),
+                              s.getLiteral("locationLabel").getString,
+                              s.getLiteral("population").getInt
+                            )
+                          )
+                        )
+                      )
+      } yield attractions
     }
 
     def fetchArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] = {
