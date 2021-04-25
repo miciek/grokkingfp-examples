@@ -35,24 +35,24 @@ object ch11_TravelGuide extends App {
   case object ByLocationPopulation extends AttractionOrdering
 
   trait DataAccess {
-    def fetchAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]]
-    def fetchArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
-    def fetchMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
+    def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]]
+    def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
+    def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
   }
 
   /**
-    * STEP 3: first version of a TravelGuide fetcher
+    * STEP 3: first version of a TravelGuide finder
     */
   object Version1 {
     def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
-        attractions <- data.fetchAttractions(attractionName, ByLocationPopulation, 1)
+        attractions <- data.findAttractions(attractionName, ByLocationPopulation, 1)
         guide <- attractions.headOption match {
                   case None => IO.pure(None)
                   case Some(attraction) =>
                     for {
-                      artists <- data.fetchArtistsFromLocation(attraction.location.id, 2)
-                      movies  <- data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                      artists <- data.findArtistsFromLocation(attraction.location.id, 2)
+                      movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
                     } yield Some(TravelGuide(attraction, artists ++ movies))
                 }
       } yield guide
@@ -118,12 +118,12 @@ object ch11_TravelGuide extends App {
   object Version2 {
     def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
-        attractions <- data.fetchAttractions(attractionName, ByLocationPopulation, 3)
+        attractions <- data.findAttractions(attractionName, ByLocationPopulation, 3)
         guides <- attractions
                    .map(attraction =>
                      for {
-                       artists <- data.fetchArtistsFromLocation(attraction.location.id, 2)
-                       movies  <- data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                       artists <- data.findArtistsFromLocation(attraction.location.id, 2)
+                       movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
                      } yield TravelGuide(attraction, artists ++ movies)
                    )
                    .sequence
@@ -156,12 +156,12 @@ object ch11_TravelGuide extends App {
     // Coffee Break: making it concurrent
     def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
-        attractions <- data.fetchAttractions(attractionName, ByLocationPopulation, 3)
+        attractions <- data.findAttractions(attractionName, ByLocationPopulation, 3)
         guides <- attractions
                    .map(attraction =>
                      List(
-                       data.fetchArtistsFromLocation(attraction.location.id, 2),
-                       data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                       data.findArtistsFromLocation(attraction.location.id, 2),
+                       data.findMoviesAboutLocation(attraction.location.id, 2)
                      ).parSequence.map(_.flatten).map(TravelGuide(attraction, _))
                    )
                    .parSequence
@@ -218,8 +218,8 @@ object ch11_TravelGuide extends App {
         case Some(attraction) =>
           for {
             attractionResult <- List(
-                                 data.fetchArtistsFromLocation(attraction.location.id, 2),
-                                 data.fetchMoviesAboutLocation(attraction.location.id, 2)
+                                 data.findArtistsFromLocation(attraction.location.id, 2),
+                                 data.findMoviesAboutLocation(attraction.location.id, 2)
                                ).parSequence.map(_.flatten).map(TravelGuide(attraction, _)).attempt
             result <- attractionResult match {
                        case Left(error) =>
@@ -242,7 +242,7 @@ object ch11_TravelGuide extends App {
 
     def travelGuide(data: DataAccess, attractionName: String): IO[Either[SearchReport, TravelGuide]] = {
       for {
-        attractions     <- data.fetchAttractions(attractionName, ByLocationPopulation, 3)
+        attractions     <- data.findAttractions(attractionName, ByLocationPopulation, 3)
         guideOrProblems <- findGoodGuide(data, attractions, SearchReport(List.empty, List.empty))
       } yield guideOrProblems
     }
@@ -251,7 +251,7 @@ object ch11_TravelGuide extends App {
   check.executedIO(Version4.travelGuide(sparql, "Yellowstone")) // Right
   check.executedIO(Version4.travelGuide(sparql, "Yosemite"))    // Left without errors
   // check.executedIO(Version4.travelGuide(sparql, "Hacking attempt \"")) // exception
-  // how do we test that exceptions in fetching artists or movies do not crash the program? (see chapter 12 for proper tests)
+  // how do we test that exceptions in finding artists or movies do not crash the program? (see chapter 12 for proper tests)
 
   /**
     * STEP 11: Making sure the connection is always closed

@@ -16,7 +16,7 @@ object ch11_WikidataDataAccess extends App {
         |PREFIX schema: <http://schema.org/>
         |""".stripMargin
 
-    def fetchAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] = {
+    def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] = {
       val orderBy = ordering match {
         case ByName               => "?attractionLabel"
         case ByLocationPopulation => "DESC(?population)"
@@ -61,7 +61,7 @@ object ch11_WikidataDataAccess extends App {
       } yield attractions
     }
 
-    def fetchArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] = {
+    def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] = {
       val query = s"""
         |$prefixes
         |SELECT DISTINCT ?artist ?artistLabel ?followers WHERE {
@@ -89,7 +89,7 @@ object ch11_WikidataDataAccess extends App {
       } yield artists
     }
 
-    def fetchMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] = {
+    def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] = {
       val query = s"""
         |$prefixes
         |SELECT DISTINCT ?subject ?subjectLabel ?boxOffice WHERE {
