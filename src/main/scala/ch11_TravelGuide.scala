@@ -1,7 +1,7 @@
 import cats.effect.{IO, Ref, Resource}
 import cats.implicits._
 import cats.effect.unsafe.implicits.global
-import ch11_WikidataDataAccess.SparqlDataAccess
+import ch11_WikidataDataAccess.getSparqlDataAccess
 import org.apache.jena.query.{QueryExecution, QueryFactory, QuerySolution}
 import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
 
@@ -61,29 +61,120 @@ object ch11_TravelGuide extends App {
 
   /**
     * STEP 4: implementing real data access
-    * @see [[ch11_WikidataDataAccess]] for a Wikidata Sparql endpoint implementation using Apache Jena.
+    * @see [[ch11_QueryingWikidata]] for a simple Wikidata query using Apache Jena imperatively
     */
+  {
+    val getConnection: IO[RDFConnection] = IO.delay(
+      RDFConnectionRemote.create // we will make it better, see at the end
+        .destination("https://query.wikidata.org/")
+        .queryEndpoint("sparql")
+        .build
+    )
+
+    def execQuery(getConnection: IO[RDFConnection], query: String): IO[List[QuerySolution]] = {
+      getConnection.flatMap(c =>
+        IO.delay(
+          asScala(c.query(QueryFactory.create(query)).execSelect()).toList
+        )
+      )
+    }
+
+    def parseAttraction(s: QuerySolution): IO[Attraction] = {
+      IO.delay(
+        Attraction(
+          name = s.getLiteral("attractionLabel").getString,
+          description = if (s.contains("description")) Some(s.getLiteral("description").getString) else None,
+          location = Location(
+            id = LocationId(s.getResource("location").getLocalName),
+            name = s.getLiteral("locationLabel").getString,
+            population = s.getLiteral("population").getInt
+          )
+        )
+      )
+    }
+
+    def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] = {
+      val orderBy = ordering match {
+        case ByName               => "?attractionLabel"
+        case ByLocationPopulation => "DESC(?population)"
+      }
+
+      val query = s"""
+                     PREFIX wd: <http://www.wikidata.org/entity/>
+                     PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+                     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                     PREFIX schema: <http://schema.org/>
+                     SELECT DISTINCT ?attraction ?attractionLabel ?description ?location ?locationLabel ?population WHERE {
+                       ?attraction wdt:P31 wd:Q570116;
+                                   rdfs:label ?attractionLabel;
+                                   wdt:P131 ?location.
+                       FILTER(LANG(?attractionLabel) = "en").
+                     
+                       OPTIONAL {
+                         ?attraction schema:description ?description.
+                         FILTER(LANG(?description) = "en").
+                       }
+                     
+                       ?location wdt:P1082 ?population;
+                                 rdfs:label ?locationLabel;
+                       FILTER(LANG(?locationLabel) = "en").
+                     
+                       FILTER(CONTAINS(?attractionLabel, "$name")).
+                     } ORDER BY $orderBy LIMIT $limit
+                     """
+
+      for {
+        solutions   <- execQuery(getConnection, query)
+        attractions <- solutions.traverse(parseAttraction) // or map(parseAttraction).sequence
+      } yield attractions
+    }
+
+    { // currying discussion (configuring a function)
+      def findAttractions(
+          connection: RDFConnection
+      )(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] = ???
+
+      val connection: RDFConnection                                    = null
+      val f: (String, AttractionOrdering, Int) => IO[List[Attraction]] = findAttractions(connection)
+      // connection.close()
+    }
+
+    check
+      .executedIO(findAttractions("Bridge of Sighs", ByLocationPopulation, 1))
+      .expect(_.map(_.name) == List("Bridge of Sighs"))
+
+    // connection.close() // PROBLEM we are not able to close each connection used by the getConnection clients
+    // and we can't pass connection directly because it's a mutable, stateful value
+
+    /**
+    * @see [[ch11_WikidataDataAccess]] for a Wikidata Sparql endpoint implementation using Apache Jena
+    *      and final version of all DataAccess functions
+    */
+  }
+
   /**
     * STEP 5: connecting the dots
     */
   // mostly IMPURE CODE, out of the functional core
-  val connection = RDFConnectionRemote.create // we will make it better, see at the end
-    .destination("https://query.wikidata.org/")
-    .queryEndpoint("sparql")
-    .build
-
   {
-    // introduce closure
-    def execQuery(query: String): IO[List[QuerySolution]] = IO.blocking { // introduce blocking
-      asScala(connection.query(QueryFactory.create(query)).execSelect()).toList // it looks OK, but it's not and we'll see why
-    }
+    def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] =
+      IO.blocking(
+        asScala(connection.query(QueryFactory.create(query)).execSelect()).toList
+      ) // it looks OK, but it's not and we'll see why
 
-    val sparql = new SparqlDataAccess(execQuery)
+    val connection: RDFConnection = RDFConnectionRemote.create
+      .destination("https://query.wikidata.org/")
+      .queryEndpoint("sparql")
+      .build // we will make it better, see STEP 7
+
+    val wikidata = getSparqlDataAccess(execQuery(connection))
 
     // now we can execute our program using the real Wikidata data access!
-    check.executedIO(Version1.travelGuide(sparql, "Yosemite"))
+    check.executedIO(Version1.travelGuide(wikidata, "Yosemite"))
     // PROBLEM with Version1: for a very popular attraction, like "Yosemite", the returned TravelGuide doesn't contain any pop culture subjects
     // we only check the first result, even though there may be better choices and better locations with similar names
+
+    connection.close()
   }
 
   /**
@@ -133,21 +224,71 @@ object ch11_TravelGuide extends App {
   // PROBLEM: it may not work, because we are leaking closable resources (in this case query executions)
 
   /**
-    * STEP 7: handle resource leaks (query execution)
+    * STEP 7: handle resource leaks (query execution and connection)
     */
+  def createExecution(connection: RDFConnection, query: String): IO[QueryExecution] = IO.blocking(
+    connection.query(QueryFactory.create(query))
+  )
+  def closeExecution(execution: QueryExecution): IO[Unit] = IO.blocking(
+    execution.close()
+  )
+
+  { // handling resource release manually
+    def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] = {
+      for {
+        execution <- createExecution(connection, query)
+        solutions <- IO.blocking(asScala(execution.execSelect()).toList) // orElse needed too
+        _         <- closeExecution(execution)
+      } yield solutions
+    }
+
+    val connection: RDFConnection = RDFConnectionRemote.create
+      .destination("https://query.wikidata.org/")
+      .queryEndpoint("sparql")
+      .build
+
+    val wikidata = getSparqlDataAccess(execQuery(connection))
+    check.executedIO(Version2.travelGuide(wikidata, "Yosemite"))
+    connection.close()
+
+    // PROBLEM: this will not leak in happy-path, but may leak on errors (we need orElse(closeExecution), too)
+    // we need something better, we need Resource!
+  }
+
   // introduce Resource
-  def execQuery(query: String): IO[List[QuerySolution]] = {
-    val createExecution: IO[QueryExecution] = IO.blocking(connection.query(QueryFactory.create(query)))
+  def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] = {
     val executionResource: Resource[IO, QueryExecution] =
-      Resource.make(createExecution)(execution => IO.blocking(execution.close())) // or Resource.fromAutoCloseable(createExecution) (see below)
+      Resource.make(createExecution(connection, query))(
+        closeExecution
+      ) // or Resource.fromAutoCloseable(createExecution)
+
     executionResource.use(execution => IO.blocking(asScala(execution.execSelect()).toList))
   }
 
-  val sparql = new SparqlDataAccess(execQuery)
+  val connectionResource: Resource[IO, RDFConnection] = Resource.make(
+    IO.blocking(
+      RDFConnectionRemote.create
+        .destination("https://query.wikidata.org/")
+        .queryEndpoint("sparql")
+        .build
+    )
+  )(connection => IO.blocking(connection.close()))
 
-  check.executedIO(Version2.travelGuide(sparql, "Yellowstone")) // this will not leak, even if there are errors
+  val program: IO[Option[TravelGuide]] = connectionResource.use(connection => {
+    val wikidata = getSparqlDataAccess(execQuery(connection))
+    Version2.travelGuide(wikidata, "Yosemite") // this will not leak, even if there are errors
+  })
 
-  // PROBLEM: we can make parallel queries in two attractions
+  check.executedIO(program)
+
+  // Resource has map! (TODO: Practicing section, Resource.use, flatMap, map (chapter 5), fromAutocloseable
+  val queryExecResource: Resource[IO, String => IO[List[QuerySolution]]] = connectionResource.map(execQuery)
+  val dataAccessResource: Resource[IO, DataAccess] =
+    connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
+
+  check.executedIO(dataAccessResource.use(dataAccess => Version2.travelGuide(dataAccess, "Yosemite")))
+
+  // PROBLEM: we make all queries sequentially, but we can make parallel queries in two attractions
 
   /**
     * STEP 8: make it concurrent (and fast)
@@ -162,40 +303,50 @@ object ch11_TravelGuide extends App {
                      List(
                        data.findArtistsFromLocation(attraction.location.id, 2),
                        data.findMoviesAboutLocation(attraction.location.id, 2)
-                     ).parSequence.map(_.flatten).map(TravelGuide(attraction, _))
+                     ).parSequence.map(_.flatten).map(popCultureSubjects => TravelGuide(attraction, popCultureSubjects))
                    )
                    .parSequence
       } yield guides.sortBy(guideScore).reverse.headOption
     }
   }
-  check.executedIO(Version3.travelGuide(sparql, "Yellowstone")) // this will take a lot less time than Version2!
 
-  // PROBLEM: we don't have to execute queries, we can cache them locally
+  check.executedIO(
+    dataAccessResource.use(dataAccess => Version3.travelGuide(dataAccess, "Yellowstone"))
+  ) // this will take a lot less time than Version2!
+
+  // PROBLEM: we are repeating the same queries, but the results don't change that often.
+  //
 
   /**
     * STEP 9: make it faster
+    * we don't have to execute queries, we can cache them locally
     */
-  def cachedExecQuery(cache: Ref[IO, Map[String, List[QuerySolution]]])(query: String): IO[List[QuerySolution]] = {
-    // you may want to use a hybrid flatMap/for comprehension approach
-    // if you need to use one of the earlier values, like result to save it to cache, for comprehension may be a more readable choice
-    cache.get.flatMap(_.get(query) match {
-      case Some(cachedSolutions) => IO.pure(cachedSolutions)
-      case None =>
-        for {
-          result <- execQuery(query)
-          _      <- cache.update(_.updated(query, result))
-        } yield result
-    })
+  def cachedExecQuery(connection: RDFConnection, cache: Ref[IO, Map[String, List[QuerySolution]]])(
+      query: String
+  ): IO[List[QuerySolution]] = {
+    for {
+      cachedQueries <- cache.get
+      solutions <- cachedQueries.get(query) match {
+                    case Some(cachedSolutions) => IO.pure(cachedSolutions)
+                    case None =>
+                      for {
+                        realSolutions <- execQuery(connection)(query)
+                        _             <- cache.update(_.updated(query, realSolutions))
+                      } yield realSolutions
+                  }
+    } yield solutions
   }
 
   check.executedIO(
-    for {
-      cache        <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
-      cachedSparql = new SparqlDataAccess(cachedExecQuery(cache))
-      result1      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-      result2      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-      result3      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-    } yield result1.toList.appendedAll(result2).appendedAll(result3)
+    connectionResource.use(connection =>
+      for {
+        cache        <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
+        cachedSparql = getSparqlDataAccess(cachedExecQuery(connection, cache))
+        result1      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+        result2      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+        result3      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+      } yield result1.toList.appendedAll(result2).appendedAll(result3)
+    )
   ) // the second and third execution will take a lot less time because all queries are cached!
 
   // PROBLEM: sometimes there will be problems (not enough data, or problems with data access, we should return smaller guide nonetheless)
@@ -248,41 +399,10 @@ object ch11_TravelGuide extends App {
     }
     // TODO: BONUS: can you do it using foldLeft?
   }
-  check.executedIO(Version4.travelGuide(sparql, "Yellowstone")) // Right
-  check.executedIO(Version4.travelGuide(sparql, "Yosemite"))    // Left without errors
-  // check.executedIO(Version4.travelGuide(sparql, "Hacking attempt \"")) // exception
+  check.executedIO(dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yellowstone"))) // Right
+  check.executedIO(
+    dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yosemite"))
+  ) // Left without errors
+  // check.executedIO(dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Hacking attempt \""))) // exception
   // how do we test that exceptions in finding artists or movies do not crash the program? (see chapter 12 for proper tests)
-
-  /**
-    * STEP 11: Making sure the connection is always closed
-    */
-  connection.close() // we need to do it when we stop needing it, even when there has been a failure
-
-  {
-    val connectionResource = Resource.fromAutoCloseable(
-      IO.blocking(
-        RDFConnectionRemote.create
-          .destination("https://query.wikidata.org/")
-          .queryEndpoint("sparql")
-          .build
-      )
-    )
-
-    def queryExecutionResource(connection: RDFConnection, query: String): Resource[IO, QueryExecution] = {
-      Resource.fromAutoCloseable(IO.blocking(connection.query(QueryFactory.create(query))))
-    }
-
-    def travelGuideProgram(attractionName: String): IO[Either[SearchReport, TravelGuide]] =
-      connectionResource.use(connection => {
-        def execQuery(query: String): IO[List[QuerySolution]] = {
-          queryExecutionResource(connection, query).use(execution =>
-            IO.blocking(asScala(execution.execSelect()).toList)
-          )
-        }
-        val sparql = new SparqlDataAccess(execQuery)
-        Version4.travelGuide(sparql, attractionName)
-      })
-
-    check.executedIO(travelGuideProgram("Bridge of Sighs"))
-  }
 }

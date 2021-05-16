@@ -1,14 +1,10 @@
 import cats.effect.IO
 import ch11_TravelGuide._
 import org.apache.jena.query.QuerySolution
-import scala.util.Try
 
 object ch11_WikidataDataAccess extends App {
 
-  /**
-    * Sparql Wikidata Data Access (separated)
-    */
-  class SparqlDataAccess(execQuery: String => IO[List[QuerySolution]]) extends DataAccess {
+  def getSparqlDataAccess(execQuery: String => IO[List[QuerySolution]]): DataAccess = new DataAccess {
     val prefixes = """
         |PREFIX wd: <http://www.wikidata.org/entity/>
         |PREFIX wdt: <http://www.wikidata.org/prop/direct/>
@@ -49,7 +45,8 @@ object ch11_WikidataDataAccess extends App {
                         solutions.map(s =>
                           Attraction( // introduce named parameters
                             name = s.getLiteral("attractionLabel").getString,
-                            description = Try(s.getLiteral("description").getString).toOption,
+                            description =
+                              if (s.contains("description")) Some(s.getLiteral("description").getString) else None,
                             location = Location(
                               LocationId(s.getResource("location").getLocalName),
                               s.getLiteral("locationLabel").getString,
