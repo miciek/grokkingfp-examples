@@ -4,17 +4,16 @@ lazy val root = (project in file("."))
     organization := "Michał Płachta (Manning)",
     version := "1.0",
     scalaVersion := "2.13.5",
-    scalacOptions ++= List(
-        "-unchecked",
-        "-language:higherKinds",
-        "-Xlint"
-      ),
+    scalacOptions ++= List("-unchecked", "-language:higherKinds", "-Xlint"),
     libraryDependencies ++= Seq(
         "org.typelevel"     %% "cats-effect"     % "3.0.0",
         "co.fs2"            %% "fs2-core"        % "3.0.0",
         "com.typesafe.akka" %% "akka-actor"      % "2.6.13",
         "org.apache.jena"   % "apache-jena-libs" % "4.0.0",
-        "org.scalatest"     %% "scalatest"       % "3.2.7" % Test
+        "org.apache.jena"   % "jena-fuseki-main" % "4.0.0",
+        "org.slf4j"         % "slf4j-simple"     % "1.7.30",
+        "org.scalatest"     %% "scalatest"       % "3.2.9" % Test,
+        "org.scalatestplus" %% "scalacheck-1-15" % "3.2.9.0" % Test
       ),
     run / fork := true,
     run / javaOptions += "-ea",
@@ -62,6 +61,7 @@ lazy val root = (project in file("."))
       ";runMain ch10_CheckIns" +
       ";runMain ch10_CheckInsImperative" +
       ";runMain ch10_CastingDieConcurrently" +
-      ";runMain ch11_TravelGuide"
+      ";runMain ch11_TravelGuide" +
+      ";runMain ch12_TravelGuide"
     )
   )

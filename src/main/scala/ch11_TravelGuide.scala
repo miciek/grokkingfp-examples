@@ -315,7 +315,6 @@ object ch11_TravelGuide extends App {
   ) // this will take a lot less time than Version2!
 
   // PROBLEM: we are repeating the same queries, but the results don't change that often.
-  //
 
   /**
     * STEP 9: make it faster
@@ -348,61 +347,4 @@ object ch11_TravelGuide extends App {
       } yield result1.toList.appendedAll(result2).appendedAll(result3)
     )
   ) // the second and third execution will take a lot less time because all queries are cached!
-
-  // PROBLEM: sometimes there will be problems (not enough data, or problems with data access, we should return smaller guide nonetheless)
-
-  /**
-    * STEP 10: make it resilient and avoid unnecessary work
-    */
-  case class SearchReport(badGuides: List[TravelGuide], errors: List[Throwable])
-
-  /**
-    * TODO: Practicing type-level exceptions (attempt)
-    */
-  object Version4 {
-    def findGoodGuide(
-        data: DataAccess,
-        attractions: List[Attraction],
-        report: SearchReport
-    ): IO[Either[SearchReport, TravelGuide]] = {
-      attractions.headOption match {
-        case Some(attraction) =>
-          for {
-            attractionResult <- List(
-                                 data.findArtistsFromLocation(attraction.location.id, 2),
-                                 data.findMoviesAboutLocation(attraction.location.id, 2)
-                               ).parSequence.map(_.flatten).map(TravelGuide(attraction, _)).attempt
-            result <- attractionResult match {
-                       case Left(error) =>
-                         findGoodGuide(data, attractions.tail, report.copy(errors = report.errors.appended(error)))
-                       case Right(guide) =>
-                         if (guideScore(guide) > 55) { // we found a good-enough guide, we return it without searching for better ones
-                           IO.pure(Right(guide))
-                         } else {
-                           findGoodGuide(
-                             data,
-                             attractions.tail,
-                             report.copy(badGuides = report.badGuides.appended(guide))
-                           )
-                         }
-                     }
-          } yield result
-        case None => IO.pure(Left(report))
-      }
-    }
-
-    def travelGuide(data: DataAccess, attractionName: String): IO[Either[SearchReport, TravelGuide]] = {
-      for {
-        attractions     <- data.findAttractions(attractionName, ByLocationPopulation, 3)
-        guideOrProblems <- findGoodGuide(data, attractions, SearchReport(List.empty, List.empty))
-      } yield guideOrProblems
-    }
-    // TODO: BONUS: can you do it using foldLeft?
-  }
-  check.executedIO(dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yellowstone"))) // Right
-  check.executedIO(
-    dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yosemite"))
-  ) // Left without errors
-  // check.executedIO(dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Hacking attempt \""))) // exception
-  // how do we test that exceptions in finding artists or movies do not crash the program? (see chapter 12 for proper tests)
 }

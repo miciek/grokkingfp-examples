@@ -63,7 +63,6 @@ object ch11_WikidataDataAccess extends App {
         |$prefixes
         |SELECT DISTINCT ?artist ?artistLabel ?followers WHERE {
         |  ?artist wdt:P136 ?genre;
-        |          # wdt:P18 ?image; surprise me mode
         |          wdt:P8687 ?followers;
         |          rdfs:label ?artistLabel.
         |  FILTER(LANG(?artistLabel) = "en").
@@ -77,10 +76,7 @@ object ch11_WikidataDataAccess extends App {
         solutions <- execQuery(query)
         artists <- IO.delay(
                     solutions.map(s =>
-                      Artist(
-                        name = s.getLiteral("artistLabel").getString,
-                        followers = s.getLiteral("followers").getInt
-                      )
+                      Artist(name = s.getLiteral("artistLabel").getString, followers = s.getLiteral("followers").getInt)
                     )
                   )
       } yield artists
@@ -90,7 +86,7 @@ object ch11_WikidataDataAccess extends App {
       val query = s"""
         |$prefixes
         |SELECT DISTINCT ?subject ?subjectLabel ?boxOffice WHERE {
-        |  ?subject wdt:P31 wd:Q11424; # video games, books?
+        |  ?subject wdt:P31 wd:Q11424;
         |           wdt:P2142 ?boxOffice;
         |           rdfs:label ?subjectLabel.
         |
@@ -105,13 +101,12 @@ object ch11_WikidataDataAccess extends App {
         solutions <- execQuery(query)
         movies <- IO.delay(
                    solutions.map(s =>
-                     Movie(
-                       name = s.getLiteral("subjectLabel").getString,
-                       boxOffice = s.getLiteral("boxOffice").getLong
-                     )
+                     Movie(name = s.getLiteral("subjectLabel").getString, boxOffice = s.getLiteral("boxOffice").getLong)
                    )
                  )
       } yield movies
     }
+
   }
+
 }
