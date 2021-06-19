@@ -1,5 +1,6 @@
 import cats.effect.{IO, Resource}
 import cats.effect.unsafe.implicits.global
+import cats.implicits._
 import ch11_TravelGuide._
 import ch11_TravelGuide.Version3.travelGuide
 import ch11_WikidataDataAccess.getSparqlDataAccess
@@ -23,7 +24,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     val guide = TravelGuide(
       Attraction(
         "Yellowstone National Park",
-        Some("first national park in the world, located in Wyoming, Montana and Idaho, United States"),
+        Some("first national park in the world"),
         Location(LocationId("Q1214"), "Wyoming", 586107)
       ),
       List(Movie("The Hateful Eight", 155760117), Movie("Heaven's Gate", 3484331))
@@ -64,7 +65,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
   /** STEP 2: testing by providing properties
     */
-  test("guide score should not depend on the attraction's name and description strings") {
+  test("guide score should not depend on its attraction's name and description strings") {
     forAll((name: String, description: String) => {
       val guide = TravelGuide(
         Attraction(
@@ -80,12 +81,12 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
-  test("guide score should depend on the amount of movies") {
+  test("guide score should always be between 30 and 70 if it has a description and some bad movies") {
     forAll((amountOfMovies: Byte) => {
       val guide = TravelGuide(
         Attraction(
           "Yellowstone National Park",
-          Some("first national park in the world, located in Wyoming, Montana and Idaho, United States"),
+          Some("first national park in the world"),
           Location(LocationId("Q1214"), "Wyoming", 586107)
         ),
         if (amountOfMovies > 0) List.fill(amountOfMovies)(Movie("Random Movie", 0))
@@ -94,49 +95,52 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
       val score = guideScore(guide)
 
-      // min. 30 (description) and no more than 100 (upper limit)
-      assert(score >= 30 && score <= 100)
+      // min. 30 (description) and no more than 70 (upper limit with no artists and 0 box office)
+      assert(score >= 30 && score <= 70)
     })
   }
 
-  test("guide score should always be between 50 and 100 if there is a description, an artist and a movie") {
+  test("guide score should always be between 20 and 50 if there is an artist and a movie, but no description") {
     forAll((followers: Long, boxOffice: Long) => {
       val guide = TravelGuide(
         Attraction(
           "Yellowstone National Park",
-          Some("first national park in the world, located in Wyoming, Montana and Idaho, United States"),
+          None,
           Location(LocationId("Q1214"), "Wyoming", 586107)
         ),
-        List(Artist("TODO", followers), Movie("The Hateful Eight", boxOffice))
+        List(Artist("Chris LeDoux", followers), Movie("The Hateful Eight", boxOffice))
       )
 
       val score = guideScore(guide)
 
-      // no matter how many followers and box office the score needs to be min: 30 (description) + 10 (1 artist) + 10 (1
-      // movie)
-      // PROBLEM: the following will fail when boxOffice < -10_000_000
-      // assert(score >= 50 && score <= 100)
+      // the score needs to be at least: 20 = 0 (no description) + 10 (1 artist) + 10 (10 movie)
+      // but maximum of 50 in a case when there are lots of followers and high box office earnings
+      // PROBLEM: the following will sometimes fail when boxOffice < -10_000_000
+      // assert(score >= 20 && score <= 50)
       println(s"Testing against an artist with $followers followers and a movie with $boxOffice box office: $score")
     })
 
-    // SOLUTION: we can use defensive programming in the implementation or use our own generators:
+    // we need to decide is it a TEST PROBLEM or IMPLEMENTATION BUG
+    // if it's an IMPLEMENTATION BUG, we can use defensive programming in the implementation
+    // if it's a TEST PROBLEM, we need to tweak the test to not include negative values!
+    // SOLUTION: use generators
     val nonNegativeLong: Gen[Long] = Gen.chooseNum(0, Long.MaxValue)
 
     forAll(nonNegativeLong, nonNegativeLong)((followers: Long, boxOffice: Long) => {
       val guide = TravelGuide(
         Attraction(
           "Yellowstone National Park",
-          Some("first national park in the world, located in Wyoming, Montana and Idaho, United States"),
+          None,
           Location(LocationId("Q1214"), "Wyoming", 586107)
         ),
-        List(Artist("TODO", followers), Movie("The Hateful Eight", boxOffice))
+        List(Artist("Chris LeDoux", followers), Movie("The Hateful Eight", boxOffice))
       )
 
       val score = guideScore(guide)
 
-      // no matter how many followers and box office the score needs to be min: 30 (description) + 10 (1 artist) + 10 (1
-      // movie)
-      assert(score >= 50 && score <= 100)
+      // the score needs to be at least: 20 = 0 (no description) + 10 (1 artist) + 10 (10 movie)
+      // but maximum of 50 in a case when there are lots of followers and high box office earnings
+      assert(score >= 20 && score <= 50)
     })
   }
 
@@ -216,7 +220,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
       // the following will fail:
       // val score = guideScore(guide)
-      // assert(score >= 0 && score <= 55)
+      // assert(score >= 0 && score <= 75)
 
       // fixed version will not:
       val score = ch12_TravelGuide.guideScore(guide)
@@ -224,6 +228,9 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
+  /**
+    *  STEP 3: test side effects without using any mocking libraries
+    */
   def testLocation(id: Int): Location =
     Location(
       LocationId(s"location-id-$id"),
@@ -231,8 +238,6 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
       1000
     ) // using such a helper function makes the test more readable (see below for more examples)
 
-  /** STEP 3: test side effects without using any mocking libraries
-    */
   test("attractions in locations that have artists should be preferred") {
     // given an external data source with an attraction named "test-attraction" at many locations,
     // only one of them being an origin for some artists
@@ -260,7 +265,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(guide.exists(_.attraction.location.id == locationWithArtists.id))
   }
 
-  // Cofee Break
+  // Coffee Break
   test("attractions in locations that were used in movies should be preferred") {
     // given an external data source with an attraction named "test-attraction" at many locations,
     // only one of them being used in multiple movies
@@ -402,7 +407,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   // using a named value makes tests more readable, too!
   val yellowstone: Attraction = Attraction(
     "Yellowstone National Park",
-    Some("first national park in the world, located in Wyoming, Montana and Idaho, United States"),
+    Some("first national park in the world"),
     Location(LocationId("Q1214"), "Wyoming", 586107)
   )
 
