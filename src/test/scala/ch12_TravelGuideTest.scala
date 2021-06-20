@@ -30,7 +30,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
       List(Movie("The Hateful Eight", 155760117), Movie("Heaven's Gate", 3484331))
     )
 
-    // 30 (description) + 0 (0 artists) + 20 (2 movies) + 15 (159 million box-office)
+    // 30 (description) + 0 (0 artists) + 20 (2 movies) + 15 (159 million box office)
     assert(guideScore(guide) == 65)
   }
 
@@ -49,7 +49,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(guideScore(guide) == 0)
   }
 
-  test("score of a guide with no description, 0 artists, and 2 movies with no box-office earnings should be 20") {
+  test("score of a guide with no description, 0 artists, and 2 movies with no box office earnings should be 20") {
     val guide = TravelGuide(
       Attraction(
         "Yellowstone National Park",
@@ -59,7 +59,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
       List(Movie("The Hateful Eight", 0), Movie("Heaven's Gate", 0))
     )
 
-    // 0 (description) + 0 (0 artists) + 20 (2 movies) + 0 (0 million box-office)
+    // 0 (description) + 0 (0 artists) + 20 (2 movies) + 0 (0 million box office)
     assert(guideScore(guide) == 20)
   }
 
@@ -76,7 +76,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
         List(Movie("The Hateful Eight", 155760117), Movie("Heaven's Gate", 3484331))
       )
 
-      // 30 (description) + 0 (0 artists) + 20 (2 movies) + 15 (159 million box-office)
+      // 30 (description) + 0 (0 artists) + 20 (2 movies) + 15 (159 million box office)
       assert(guideScore(guide) == 65)
     })
   }
@@ -144,7 +144,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
-  // we can combine different generators using flatMap
+  // we can compose different generators using flatMap
   val nonNegativeInt: Gen[Int] = Gen.chooseNum(0, Int.MaxValue)
 
   val randomArtist: Gen[Artist] = for {
@@ -168,7 +168,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
   // we can build big generators from small ones in the same way
   val randomArtists: Gen[List[Artist]] = for {
-    numberOfArtists <- Gen.choose(0, 100)
+    numberOfArtists <- Gen.chooseNum(0, 100)
     artists         <- Gen.listOfN(numberOfArtists, randomArtist)
   } yield artists
 
@@ -202,7 +202,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   } yield Movie(name, boxOffice)
 
   val randomMovies: Gen[List[Movie]] = for {
-    numberOfMovies <- Gen.choose(0, 100)
+    numberOfMovies <- Gen.chooseNum(0, 100)
     artists        <- Gen.listOfN(numberOfMovies, randomMovie)
   } yield artists
 
