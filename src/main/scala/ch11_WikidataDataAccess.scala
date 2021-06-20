@@ -101,7 +101,7 @@ object ch11_WikidataDataAccess extends App {
         solutions <- execQuery(query)
         movies <- IO.delay(
                    solutions.map(s =>
-                     Movie(name = s.getLiteral("subjectLabel").getString, boxOffice = s.getLiteral("boxOffice").getLong)
+                     Movie(name = s.getLiteral("subjectLabel").getString, boxOffice = s.getLiteral("boxOffice").getInt)
                    )
                  )
       } yield movies

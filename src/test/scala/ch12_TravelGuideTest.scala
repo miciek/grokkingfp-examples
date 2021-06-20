@@ -101,7 +101,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   }
 
   test("guide score should always be between 20 and 50 if there is an artist and a movie, but no description") {
-    forAll((followers: Long, boxOffice: Long) => {
+    forAll((followers: Int, boxOffice: Int) => {
       val guide = TravelGuide(
         Attraction(
           "Yellowstone National Park",
@@ -124,9 +124,9 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     // if it's an IMPLEMENTATION BUG, we can use defensive programming in the implementation
     // if it's a TEST PROBLEM, we need to tweak the test to not include negative values!
     // SOLUTION: use generators
-    val nonNegativeLong: Gen[Long] = Gen.chooseNum(0, Long.MaxValue)
+    val nonNegativeInt: Gen[Int] = Gen.chooseNum(0, Int.MaxValue)
 
-    forAll(nonNegativeLong, nonNegativeLong)((followers: Long, boxOffice: Long) => {
+    forAll(nonNegativeInt, nonNegativeInt)((followers: Int, boxOffice: Int) => {
       val guide = TravelGuide(
         Attraction(
           "Yellowstone National Park",
@@ -145,11 +145,11 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   }
 
   // we can combine different generators using flatMap
-  val nonNegativeLong: Gen[Long] = Gen.chooseNum(0, Long.MaxValue)
+  val nonNegativeInt: Gen[Int] = Gen.chooseNum(0, Int.MaxValue)
 
   val randomArtist: Gen[Artist] = for {
     name      <- Gen.identifier // introduce Gen.identifier
-    followers <- nonNegativeLong
+    followers <- nonNegativeInt
   } yield Artist(name, followers)
 
   test("guide score should always be between 10 and 25 if there is just a single artist") {
@@ -198,7 +198,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
   val randomMovie: Gen[Movie] = for {
     name      <- Gen.identifier
-    boxOffice <- nonNegativeLong
+    boxOffice <- nonNegativeInt
   } yield Movie(name, boxOffice)
 
   val randomMovies: Gen[List[Movie]] = for {

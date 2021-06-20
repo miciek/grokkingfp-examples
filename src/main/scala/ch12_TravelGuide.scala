@@ -3,6 +3,7 @@ import cats.implicits._
 import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
 
 object ch12_TravelGuide extends App {
+  System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
 
   /** PREREQUISITES: data model and the guideScore function.  We don't import the travelGuide
     * function here because we want to develop a new version of it. However, its dependencies
@@ -16,9 +17,32 @@ object ch12_TravelGuide extends App {
 
   /** STEPS 1-3: see ch12_TravelGuideTest.scala in the test directory.
     *
-    * The tests showed a bug in the ch11 implementation. This is a fixed version that passes the tests.
+    * The tests showed a bug in the ch11 implementation (Int overflow).
+    * Here is a fixed version that passes the tests.
     */
   def guideScore(guide: TravelGuide): Int = {
+    val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
+    val quantityScore    = Math.min(40, guide.subjects.size * 10)
+    val totalFollowers = guide.subjects
+      .map(_ match {
+        case Artist(_, followers) => followers.toLong
+        case _                    => 0
+      })
+      .sum
+    val totalBoxOffice = guide.subjects
+      .map(_ match {
+        case Movie(_, boxOffice) => boxOffice.toLong
+        case _                   => 0
+      })
+      .sum
+
+    val followersScore = Math.min(15, totalFollowers / 100_000).toInt
+    val boxOfficeScore = Math.min(15, totalBoxOffice / 10_000_000).toInt
+    descriptionScore + quantityScore + followersScore + boxOfficeScore
+  }
+
+  // BONUS: if we changed the generators to Longs, we'd need to deal with Long overflows too:
+  def guideScoreBigInt(guide: TravelGuide): Int = {
     val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
     val quantityScore    = Math.min(40, guide.subjects.size * 10)
     val totalFollowers = guide.subjects

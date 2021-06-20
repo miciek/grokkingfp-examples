@@ -8,6 +8,7 @@ import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
 import scala.jdk.javaapi.CollectionConverters.asScala
 
 object ch11_TravelGuide extends App {
+  System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
 
   /**
     * STEP 1
@@ -17,12 +18,12 @@ object ch11_TravelGuide extends App {
     * to have separate ones for data access and business domain (see the book).
     */
   case class LocationId(value: String) extends AnyVal
-  case class Location(id: LocationId, name: String, population: Long)
+  case class Location(id: LocationId, name: String, population: Int)
   case class Attraction(name: String, description: Option[String], location: Location)
 
   sealed trait PopCultureSubject
-  case class Artist(name: String, followers: Long) extends PopCultureSubject
-  case class Movie(name: String, boxOffice: Long)  extends PopCultureSubject
+  case class Artist(name: String, followers: Int) extends PopCultureSubject
+  case class Movie(name: String, boxOffice: Int)  extends PopCultureSubject
 
   case class TravelGuide(attraction: Attraction, subjects: List[PopCultureSubject])
 
@@ -201,8 +202,8 @@ object ch11_TravelGuide extends App {
       })
       .sum
 
-    val followersScore = Math.min(15, totalFollowers / 100_000).toInt
-    val boxOfficeScore = Math.min(15, totalBoxOffice / 10_000_000).toInt
+    val followersScore = Math.min(15, totalFollowers / 100_000)
+    val boxOfficeScore = Math.min(15, totalBoxOffice / 10_000_000)
     descriptionScore + quantityScore + followersScore + boxOfficeScore
   }
 
