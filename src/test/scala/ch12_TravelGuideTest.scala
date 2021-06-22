@@ -172,7 +172,6 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     artists         <- Gen.listOfN(numberOfArtists, randomArtist)
   } yield artists
 
-  // quiz: Why 55? (That's how you need to think about properties and assertions)
   test("guide score should always be between 0 and 55 if there is no description and no movies") {
     forAll(randomArtists)((artists: List[Artist]) => {
       val guide = TravelGuide(
@@ -192,10 +191,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
-  // TODO: PRACTICING generators
-  // built-in generators, like Gen.identifier, are used by default
-  // listOf randomMovies
-
+  // Coffee Break: Property-based tests
   val randomMovie: Gen[Movie] = for {
     name      <- Gen.identifier
     boxOffice <- nonNegativeInt
@@ -203,28 +199,25 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
   val randomMovies: Gen[List[Movie]] = for {
     numberOfMovies <- Gen.chooseNum(0, 100)
-    artists        <- Gen.listOfN(numberOfMovies, randomMovie)
-  } yield artists
+    movies         <- Gen.listOfN(numberOfMovies, randomMovie)
+  } yield movies
 
   val randomPopCultureSubjects: Gen[List[PopCultureSubject]] = for {
     movies  <- randomMovies
     artists <- randomArtists
   } yield movies.appendedAll(artists)
 
-  test("guide score should always be between 0 and 75 if there is no description") {
+  test("guide score should always be between 0 and 70 if it only contains pop culture subjects") {
     forAll(randomPopCultureSubjects)((popCultureSubjects: List[PopCultureSubject]) => {
       val guide = TravelGuide(
         Attraction("Yellowstone National Park", None, Location(LocationId("Q1214"), "Wyoming", 586107)),
         popCultureSubjects
       )
 
-      // the following will fail:
-      // val score = guideScore(guide)
-      // assert(score >= 0 && score <= 75)
-
-      // fixed version will not:
+      // min. 0 if the list of pop culture subjects is empty (there is never any description)
+      // max. 70 if there are more than four subjects with big followings
       val score = ch12_TravelGuide.guideScore(guide)
-      assert(score >= 0 && score <= 75)
+      assert(score >= 0 && score <= 70)
     })
   }
 
@@ -388,9 +381,9 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   }
 
   /**
-    * STEP 4: develop new functionalities in a test-driven way.
+    * STEP 4: develop new functionalities in a test-driven way
     */
-  // this function is very straightforward but cleans up the following tests significantly.
+  // this function is very straightforward and cleans up the following tests significantly.
   // What's important is what's left in the tests, how they document the function and convey this new functionality.
   // again: using such a helper function make the tests more readable, because readers can focus on the functionality
   def dataAccessStub(

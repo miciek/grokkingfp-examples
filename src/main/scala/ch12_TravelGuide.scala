@@ -23,13 +23,13 @@ object ch12_TravelGuide extends App {
   def guideScore(guide: TravelGuide): Int = {
     val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
     val quantityScore    = Math.min(40, guide.subjects.size * 10)
-    val totalFollowers = guide.subjects
+    val totalFollowers: Long = guide.subjects
       .map(_ match {
         case Artist(_, followers) => followers.toLong
         case _                    => 0
       })
       .sum
-    val totalBoxOffice = guide.subjects
+    val totalBoxOffice: Long = guide.subjects
       .map(_ match {
         case Movie(_, boxOffice) => boxOffice.toLong
         case _                   => 0
