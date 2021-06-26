@@ -222,70 +222,60 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   }
 
   /**
-    *  STEP 3: test side effects without using any mocking libraries
+    *  STEP 3a: test side effects without using any mocking libraries
+    *  - testing using stubs
     */
-  def testLocation(id: Int): Location =
-    Location(
-      LocationId(s"location-id-$id"),
-      s"location-name-$id",
-      1000
-    ) // using such a helper function makes the test more readable (see below for more examples)
+  test("travel guide should include artists originating from the attraction's location") {
+    // given an external data source with an attraction named "Tower Bridge"
+    // at a location that brought us "Queen"
+    val attractionName = "Tower Bridge"
+    val london         = Location(LocationId("Q84"), "London", 8_908_081)
+    val queen          = Artist("Queen", 2_050_559)
+    val dataAccess = new DataAccess {
+      def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
+        IO.pure(List(Attraction(attractionName, None, london)))
 
-  test("attractions in locations that have artists should be preferred") {
-    // given an external data source with an attraction named "test-attraction" at many locations,
-    // only one of them being an origin for some artists
-    val attractionName      = "test-attraction"
-    val locations           = List.range(0, 100).map(testLocation) // one hundred locations
-    val locationWithArtists = testLocation(1) // only the second one has artists in the data access layer below
-    val dataAccess =
-      new DataAccess { // we could use a helper function that takes locations and return dataAccess, but this is more straightforward: tests should not use too much magic
-        def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
-          IO.pure(locations.map(location => Attraction(attractionName, None, location)))
+      def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] =
+        if (locationId == london.id) IO.pure(List(queen)) else IO.pure(List.empty)
 
-        def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] =
-          if (locationId == locationWithArtists.id)
-            IO.pure(List.range(0, limit).map(number => Artist(s"artist-$number", number * 1000)))
-          else
-            IO.pure(List.empty)
+      def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] = IO.pure(List.empty)
+    }
 
-        def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] = IO.pure(List.empty)
-      }
-
-    // when we want to get a travelGuide for this attraction
+    // when we want to get a travel guide for this attraction
     val guide: Option[TravelGuide] = travelGuide(dataAccess, attractionName).unsafeRunSync()
 
-    // then we get a travel guide for a location that has artists (location.id == 1)
-    assert(guide.exists(_.attraction.location.id == locationWithArtists.id))
+    // then we get a travel guide with "Queen"
+    assert(guide.exists(_.subjects == List(queen)))
   }
 
-  // Coffee Break
-  test("attractions in locations that were used in movies should be preferred") {
-    // given an external data source with an attraction named "test-attraction" at many locations,
-    // only one of them being used in multiple movies
-    val attractionName     = "test-attraction"
-    val locations          = List.range(0, 100).map(testLocation) // one hundred locations
-    val locationWithMovies = testLocation(1) // only the second one has movies in the data access layer below
-    val dataAccess =
-      new DataAccess {
-        def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
-          IO.pure(locations.map(location => Attraction(attractionName, None, location)))
+  // Practicing stubbing external data using IO
+  test("travel guide should include movies set in the attraction's location") {
+    // given an external data source with an attraction named "Golden Gate Bridge"
+    // at a location where "Inside Out" was taking place in
+    val attractionName = "Golden Gate Bridge"
+    val sanFrancisco   = Location(LocationId("Q62"), "San Francisco", 883_963)
+    val insideOut      = Movie("Inside Out", 857_611_174)
+    val dataAccess = new DataAccess {
+      def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
+        IO.pure(List(Attraction(attractionName, None, sanFrancisco)))
 
-        def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] = IO.pure(List.empty)
+      def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] = IO.pure(List.empty)
 
-        def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] =
-          if (locationId == locationWithMovies.id)
-            IO.pure(List.range(0, limit).map(number => Movie(s"movie-$number", number * 1_000_000)))
-          else
-            IO.pure(List.empty)
-      }
+      def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] =
+        if (locationId == sanFrancisco.id) IO.pure(List(insideOut)) else IO.pure(List.empty)
+    }
 
-    // when we want to get a travelGuide for this attraction
+    // when we want to get a travel guide for this attraction
     val guide: Option[TravelGuide] = travelGuide(dataAccess, attractionName).unsafeRunSync()
 
-    // then we get a travel guide for a location that has movies (location.id == 1)
-    assert(guide.exists(_.attraction.location.id == locationWithMovies.id))
+    // then we get a travel guide that includes the "Inside Out" movie
+    assert(guide.exists(_.subjects == List(insideOut)))
   }
 
+  /**
+    *  STEP 3b: test side effects without using any mocking libraries
+    *  - testing using a real SPARQL server
+    */
   def localSparqlServer: Resource[IO, FusekiServer] = {
     val start: IO[FusekiServer] = IO.blocking {
       val model  = RDFDataMgr.loadModel(getClass.getResource("testdata.ttl").toString)
@@ -304,7 +294,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
       connection  <- ch12_TravelGuide.connectionResource(localServer.serverURL(), "test")
     } yield connection
 
-  test("findAttractions implementation should work with a real SPARQL server") {
+  test("data access layer should fetch attractions from a real SPARQL server") {
     val result: List[Attraction] = testServerConnection
       .use(connection => {
         val dataAccess = getSparqlDataAccess(execQuery(connection))
@@ -315,7 +305,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(result.exists(_.name == "Bridge of Sighs") && result.size <= 5)
   }
 
-  test("findAttractions implementation should allow requesting ordering by location population") {
+  test("data access layer should allow requesting attractions sorted by location population") {
     val attractions: List[Attraction] = testServerConnection
       .use(connection => {
         val dataAccess = getSparqlDataAccess(execQuery(connection))
@@ -328,7 +318,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(locations.size == 3 && locations == locations.sortBy(_.population).reverse)
   }
 
-  test("findAttractions implementation should allow requesting an ordering by name") {
+  test("data access layer should allow requesting attractions sorted by name") {
     val attractions: List[Attraction] = testServerConnection
       .use(connection => {
         val dataAccess = getSparqlDataAccess(execQuery(connection))
@@ -339,7 +329,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(attractions.size == 5 && attractions.map(_.name) == attractions.sortBy(_.name).map(_.name))
   }
 
-  test("findArtistsFromLocation should work with a real SPARQL server") {
+  test("data access layer should fetch artists from a real SPARQL server") {
     val artists: List[Artist] = testServerConnection
       .use(connection => {
         val dataAccess = getSparqlDataAccess(execQuery(connection))
@@ -350,7 +340,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(artists.map(_.name) == List("Talco"))
   }
 
-  test("findMoviesAboutLocation should work with a real SPARQL server") {
+  test("data access layer should fetch movies from a real SPARQL server") {
     val movies: List[Movie] = testServerConnection
       .use(connection => {
         val dataAccess = getSparqlDataAccess(execQuery(connection))
@@ -364,7 +354,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     ) // TODO: another test, maybe an exercise/practicing? maybe Resource[IO, DataAccess]?
   }
 
-  test("findMoviesAboutLocation should accepts and pass different limit values to a real SPARQL server") {
+  test("data access layer should accept and relay limit values to a real SPARQL server") {
     // this test shows that you can use property-based checks in integrations tests as well
     // it will fail with and internal SPARQL server error if we use a generator with negative ints
     // (negative limits are not supported) and the test itself is longer than others but it may be useful in some cases
@@ -476,4 +466,69 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
         )
     )
   } // this test will fail for Version4, but passes for Version5 which was written after Version4 and this test (TDD)
+
+  /**
+    * BONUS: semi-end-to-end tests. Tests that test the whole application without the real external service.
+    * It can verify that everything works correctly by looking at some simple happy paths.
+    */
+  def testLocation(id: Int): Location =
+    Location(
+      LocationId(s"location-id-$id"),
+      s"location-name-$id",
+      1000
+    ) // using such a helper function makes the test more readable (see below for more examples)
+
+  test("locations that have artists should be preferred") {
+    // given an external data source with an attraction named "test-attraction" at many locations,
+    // only one of them being an origin for some artists
+    val attractionName      = "test-attraction"
+    val locations           = List.range(0, 100).map(testLocation) // one hundred locations
+    val locationWithArtists = testLocation(1) // only the second one has artists in the data access layer below
+    val dataAccess =
+      new DataAccess { // we could use a helper function that takes locations and return dataAccess, but this is more straightforward: tests should not use too much magic
+        def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
+          IO.pure(locations.map(location => Attraction(attractionName, None, location)))
+
+        def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] =
+          if (locationId == locationWithArtists.id)
+            IO.pure(List.range(0, limit).map(number => Artist(s"artist-$number", number * 1000)))
+          else
+            IO.pure(List.empty)
+
+        def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] = IO.pure(List.empty)
+      }
+
+    // when we want to get a travel guide for this attraction
+    val guide: Option[TravelGuide] = travelGuide(dataAccess, attractionName).unsafeRunSync()
+
+    // then we get a travel guide for a location that has artists (location.id == 1)
+    assert(guide.exists(_.attraction.location.id == locationWithArtists.id))
+  }
+
+  test("locations that were used in movies should be preferred") {
+    // given an external data source with an attraction named "test-attraction" at many locations,
+    // only one of them being used in multiple movies
+    val attractionName     = "test-attraction"
+    val locations          = List.range(0, 100).map(testLocation) // one hundred locations
+    val locationWithMovies = testLocation(1) // only the second one has movies in the data access layer below
+    val dataAccess =
+      new DataAccess {
+        def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
+          IO.pure(locations.map(location => Attraction(attractionName, None, location)))
+
+        def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] = IO.pure(List.empty)
+
+        def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] =
+          if (locationId == locationWithMovies.id)
+            IO.pure(List.range(0, limit).map(number => Movie(s"movie-$number", number * 1_000_000)))
+          else
+            IO.pure(List.empty)
+      }
+
+    // when we want to get a travel guide for this attraction
+    val guide: Option[TravelGuide] = travelGuide(dataAccess, attractionName).unsafeRunSync()
+
+    // then we get a travel guide for a location that has movies (location.id == 1)
+    assert(guide.exists(_.attraction.location.id == locationWithMovies.id))
+  }
 }
