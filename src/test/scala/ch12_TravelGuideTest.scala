@@ -288,7 +288,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     Resource.make(start)(server => IO.blocking(server.stop()))
   }
 
-  def testServerConnection: Resource[IO, RDFConnection] =
+  val testServerConnection: Resource[IO, RDFConnection] =
     for {
       localServer <- localSparqlServer
       connection  <- ch12_TravelGuide.connectionResource(localServer.serverURL(), "test")
@@ -297,61 +297,81 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   test("data access layer should fetch attractions from a real SPARQL server") {
     val result: List[Attraction] = testServerConnection
       .use(connection => {
+        // given a real external data source with attractions in Venice
         val dataAccess = getSparqlDataAccess(execQuery(connection))
+
+        // when we use it to find attractions named "Bridge of Sighs"
         dataAccess.findAttractions("Bridge of Sighs", ByLocationPopulation, 5)
       })
       .unsafeRunSync()
 
+    // then we get a list of results with Bridge of Sighs in it
     assert(result.exists(_.name == "Bridge of Sighs") && result.size <= 5)
   }
 
-  test("data access layer should allow requesting attractions sorted by location population") {
-    val attractions: List[Attraction] = testServerConnection
+  test("data access layer should fetch attractions sorted by location population") {
+    val locations: List[Location] = testServerConnection
       .use(connection => {
+        // given a real external data source with national parks in the US
         val dataAccess = getSparqlDataAccess(execQuery(connection))
-        dataAccess.findAttractions("Yellowstone", ByLocationPopulation, 5)
+
+        // when we use it to find three locations of the attraction named "Yellowstone"
+        dataAccess.findAttractions("Yellowstone", ByLocationPopulation, 3)
       })
       .unsafeRunSync()
+      .map(_.location)
 
-    val locations = attractions.map(_.location)
-
+    // then we get a list of three locations sorted properly by their population
     assert(locations.size == 3 && locations == locations.sortBy(_.population).reverse)
   }
 
-  test("data access layer should allow requesting attractions sorted by name") {
+  // Coffee Break: Writing integration tests
+  test("data access layer should fetch attractions sorted by name") {
     val attractions: List[Attraction] = testServerConnection
       .use(connection => {
+        // given a real external data source with national parks in the US
         val dataAccess = getSparqlDataAccess(execQuery(connection))
-        dataAccess.findAttractions("National Park", ByName, 5) // looking for national parks
+
+        // when we use it to find five attractions named "National Park"
+        dataAccess.findAttractions("National Park", ByName, 5)
       })
       .unsafeRunSync()
 
+    // then we get a list of five attractions sorted properly by their name
     assert(attractions.size == 5 && attractions.map(_.name) == attractions.sortBy(_.name).map(_.name))
   }
+
+  val veniceId: LocationId = LocationId("Q641")
 
   test("data access layer should fetch artists from a real SPARQL server") {
     val artists: List[Artist] = testServerConnection
       .use(connection => {
+        // given a real external data source with attractions in Venice
         val dataAccess = getSparqlDataAccess(execQuery(connection))
-        dataAccess.findArtistsFromLocation(LocationId("Q641"), 1) // Venice id
+
+        // when we use it to find an artist from Venice
+        dataAccess.findArtistsFromLocation(veniceId, 1)
       })
       .unsafeRunSync()
 
+    // then we get a list of a single artist named "Talco"
     assert(artists.map(_.name) == List("Talco"))
   }
 
   test("data access layer should fetch movies from a real SPARQL server") {
     val movies: List[Movie] = testServerConnection
       .use(connection => {
+        // given a real external data source with attractions in Venice
         val dataAccess = getSparqlDataAccess(execQuery(connection))
-        dataAccess.findMoviesAboutLocation(LocationId("Q641"), 2) // Venice id
+
+        // when we use it to find max two movies set in Venice
+        dataAccess.findMoviesAboutLocation(veniceId, 2)
       })
       .unsafeRunSync()
 
+    // then we get a list of a two movies:
+    // "Spider-Man: Far from Home" and "Casino Royale"
     assert(movies.map(_.name) == List("Spider-Man: Far from Home", "Casino Royale"))
-    assert(
-      movies.forall(_.boxOffice > 0)
-    ) // TODO: another test, maybe an exercise/practicing? maybe Resource[IO, DataAccess]?
   }
 
   test("data access layer should accept and relay limit values to a real SPARQL server") {
@@ -362,7 +382,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
       val movies: List[Movie] = testServerConnection
         .use(connection => {
           val dataAccess = getSparqlDataAccess(execQuery(connection))
-          dataAccess.findMoviesAboutLocation(LocationId("Q641"), limit) // Venice id
+          dataAccess.findMoviesAboutLocation(veniceId, limit)
         })
         .unsafeRunSync()
 
