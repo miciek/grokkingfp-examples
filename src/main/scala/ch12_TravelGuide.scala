@@ -80,10 +80,8 @@ object ch12_TravelGuide extends App {
     */
   // PROBLEM: sometimes there will be problems (not enough data, or problems with data access, we should return smaller
   // guide nonetheless)
-  case class SearchReport(badGuides: List[TravelGuide], errors: List[String])
+  case class SearchReport(badGuides: List[TravelGuide], problems: List[String])
 
-  /** TODO: Practicing type-level exceptions (attempt)
-    */
   object Version4 {
     def travelGuideForAttraction(dataAccess: DataAccess, attraction: Attraction): IO[TravelGuide] = {
       List(
@@ -92,7 +90,7 @@ object ch12_TravelGuide extends App {
       ).parSequence.map(_.flatten).map(subjects => TravelGuide(attraction, subjects))
     }
 
-    def searchForGoodGuide(guides: List[TravelGuide]): Either[SearchReport, TravelGuide] = {
+    def findGoodGuide(guides: List[TravelGuide]): Either[SearchReport, TravelGuide] = {
       guides.sortBy(guideScore).reverse.headOption match {
         case Some(bestGuide) =>
           if (guideScore(bestGuide) > 55) Right(bestGuide) else Left(SearchReport(guides, List.empty))
@@ -110,7 +108,7 @@ object ch12_TravelGuide extends App {
             attractions
               .map(attraction => travelGuideForAttraction(dataAccess, attraction))
               .parSequence
-              .map(searchForGoodGuide)
+              .map(findGoodGuide)
         })
     }
   }

@@ -376,9 +376,9 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
   test("data access layer should accept and relay limit values to a real SPARQL server") {
     // this test shows that you can use property-based checks in integrations tests as well
-    // it will fail with and internal SPARQL server error if we use a generator with negative ints
+    // it will fail with an internal SPARQL server error if we use a generator with negative ints
     // (negative limits are not supported) and the test itself is longer than others but it may be useful in some cases
-    forAll(Gen.chooseNum(0, Int.MaxValue))((limit: Int) => {
+    forAll(nonNegativeInt)((limit: Int) => {
       val movies: List[Movie] = testServerConnection
         .use(connection => {
           val dataAccess = getSparqlDataAccess(execQuery(connection))
@@ -414,42 +414,55 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     Location(LocationId("Q1214"), "Wyoming", 586107)
   )
 
+  test("travelGuide should return a search report if it can't find a good-enough guide") {
+    // given an external data source with a single attraction,
+    // no movies, no artists and no IO failures
+    val dataAccess = dataAccessStub(
+      IO.pure(List(yellowstone)),
+      IO.pure(List.empty),
+      IO.pure(List.empty)
+    )
+
+    // when we want to get a travel guide
+    val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "").unsafeRunSync()
+
+    // then we get a search report with bad guides (0 artists, 0 movies means the score is < 55)
+    assert(
+      result == Left(
+          SearchReport(List(TravelGuide(yellowstone, List.empty)), problems = List.empty)
+        )
+    )
+  }
+
   val hatefulEight: Movie = Movie("The Hateful Eight", 155760117)
   val heavensGate: Movie  = Movie("Heaven's Gate", 3484331)
 
-  test("travelGuide should return a search report if it can't find a good-enough guide") {
-    // given an external data source with a single attraction, no movies, no artists and no IO failures
-    val dataAccess = dataAccessStub(IO.pure(List(yellowstone)), IO.pure(List.empty), IO.pure(List.empty))
+  test("travelGuide should return a travel guide if two movies are available") {
+    // given an external data source with a single attraction
+    // two movies, no artists and no IO failures
+    val dataAccess = dataAccessStub(
+      IO.pure(List(yellowstone)),
+      IO.pure(List.empty),
+      IO.pure(List(hatefulEight, heavensGate))
+    )
 
-    // when we execute the travelGuide function for "Yellowstone" (it's just for the show, because no matter what we put here, the data is stubbed)
-    val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "Yellowstone").unsafeRunSync()
-
-    // then we don't get a travel guide but a search report (not enough points)
-    assert(result == Left(SearchReport(List(TravelGuide(yellowstone, List.empty)), errors = List.empty)))
-  }
-
-  test("travelGuide should return a travel guide if there is enough data in the external data source") {
-    // given an external data source with a single attraction, two movies, no artists and no IO failures
-    val dataAccess =
-      dataAccessStub(IO.pure(List(yellowstone)), IO.pure(List.empty), IO.pure(List(hatefulEight, heavensGate)))
-
-    // when we execute the travelGuide function for "Yellowstone"
-    val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "Yellowstone").unsafeRunSync()
+    // when we want to get a travel guide
+    val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "").unsafeRunSync()
 
     // then we get a proper travel guide because it has a high score (> 55 points)
     assert(result == Right(TravelGuide(yellowstone, List(hatefulEight, heavensGate))))
   }
 
-  test("travelGuide should return a search report with no guides if it can't fetch the attractions due to IO failures") {
+  test("travelGuide should return a search report with problems when fetching attractions fails") {
     // given an external data source that fails when trying to fetch attractions
     val dataAccess =
       dataAccessStub(IO.delay(throw new Exception("fetching failed")), IO.pure(List.empty), IO.pure(List.empty))
 
-    // when we execute the travelGuide function for "Yellowstone"
-    val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "Yellowstone").unsafeRunSync()
+    // when we want to get a travel guide
+    val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "").unsafeRunSync()
 
-    // then we don't get a search report with no bad guides and list of errors
-    assert(result == Left(SearchReport(badGuides = List.empty, errors = List("fetching failed"))))
+    // then we get a search report with a list of problems
+    assert(result == Left(SearchReport(badGuides = List.empty, problems = List("fetching failed"))))
   }
 
   val yosemite: Attraction = Attraction(
@@ -473,15 +486,15 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
           IO.pure(List.empty)
       }
 
-    // when we execute the travelGuide function for "National Park"
-    val result: Either[SearchReport, TravelGuide] = Version5.travelGuide(dataAccess, "National Park").unsafeRunSync()
+    // when we want to get a travel guide
+    val result: Either[SearchReport, TravelGuide] = Version5.travelGuide(dataAccess, "").unsafeRunSync()
 
     // then we get a search report with one bad guide (< 55) and list of errors
     assert(
       result == Left(
           SearchReport(
             badGuides = List(TravelGuide(yellowstone, List.empty)),
-            errors = List("Yosemite artists fetching failed")
+            problems = List("Yosemite artists fetching failed")
           )
         )
     )
