@@ -138,7 +138,7 @@ object ch12_TravelGuide extends App {
   object Version5 {
     import Version4.travelGuideForAttraction
 
-    def searchForGoodGuide(errorsOrGuides: List[Either[Throwable, TravelGuide]]): Either[SearchReport, TravelGuide] = {
+    def findGoodGuide(errorsOrGuides: List[Either[Throwable, TravelGuide]]): Either[SearchReport, TravelGuide] = {
       val guides: List[TravelGuide] = errorsOrGuides.collect(_ match {
         case Right(travelGuide) => travelGuide
       })
@@ -163,7 +163,7 @@ object ch12_TravelGuide extends App {
               .map(attraction => travelGuideForAttraction(dataAccess, attraction))
               .map(_.attempt) // note that we attempt on individual IO values, so it needs to be before parSequence
               .parSequence
-              .map(searchForGoodGuide)
+              .map(findGoodGuide)
         })
     }
   }

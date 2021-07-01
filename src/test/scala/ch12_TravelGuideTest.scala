@@ -471,19 +471,16 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     Location(LocationId("Q109661"), "Madera County", 157327)
   )
 
-  test(
-    "travelGuide should return a search report with some guides if it can't sometimes fetch artists due to IO failures"
-  ) {
-    // given an external data source that fails when trying to fetch artists for "Yosemite"
+  test("travelGuide should return a search report with some guides if it can't fetch artists due to IO failures") {
+    // given a data source that fails when trying to fetch artists for "Yosemite"
     val dataAccess =
       new DataAccess { // it's more complicated case, so it's better to define it directly, without helpers
-        def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
+        def findAttractions(name: String, ordering: AttractionOrdering, limit: Int) =
           IO.pure(List(yosemite, yellowstone))
-        def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]] =
+        def findArtistsFromLocation(locationId: LocationId, limit: Int) =
           if (locationId == yosemite.location.id) IO.delay(throw new Exception("Yosemite artists fetching failed"))
           else IO.pure(List.empty)
-        def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]] =
-          IO.pure(List.empty)
+        def findMoviesAboutLocation(locationId: LocationId, limit: Int) = IO.pure(List.empty)
       }
 
     // when we want to get a travel guide
