@@ -189,13 +189,17 @@ public class ch08_SchedulingMeetingsImpure {
         check.apply(scheduleNoFailures("Alice", "Bob", 3)).expect(new MeetingTime(12, 15));
         check.apply(scheduleNoFailures("Alice", "Bob", 4)).expect(new MeetingTime(12, 16));
         check.apply(scheduleNoFailures("Alice", "Bob", 5)).expect((MeetingTime) null);
-        check.apply(scheduleNoFailures("Alice", "Charlie", 2)).expect(meetingTime -> true);
+        check.apply(scheduleNoFailures("Alice", "Charlie", 2)).expectThat(meetingTime -> true);
 
-        check.apply(schedule("Alice", "Bob", 1)).expect(new MeetingTime(10, 11));
-        check.apply(schedule("Alice", "Bob", 2)).expect(new MeetingTime(12, 14));
-        check.apply(schedule("Alice", "Bob", 3)).expect(new MeetingTime(12, 15));
-        check.apply(schedule("Alice", "Bob", 4)).expect(new MeetingTime(12, 16));
-        check.apply(schedule("Alice", "Bob", 5)).expect((MeetingTime) null);
-        check.apply(schedule("Alice", "Charlie", 2)).expect(meetingTime -> true);
+        try {
+            check.apply(schedule("Alice", "Bob", 1)).expect(new MeetingTime(10, 11));
+            check.apply(schedule("Alice", "Bob", 2)).expect(new MeetingTime(12, 14));
+            check.apply(schedule("Alice", "Bob", 3)).expect(new MeetingTime(12, 15));
+            check.apply(schedule("Alice", "Bob", 4)).expect(new MeetingTime(12, 16));
+            check.apply(schedule("Alice", "Bob", 5)).expect((MeetingTime) null);
+            check.apply(schedule("Alice", "Charlie", 2)).expectThat(meetingTime -> true);
+        } catch (Throwable t) {
+            System.out.println("Caught an exception in the impure version: " + t.getMessage());
+        }
     }
 }

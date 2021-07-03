@@ -7,8 +7,7 @@ import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
 
 import scala.jdk.javaapi.CollectionConverters.asScala
 
-object ch11_TravelGuide extends App {
-  System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
+object ch11_TravelGuide {
 
   /**
     * STEP 1
@@ -64,7 +63,7 @@ object ch11_TravelGuide extends App {
     * STEP 4: implementing real data access
     * @see [[ch11_QueryingWikidata]] for a simple Wikidata query using Apache Jena imperatively
     */
-  {
+  private def runStep4 = {
     val getConnection: IO[RDFConnection] = IO.delay(
       RDFConnectionRemote.create // we will make it better, see at the end
         .destination("https://query.wikidata.org/")
@@ -130,19 +129,19 @@ object ch11_TravelGuide extends App {
       } yield attractions
     }
 
-    { // currying discussion (configuring a function)
+    def configuringAFunction = { // currying discussion (configuring a function)
       def findAttractions(
           connection: RDFConnection
       )(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] = ???
 
       val connection: RDFConnection                                    = null
       val f: (String, AttractionOrdering, Int) => IO[List[Attraction]] = findAttractions(connection)
-      // connection.close()
+      f // you should be able to use f now without knowing anything about the connection (which you should close() later)
     }
 
     check
       .executedIO(findAttractions("Bridge of Sighs", ByLocationPopulation, 1))
-      .expect(_.map(_.name) == List("Bridge of Sighs"))
+      .expectThat(_.map(_.name) == List("Bridge of Sighs"))
 
     // connection.close() // PROBLEM we are not able to close each connection used by the getConnection clients
     // and we can't pass connection directly because it's a mutable, stateful value
@@ -157,7 +156,7 @@ object ch11_TravelGuide extends App {
     * STEP 5: connecting the dots
     */
   // mostly IMPURE CODE, out of the functional core
-  {
+  private def runStep5 = {
     def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] =
       IO.blocking(
         asScala(connection.query(QueryFactory.create(query)).execSelect()).toList
@@ -234,7 +233,7 @@ object ch11_TravelGuide extends App {
     execution.close()
   )
 
-  { // handling resource release manually
+  private def runVersion2 = { // handling resource release manually
     def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] = {
       for {
         execution <- createExecution(connection, query)
@@ -275,19 +274,23 @@ object ch11_TravelGuide extends App {
     )
   )(connection => IO.blocking(connection.close()))
 
-  val program: IO[Option[TravelGuide]] = connectionResource.use(connection => {
-    val wikidata = getSparqlDataAccess(execQuery(connection))
-    Version2.travelGuide(wikidata, "Yosemite") // this will not leak, even if there are errors
-  })
+  private def runVersion2UsingResource = {
+    val program: IO[Option[TravelGuide]] = connectionResource.use(connection => {
+      val wikidata = getSparqlDataAccess(execQuery(connection))
+      Version2.travelGuide(wikidata, "Yosemite") // this will not leak, even if there are errors
+    })
 
-  check.executedIO(program)
+    check.executedIO(program)
+  }
 
-  // Resource has map! (TODO: Practicing section, Resource.use, flatMap, map (chapter 5), fromAutocloseable
+  // Resource has map! TODO: Practicing section, Resource.use, flatMap, map (chapter 5), fromAutocloseable
   val queryExecResource: Resource[IO, String => IO[List[QuerySolution]]] = connectionResource.map(execQuery)
   val dataAccessResource: Resource[IO, DataAccess] =
     connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
 
-  check.executedIO(dataAccessResource.use(dataAccess => Version2.travelGuide(dataAccess, "Yosemite")))
+  private def runVersion2WithMappedResource = {
+    check.executedIO(dataAccessResource.use(dataAccess => Version2.travelGuide(dataAccess, "Yosemite")))
+  }
 
   // PROBLEM: we make all queries sequentially, but we can make parallel queries in two attractions
 
@@ -311,9 +314,11 @@ object ch11_TravelGuide extends App {
     }
   }
 
-  check.executedIO(
-    dataAccessResource.use(dataAccess => Version3.travelGuide(dataAccess, "Yellowstone"))
-  ) // this will take a lot less time than Version2!
+  private def runVersion3 = {
+    check.executedIO(
+      dataAccessResource.use(dataAccess => Version3.travelGuide(dataAccess, "Yellowstone"))
+    ) // this will take a lot less time than Version2!
+  }
 
   // PROBLEM: we are repeating the same queries, but the results don't change that often.
 
@@ -337,15 +342,28 @@ object ch11_TravelGuide extends App {
     } yield solutions
   }
 
-  check.executedIO(
-    connectionResource.use(connection =>
-      for {
-        cache        <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
-        cachedSparql = getSparqlDataAccess(cachedExecQuery(connection, cache))
-        result1      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-        result2      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-        result3      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-      } yield result1.toList.appendedAll(result2).appendedAll(result3)
-    )
-  ) // the second and third execution will take a lot less time because all queries are cached!
+  private def runCachedVersion = {
+    check.executedIO(
+      connectionResource.use(connection =>
+        for {
+          cache        <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
+          cachedSparql = getSparqlDataAccess(cachedExecQuery(connection, cache))
+          result1      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result2      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result3      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+        } yield result1.toList.appendedAll(result2).appendedAll(result3)
+      )
+    ) // the second and third execution will take a lot less time because all queries are cached!
+  }
+
+  def main(args: Array[String]): Unit = {
+    System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
+    runStep4
+    runStep5
+    runVersion2
+    runVersion2UsingResource
+    runVersion2WithMappedResource
+    runVersion3
+    runCachedVersion
+  }
 }

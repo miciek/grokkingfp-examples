@@ -2,8 +2,7 @@ import cats.effect.{IO, Resource}
 import cats.implicits._
 import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
 
-object ch12_TravelGuide extends App {
-  System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
+object ch12_TravelGuide {
 
   /** PREREQUISITES: data model and the guideScore function.  We don't import the travelGuide
     * function here because we want to develop a new version of it. However, its dependencies
@@ -113,7 +112,10 @@ object ch12_TravelGuide extends App {
     }
   }
 
-  { // Let's run the new version (we will need a DataAccess so let's wrap it in Resource)
+  private def runVersion4 = {
+    System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
+
+    // We need a DataAccess to run the travelGuide function so let's wrap it in Resource
     val connectionResource: Resource[IO, RDFConnection] = Resource.make(
       IO.blocking(
         RDFConnectionRemote.create
@@ -168,19 +170,7 @@ object ch12_TravelGuide extends App {
     }
   }
 
-  { // Let's run the new version (we will need a DataAccess so let's wrap it in Resource)
-    val connectionResource: Resource[IO, RDFConnection] = Resource.make(
-      IO.blocking(
-        RDFConnectionRemote.create
-          .destination("https://query.wikidata.org/")
-          .queryEndpoint("sparql")
-          .build
-      )
-    )(connection => IO.blocking(connection.close()))
-
-    val dataAccessResource: Resource[IO, DataAccess] =
-      connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
-
+  private def runVersion5 = {
     check.executedIO(dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Yellowstone"))) // Right
     check.executedIO(
       dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Yosemite"))
@@ -188,5 +178,10 @@ object ch12_TravelGuide extends App {
     check.executedIO(
       dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Hacking attempt \""))
     ) // Left with errors
+  }
+
+  def main(args: Array[String]): Unit = {
+    runVersion4
+    runVersion5
   }
 }

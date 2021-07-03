@@ -56,7 +56,7 @@ object ch09_CastingDieStream extends App {
     val dieCast: Stream[IO, Int]         = Stream.eval(castTheDie())
     val oneDieCastProgram: IO[List[Int]] = dieCast.compile.toList
 
-    check(oneDieCastProgram.unsafeRunSync()).expect(_.size == 1)
+    check(oneDieCastProgram.unsafeRunSync()).expectThat(_.size == 1)
 
     val infiniteDieCasts: Stream[IO, Int]      = Stream.eval(castTheDie()).repeat
     val infiniteDieCastsProgram: IO[List[Int]] = infiniteDieCasts.compile.toList
@@ -66,36 +66,37 @@ object ch09_CastingDieStream extends App {
     // println(infiniteDieCastsProgramDrain.unsafeRunSync()) // will never finish
 
     val firstThreeCasts: IO[List[Int]] = infiniteDieCasts.take(3).compile.toList
-    check(firstThreeCasts.unsafeRunSync()).expect(_.size == 3)
+    check(firstThreeCasts.unsafeRunSync()).expectThat(_.size == 3)
 
     val six: IO[List[Int]] = infiniteDieCasts.filter(_ == 6).take(1).compile.toList
     check(six.unsafeRunSync()).expect(List(6))
 
     // Practicing stream operations:
     // 1. filter odd numbers only and return the first three such casts
-    check(infiniteDieCasts.filter(_ % 2 != 0).take(3).compile.toList.unsafeRunSync()).expect(_.size == 3)
+    check(infiniteDieCasts.filter(_ % 2 != 0).take(3).compile.toList.unsafeRunSync()).expectThat(_.size == 3)
 
     // 2. return first five die casts, but make sure all sixes values are doubled (so 1, 2, 3, 6, 4 becomes 1, 2, 3, 12, 4)
-    check(infiniteDieCasts.take(5).map(x => if (x == 6) 12 else x).compile.toList.unsafeRunSync()).expect { result =>
-      !result.contains(6) && result.size == 5
+    check(infiniteDieCasts.take(5).map(x => if (x == 6) 12 else x).compile.toList.unsafeRunSync()).expectThat {
+      result => !result.contains(6) && result.size == 5
     }
 
     // 3. return the sum of the first three casts
-    check(infiniteDieCasts.take(3).compile.toList.map(_.sum).unsafeRunSync()).expect { result =>
+    check(infiniteDieCasts.take(3).compile.toList.map(_.sum).unsafeRunSync()).expectThat { result =>
       result >= 3 && result <= 18
     }
 
     // 4. cast the die until there is a five and then cast it two more times, returning three last results back
     check(infiniteDieCasts.filter(_ == 5).take(1).append(infiniteDieCasts.take(2)).compile.toList.unsafeRunSync())
-      .expect { result => result.size == 3 && result.head == 5 }
+      .expectThat { result => result.size == 3 && result.head == 5 }
 
     // 5. make sure the die is cast one hundred times and values are discarded
-    check(infiniteDieCasts.take(100).compile.drain).expect(_.isInstanceOf[IO[Unit]])
+    check(infiniteDieCasts.take(100).compile.drain).expectThat(_.isInstanceOf[IO[Unit]])
 
     // 6. return first three casts unchanged and next three casts tripled (six in total)
-    check(infiniteDieCasts.take(3).append(infiniteDieCasts.take(3).map(_ * 3)).compile.toList.unsafeRunSync()).expect {
-      result => result.size == 6 && result.slice(0, 3).forall(_ <= 6) && result.slice(3, 6).forall(_ >= 3)
-    }
+    check(infiniteDieCasts.take(3).append(infiniteDieCasts.take(3).map(_ * 3)).compile.toList.unsafeRunSync())
+      .expectThat { result =>
+        result.size == 6 && result.slice(0, 3).forall(_ <= 6) && result.slice(3, 6).forall(_ >= 3)
+      }
 
     // 7. cast the die until there are two sixes in a row
     check(

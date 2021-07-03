@@ -3,7 +3,7 @@ import cats.effect.IO
 import cats.implicits._
 import cats.effect.unsafe.implicits.global
 
-object ch08_SchedulingMeetings extends App {
+object ch08_SchedulingMeetings {
 
   /**
     * PREREQUISITE 1: MeetingTime model
@@ -36,7 +36,7 @@ object ch08_SchedulingMeetings extends App {
   }
 
   // STEP 0: imperative implementation of the happy path (assuming no failures)
-  {
+  private def runStep0 = {
     import ch08_SchedulingMeetingsImpure.scheduleNoFailures
 
     check { scheduleNoFailures("Alice", "Bob", 1) }.expect {
@@ -54,7 +54,7 @@ object ch08_SchedulingMeetings extends App {
     check { scheduleNoFailures("Alice", "Bob", 5) }.expect {
       null.asInstanceOf[MeetingTime]
     }
-    check { scheduleNoFailures("Alice", "Charlie", 2) }.expect { _ =>
+    check { scheduleNoFailures("Alice", "Charlie", 2) }.expectThat { _ =>
       true // it's random so it may be null or a random MeetingTime
     }
   } // PROBLEMS: multiple responsibilities, no failure handling, signature lies
@@ -78,15 +78,17 @@ object ch08_SchedulingMeetings extends App {
     } yield person1Entries.appendedAll(person2Entries)
   }
 
-  check.potentiallyFailing { scheduledMeetings("Alice", "Bob").unsafeRunSync() }.expect {
-    List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10))
-  }
+  private def runStep1 = {
+    check.potentiallyFailing { scheduledMeetings("Alice", "Bob").unsafeRunSync() }.expect {
+      List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10))
+    }
 
-  val scheduledMeetingsProgram = scheduledMeetings("Alice", "Bob")
-  check.potentiallyFailing(scheduledMeetingsProgram).expect(_.isInstanceOf[IO[List[MeetingTime]]])
+    val scheduledMeetingsProgram = scheduledMeetings("Alice", "Bob")
+    check(scheduledMeetingsProgram).expectThat(_.isInstanceOf[IO[List[MeetingTime]]])
 
-  check.potentiallyFailing { scheduledMeetingsProgram.unsafeRunSync() }.expect {
-    List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10))
+    check.potentiallyFailing { scheduledMeetingsProgram.unsafeRunSync() }.expect {
+      List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10))
+    }
   }
 
   // Coffee Break: Working with values
@@ -114,10 +116,10 @@ object ch08_SchedulingMeetings extends App {
     }
   }
 
-  {
+  private def runVersion1 = {
     import Version1.schedule
     val program = schedule("Alice", "Bob", 1)
-    check(program).expect(_.isInstanceOf[IO[Option[MeetingTime]]])
+    check(program).expectThat(_.isInstanceOf[IO[Option[MeetingTime]]])
     check.potentiallyFailing { program.unsafeRunSync() }.expect {
       Some(MeetingTime(10, 11))
     }
@@ -125,7 +127,7 @@ object ch08_SchedulingMeetings extends App {
   // PROBLEM SOLVED: entangled concerns
 
   // PROBLEMS: no failure handling, signature lies
-  {
+  private def imperativeErrorHandling = {
     // handling possible failures imperatively:
     import ch08_SchedulingMeetingsImpure.schedule
     check.potentiallyFailing { schedule("Alice", "Bob", 1) }.expect {
@@ -158,7 +160,7 @@ object ch08_SchedulingMeetings extends App {
   }
 
   // STEP 2: Introduce orElse
-  {
+  private def introduceOrElse = {
     val year: IO[Int]   = IO.delay(996)
     val noYear: IO[Int] = IO.delay(throw new Exception("no year"))
 
@@ -178,25 +180,22 @@ object ch08_SchedulingMeetings extends App {
     }
   }
 
-  // lazy evaluation
-  {
+  private def lazyEvaluation = {
     val program = IO.pure(2021).orElse(IO.delay(throw new Exception()))
-    check(program).expect(_.isInstanceOf[IO[Int]])
+    check(program).expectThat(_.isInstanceOf[IO[Int]])
     check(program.unsafeRunSync()).expect(2021)
   }
 
-  // eager evaluation
-  {
+  private def eagerEvaluation = {
     try {
       val program = IO.pure(2021).orElse(IO.pure(throw new Exception()))
-      check(program).expect(_.isInstanceOf[IO[Int]])
+      check(program).expectThat(_.isInstanceOf[IO[Int]])
     } catch {
       case e: Throwable => assert(e.getMessage == null)
     }
   }
 
-  // recovery strategies
-  {
+  private def recoveryStrategies = {
     calendarEntries("Alice").orElse(calendarEntries("Alice")).orElse(IO.pure(List.empty))
 
     // described behaviour: call the side-effectful IO action and return results if successful; if it fails—call it again:
@@ -210,8 +209,7 @@ object ch08_SchedulingMeetings extends App {
       .orElse(IO.pure(List.empty))
   }
 
-  // different levels of handling potential failures
-  {
+  private def differentLevelsOfHandlingPotentialFailures = {
     // first option:
     def calendarEntries(name: String): IO[List[MeetingTime]] = {
       IO.delay(calendarEntriesApiCall(name))
@@ -241,7 +239,7 @@ object ch08_SchedulingMeetings extends App {
       } yield meetings.headOption
     }
 
-    check(schedule _).expect(_.isInstanceOf[(String, String, Int) => IO[Option[MeetingTime]]])
+    check(schedule _).expectThat(_.isInstanceOf[(String, String, Int) => IO[Option[MeetingTime]]])
   }
 
   object Version2 {
@@ -256,11 +254,11 @@ object ch08_SchedulingMeetings extends App {
     }
   }
 
-  {
+  private def runVersion2 = {
     import Version2.schedule
 
     val program = schedule("Alice", "Bob", 1)
-    check(program).expect(_.isInstanceOf[IO[Option[MeetingTime]]])
+    check(program).expectThat(_.isInstanceOf[IO[Option[MeetingTime]]])
 
     // we can execute it many times and it won't fail!
     program.unsafeRunSync()
@@ -270,16 +268,16 @@ object ch08_SchedulingMeetings extends App {
     // note we can't assert on fixed results because
     // there may be different results since in this version of schedule
     // we sometime use List.empty fallback!
-    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 1)
     }
-    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 2)
     }
-    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 3)
     }
-    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 4)
     }
   }
@@ -326,28 +324,29 @@ object ch08_SchedulingMeetings extends App {
     }
   }
 
-  {
+  private def runVersion3 = {
     import Version3.schedule
 
     // note we can't assert on fixed results because
     // there may be different results since in this version of schedule
     // we sometime use List.empty fallback!
 
-    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 1)
     }
-    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 2)
     }
-    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 3)
     }
-    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expect {
+    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expectThat {
       _.forall(meeting => meeting.endHour - meeting.startHour == 4)
     }
   }
   // PROBLEM SOLVED: signature lies
 
+  // an example of caching from a client perspective (see ch10 for more)
   trait Caching {
     def cachedCalendarEntries(name: String): IO[List[MeetingTime]]
     def updateCachedEntries(name: String, newEntries: List[MeetingTime]): IO[Unit]
@@ -372,7 +371,7 @@ object ch08_SchedulingMeetings extends App {
       })
   }
 
-  { // retry test
+  private def runRetry = {
     var calls = 0
     retry(IO.delay {
       calls = calls + 1
@@ -381,7 +380,7 @@ object ch08_SchedulingMeetings extends App {
     check(calls).expect(11)
   }
 
-  {
+  object Version4 {
     def schedule(person1: String, person2: String, lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- retry(scheduledMeetings(person1, person2), 10)
@@ -394,6 +393,10 @@ object ch08_SchedulingMeetings extends App {
             }
       } yield possibleMeeting
     }
+  }
+
+  private def runVersion4 = {
+    import Version4.schedule
 
     check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expect {
       Some(MeetingTime(10, 11))
@@ -417,10 +420,12 @@ object ch08_SchedulingMeetings extends App {
       .map(_.flatten)
   }
 
-  check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
-    .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
-  check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
-  check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+  private def runScheduledMeetings = {
+    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
+      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
+    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+  }
 
   object Version5 { // FINAL VERSION: also presented at the beginning of the chapter
     def schedule(attendees: List[String], lengthHours: Int): IO[Option[MeetingTime]] = {
@@ -435,7 +440,7 @@ object ch08_SchedulingMeetings extends App {
     }
   }
 
-  {
+  private def runVersion5 = {
     import Version5.schedule
 
     // note we can assert on fixed results here because
@@ -454,13 +459,13 @@ object ch08_SchedulingMeetings extends App {
     check { schedule(List("Alice", "Bob"), 4).unsafeRunSync() }.expect {
       Some(MeetingTime(12, 16))
     }
-    check { schedule(List("Alice", "Bob", "Charlie"), 1).unsafeRunSync() }.expect { r =>
+    check { schedule(List("Alice", "Bob", "Charlie"), 1).unsafeRunSync() }.expectThat { r =>
       r.forall(m => m.endHour - m.startHour == 1)
     }
   }
 
   // BONUS: scheduledMeetings using foldLeft instead of sequence:
-  {
+  private def bonus1 = {
     def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
       attendees
         .map(attendee => retry(calendarEntries(attendee), 10))
@@ -475,13 +480,13 @@ object ch08_SchedulingMeetings extends App {
     check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
       .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
 
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
 
     check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
   }
 
   // BONUS: scheduledMeetings using traverse
-  {
+  private def bonus2 = {
     def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
       attendees
         .traverse(attendee => retry(calendarEntries(attendee), 10))
@@ -491,13 +496,13 @@ object ch08_SchedulingMeetings extends App {
     check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
       .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
 
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
 
     check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
   }
 
   // BONUS: scheduledMeetings using flatTraverse
-  {
+  private def bonus3 = {
     def scheduledMeetings(attendees: List[String]): IO[List[MeetingTime]] = {
       attendees.flatTraverse(attendee => retry(calendarEntries(attendee), 10))
     }
@@ -505,7 +510,7 @@ object ch08_SchedulingMeetings extends App {
     check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
       .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
 
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expect(_.size == 4)
+    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
 
     check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
   }
@@ -519,5 +524,26 @@ object ch08_SchedulingMeetings extends App {
     val goodYears: List[Option[Int]]  = List(Some(2019), Some(2021))
     val resultSome: Option[List[Int]] = goodYears.sequence
     check(resultSome).expect(Some(List(2019, 2021)))
+  }
+
+  def main(args: Array[String]): Unit = {
+    runStep0
+    runStep1
+    runVersion1
+    imperativeErrorHandling
+    introduceOrElse
+    lazyEvaluation
+    eagerEvaluation
+    recoveryStrategies
+    differentLevelsOfHandlingPotentialFailures
+    runVersion2
+    runVersion3
+    runRetry
+    runVersion4
+    runScheduledMeetings
+    runVersion5
+    bonus1
+    bonus2
+    bonus3
   }
 }

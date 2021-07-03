@@ -221,37 +221,37 @@ object ch07_MusicArtistsSearch extends App {
     def f1(users: List[User]): List[User] = {
       users.filter(_.city.forall(_ == "Melbourne"))
     }
-    check(f1(users)).expect(_.map(_.name) == List("Alice", "Mallory"))
+    check(f1(users)).expectThat(_.map(_.name) == List("Alice", "Mallory"))
 
     // 2. users that live in Lagos
     def f2(users: List[User]): List[User] = {
       users.filter(_.city.contains("Lagos"))
     }
-    check(f2(users)).expect(_.map(_.name) == List("Bob"))
+    check(f2(users)).expectThat(_.map(_.name) == List("Bob"))
 
     // 3. users that like Bee Gees
     def f3(users: List[User]): List[User] = {
       users.filter(_.favoriteArtists.contains("Bee Gees"))
     }
-    check(f3(users)).expect(_.map(_.name) == List("Alice", "Bob", "Mallory"))
+    check(f3(users)).expectThat(_.map(_.name) == List("Alice", "Bob", "Mallory"))
 
     // 4. users that live in cities that start with a letter T
     def f4(users: List[User]): List[User] = {
       users.filter(_.city.exists(_.startsWith("T")))
     }
-    check(f4(users)).expect(_.map(_.name) == List("Eve"))
+    check(f4(users)).expectThat(_.map(_.name) == List("Eve"))
 
     // 5. users that only like artists that have a name longer than 8 characters (or no favorite artists at all)
     def f5(users: List[User]): List[User] = {
       users.filter(_.favoriteArtists.forall(_.length > 8))
     }
-    check(f5(users)).expect(_.map(_.name) == List("Eve", "Trent"))
+    check(f5(users)).expectThat(_.map(_.name) == List("Eve", "Trent"))
 
     // 6. users that like some artists whose names start with M
     def f6(users: List[User]): List[User] = {
       users.filter(_.favoriteArtists.exists(_.startsWith("M")))
     }
-    check(f6(users)).expect(_.map(_.name) == List("Mallory"))
+    check(f6(users)).expectThat(_.map(_.name) == List("Mallory"))
   }
 
   // STEP 2b: new case class

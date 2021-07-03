@@ -8,7 +8,7 @@ object ch08_CastingDie extends App {
     val existingInt: IO[Int]        = IO.pure(6)
     val intFromUnsafePlace: IO[Int] = IO.delay(getIntUnsafely())
     check(existingInt.unsafeRunSync()).expect(6)
-    check.potentiallyFailing(intFromUnsafePlace.unsafeRunSync()).expect(r => r > 0 && r < 7)
+    check.potentiallyFailing(intFromUnsafePlace.unsafeRunSync()).expectThat(r => r > 0 && r < 7)
   }
 
   {

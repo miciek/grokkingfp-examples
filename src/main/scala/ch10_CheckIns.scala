@@ -1,4 +1,4 @@
-import cats.effect.{Deferred, IO, Ref}
+import cats.effect.{IO, Ref}
 import cats.implicits._
 import cats.effect.unsafe.implicits.global
 import fs2.Stream
@@ -6,7 +6,7 @@ import fs2.Stream
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration._
 
-object ch10_CheckIns extends App {
+object ch10_CheckIns {
 
   /**
     * PREREQUISITE: model
@@ -24,10 +24,12 @@ object ch10_CheckIns extends App {
       .append(Stream(City("Sydney"), City("Sydney"), City("Lima")))
       .covary[IO]
 
-  check.withoutPrinting(checkIns.map(_.name).compile.toList.unsafeRunSync()).expect { allCheckIns =>
-    allCheckIns.size == 600_003 && allCheckIns.count(_ == "Sydney") == 100_002 && allCheckIns
-      .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Cape Town") == 100_000 && allCheckIns
-      .count(_ == "City 27") == 1
+  private def showCheckIns = {
+    check.withoutPrinting(checkIns.map(_.name).compile.toList.unsafeRunSync()).expectThat { allCheckIns =>
+      allCheckIns.size == 600_003 && allCheckIns.count(_ == "Sydney") == 100_002 && allCheckIns
+        .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Cape Town") == 100_000 && allCheckIns
+        .count(_ == "City 27") == 1
+    }
   }
 
   /**
@@ -44,7 +46,7 @@ object ch10_CheckIns extends App {
       .take(3)
   }
 
-  { // Coffee Break: Many things in a single thread
+  private def step1 = { // Coffee Break: Many things in a single thread
     val checkInsSmall: Stream[IO, City] =
       Stream(
         City("Sydney"),
@@ -103,17 +105,19 @@ object ch10_CheckIns extends App {
     }
   }
 
-  check
-    .timed {
-      Version1.processCheckIns(checkIns).unsafeRunSync()
-    }
+  private def runVersion1 = {
+    check
+      .timed {
+        Version1.processCheckIns(checkIns).unsafeRunSync()
+      }
+  }
 
   // PROBLEMS: the current version is updated only every 100k elements (if you make it lower, it takes a lot longer)
 
   /**
     * STEP 2: concurrent & up-to-date (real time, no batching)
     */
-  {   // Ref intro
+  private def step2 = { // Ref intro
     { // update intro
       // we don't know how to create and use Refs
       // so let's use unsafeRunSync, but note it's not a proper usage, just for demonstration purpose
@@ -137,7 +141,7 @@ object ch10_CheckIns extends App {
     check(example.unsafeRunSync()).expect(3)
   }
 
-  { // parSequence intro
+  private def parSequenceIntro = {
     val exampleSequential: IO[Int] = for {
       counter <- Ref.of[IO, Int](0)
       _       <- List(counter.update(_ + 2), counter.update(_ + 3), counter.update(_ + 4)).sequence
@@ -154,7 +158,7 @@ object ch10_CheckIns extends App {
     check.timed(exampleConcurrent.unsafeRunSync()).expect(9)
   }
 
-  { // parSequence with sleeping intro
+  private def parSequenceWithSleepingIntro = { // parSequence with sleeping intro
     val exampleSequential: IO[Int] = for {
       counter  <- Ref.of[IO, Int](0)
       program1 = counter.update(_ + 2)
@@ -191,7 +195,7 @@ object ch10_CheckIns extends App {
     }))
   }
 
-  {
+  def differentUpdateRankingApproaches: Unit = {
     def updateRankingRecursion(
         storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]]
@@ -256,14 +260,16 @@ object ch10_CheckIns extends App {
         rankingProgram  = updateRanking(storedCheckIns, storedRanking)
         checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
         outputProgram   = IO.sleep(1.second).flatMap(_ => storedRanking.get).flatMap(IO.println).foreverM
-        result          <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
-      } yield result
+        _               <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
+      } yield ()
     }
   }
 
-  println("The following should print ranking every 1 second")
-  // check(Version2.processCheckIns(checkIns).unsafeRunSync()) // won't finish because it's an infinite program
-  check(Version2.processCheckIns(checkIns).unsafeRunTimed(3.seconds)) // run for max 3 seconds
+  private def runVersion2 = {
+    println("The following should print ranking every 1 second")
+    // check(Version2.processCheckIns(checkIns).unsafeRunSync()) // won't finish because it's an infinite program
+    check(Version2.processCheckIns(checkIns).unsafeRunTimed(3.seconds)) // run for max 3 seconds
+  }
 
   // PROBLEM: our program doesn't return so we need to decide the way we want to consume rankings (here, println every 1 second)
 
@@ -284,26 +290,42 @@ object ch10_CheckIns extends App {
     }
   }
 
-  println("The following should print two rankings")
-  check
-    .executedIO {
-      for {
-        processing <- Version3.processCheckIns(checkIns)
-        ranking    <- processing.currentRanking
-        _          <- IO.println(ranking)
-        _          <- IO.sleep(1.second)
-        newRanking <- processing.currentRanking
-        _          <- processing.stop
-      } yield newRanking
-    }
-    .expect(_.size == 3)
+  private def runVersion3 = {
+    println("The following should print two rankings")
+    check
+      .executedIO {
+        for {
+          processing <- Version3.processCheckIns(checkIns)
+          ranking    <- processing.currentRanking
+          _          <- IO.println(ranking)
+          _          <- IO.sleep(1.second)
+          newRanking <- processing.currentRanking
+          _          <- processing.stop
+        } yield newRanking
+      }
+      .expectThat(_.size == 3)
+  }
 
   // Quick quiz: fibers
   // What will this program do? How long will it run?
-  check.executedIO(for {
-    fiber <- IO.sleep(300.millis).flatMap(_ => IO.println("hello")).foreverM.start
-    _     <- IO.sleep(1.second)
-    _     <- fiber.cancel
-    _     <- IO.sleep(1.second)
-  } yield ())
+  private def quiz = {
+    check.executedIO(for {
+      fiber <- IO.sleep(300.millis).flatMap(_ => IO.println("hello")).foreverM.start
+      _     <- IO.sleep(1.second)
+      _     <- fiber.cancel
+      _     <- IO.sleep(1.second)
+    } yield ())
+  }
+
+  def main(args: Array[String]): Unit = {
+    showCheckIns
+    step1
+    runVersion1
+    step2
+    parSequenceIntro
+    parSequenceWithSleepingIntro
+    runVersion2
+    runVersion3
+    quiz
+  }
 }

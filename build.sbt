@@ -3,13 +3,14 @@ lazy val root = (project in file("."))
     name := "grokkingfp-examples",
     organization := "Michał Płachta (Manning)",
     version := "1.0",
-    scalaVersion := "2.13.5",
-    scalacOptions ++= List("-unchecked", "-language:higherKinds", "-Xlint"),
+    scalaVersion := "3.0.0",
+    scalacOptions ++= List("-unchecked", "-language:higherKinds"),
     libraryDependencies ++= Seq(
         "org.typelevel"     %% "cats-effect"     % "3.1.1",
-        "co.fs2"            %% "fs2-core"        % "3.0.0",
+        "co.fs2"            %% "fs2-core"        % "3.0.5",
         "org.scalatest"     %% "scalatest"       % "3.2.9" % Test,
         "org.scalatestplus" %% "scalacheck-1-15" % "3.2.9.0" % Test,
+        // imperative libraries (used in Java):
         "com.typesafe.akka" % "akka-actor_2.13"  % "2.6.15",
         "org.apache.jena"   % "apache-jena-libs" % "4.0.0",
         "org.apache.jena"   % "jena-fuseki-main" % "4.0.0",
@@ -53,6 +54,7 @@ lazy val root = (project in file("."))
       ";runMain ch06_TvShowsJava" +
       ";runMain ch07_MusicArtistsSearch" +
       ";runMain ch07_Playlist" +
+      ";runMain ch08_SchedulingMeetingsImpure" +
       ";runMain ch08_SchedulingMeetings" +
       ";runMain ch08_CastingDie" +
       ";runMain ch09_CurrencyExchange" +

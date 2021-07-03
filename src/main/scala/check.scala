@@ -36,7 +36,7 @@ object check {
       result
     }
 
-    def expect(checkResult: A => Boolean): A = {
+    def expectThat(checkResult: A => Boolean): A = {
       assert(checkResult(result))
       result
     }
