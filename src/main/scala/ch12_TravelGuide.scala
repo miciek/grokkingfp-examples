@@ -12,6 +12,8 @@ object ch12_TravelGuide {
     * with small functions and immutable values that describe small functionalities.
     */
   import ch11_TravelGuide._
+  import ch11_TravelGuide.PopCultureSubject._
+  import ch11_TravelGuide.AttractionOrdering._
   import ch11_WikidataDataAccess.getSparqlDataAccess
 
   /** STEPS 1-3: see ch12_TravelGuideTest.scala in the test directory.

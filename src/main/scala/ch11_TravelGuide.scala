@@ -16,13 +16,23 @@ object ch11_TravelGuide {
     * Note that we have a single model for the whole application, but sometimes it may be beneficial
     * to have separate ones for data access and business domain (see the book).
     */
-  case class LocationId(value: String) extends AnyVal
-  case class Location(id: LocationId, name: String, population: Int)
+  object location:
+    opaque type LocationId = String
+    object LocationId:
+      def apply(value: String): LocationId = value
+      extension(a: LocationId) def value: String = a
+
+    case class Location(id: LocationId, name: String, population: Int)
+
+  import location._
+
   case class Attraction(name: String, description: Option[String], location: Location)
 
-  sealed trait PopCultureSubject
-  case class Artist(name: String, followers: Int) extends PopCultureSubject
-  case class Movie(name: String, boxOffice: Int)  extends PopCultureSubject
+  enum PopCultureSubject:
+    case Artist(name: String, followers: Int)
+    case Movie(name: String, boxOffice: Int)
+
+  import PopCultureSubject._
 
   case class TravelGuide(attraction: Attraction, subjects: List[PopCultureSubject])
 
@@ -30,15 +40,16 @@ object ch11_TravelGuide {
     * STEP 2
     * DATA ACCESS (just an interface providing pure functions, implementation completely separated)
     */
-  sealed trait AttractionOrdering
-  case object ByName               extends AttractionOrdering
-  case object ByLocationPopulation extends AttractionOrdering
+  enum AttractionOrdering:
+    case ByName
+    case ByLocationPopulation
+  
+  import AttractionOrdering._
 
-  trait DataAccess {
+  trait DataAccess:
     def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]]
     def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
     def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
-  }
 
   /**
     * STEP 3: first version of a TravelGuide finder

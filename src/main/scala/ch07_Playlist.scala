@@ -1,17 +1,27 @@
-case class User(name: String)   extends AnyVal
-case class Artist(name: String) extends AnyVal
+object newtypes:
+  opaque type User = String
+  object User:
+    def apply(name: String): User = name
+
+  opaque type Artist = String
+  object Artist:
+    def apply(name: String): Artist = name
+
+import newtypes._
 
 case class Song(artist: Artist, title: String)
 
-sealed trait MusicGenre
-case object House  extends MusicGenre
-case object Funk   extends MusicGenre
-case object HipHop extends MusicGenre
+enum MusicGenre:
+  case House
+  case Funk
+  case HipHop
+import MusicGenre._
 
-sealed trait PlaylistKind
-case class CuratedByUser(user: User)              extends PlaylistKind
-case class BasedOnArtist(artist: Artist)          extends PlaylistKind
-case class BasedOnGenres(genres: Set[MusicGenre]) extends PlaylistKind
+enum PlaylistKind:
+  case CuratedByUser(user: User)
+  case BasedOnArtist(artist: Artist)
+  case BasedOnGenres(genres: Set[MusicGenre])
+import PlaylistKind._
 
 case class Playlist(name: String, kind: PlaylistKind, songs: List[Song])
 
@@ -30,21 +40,19 @@ object ch07_Playlist extends App {
   )
 
   val playlist3 = Playlist(
-    "Michał's Playlist",
+    "My Playlist",
     CuratedByUser(User("Michał Płachta")),
     List(Song(fooFighters, "My Hero"), Song(Artist("Iron Maiden"), "The Trooper"))
   )
 
-  def gatherSongs(playlists: List[Playlist], searchedArtist: Artist, searchedGenre: MusicGenre): List[Song] = {
-    playlists.foldLeft(List.empty[Song])((songs, playlist) => {
-      val matchingSongs = playlist.kind match {
-        case CuratedByUser(user)   => playlist.songs.filter(_.artist == searchedArtist)
-        case BasedOnArtist(artist) => if (artist == searchedArtist) playlist.songs else List.empty
-        case BasedOnGenres(genres) => if (genres.contains(searchedGenre)) playlist.songs else List.empty
-      }
+  def gatherSongs(playlists: List[Playlist], artist: Artist, genre: MusicGenre): List[Song] =
+    playlists.foldLeft(List.empty[Song])((songs, playlist) =>
+      val matchingSongs = playlist.kind match
+        case CuratedByUser(user)   => playlist.songs.filter(_.artist == artist)
+        case BasedOnArtist(playlistArtist) => if (playlistArtist == artist) playlist.songs else List.empty
+        case BasedOnGenres(genres) => if (genres.contains(genre)) playlist.songs else List.empty
       songs.appendedAll(matchingSongs)
-    })
-  }
+    )
 
   check {
     gatherSongs(List(playlist1, playlist2, playlist3), fooFighters, Funk)

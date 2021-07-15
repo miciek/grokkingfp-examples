@@ -12,7 +12,12 @@ object ch09_CurrencyExchange {
   /**
     * PREREQUISITE: model
     */
-  case class Currency(name: String) extends AnyVal
+  object model:
+    opaque type Currency = String
+    object Currency:
+      def apply(name: String): Currency = name
+      extension(currency: Currency) def name: String = currency
+  import model._
 
   /**
     * PREREQUISITE: retry function from ch8

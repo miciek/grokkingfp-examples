@@ -1,7 +1,5 @@
 object ch07_MusicArtistsSearch extends App {
-
-  // STEP 0: Design using what we know
-  {
+  { // STEP 0: Design using what we know (primitive types)
     case class Artist(
         name: String,
         genre: String,
@@ -18,32 +16,31 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre)) &&
         (locations.isEmpty || locations.contains(artist.origin)) &&
         (!searchByActiveYears || ((artist.isActive || artist.yearsActiveEnd >= activeAfter) &&
         (artist.yearsActiveStart <= activeBefore)))
       )
-    }
 
     val artists = List(
-      Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+      Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
       Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
       Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
     )
 
     // coffee break cases:
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2020) }.expect {
+    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
       List(Artist("Bee Gees", "Pop", "England", 1958, false, 2003))
     }
-    check { searchArtists(artists, List.empty, List("England"), true, 1950, 2020) }.expect {
+    check { searchArtists(artists, List.empty, List("England"), true, 1950, 2021) }.expect {
       List(
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
     }
-    check { searchArtists(artists, List.empty, List.empty, true, 1950, 1982) }.expect {
+    check { searchArtists(artists, List.empty, List.empty, true, 1950, 1979) }.expect {
       List(
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
@@ -51,13 +48,13 @@ object ch07_MusicArtistsSearch extends App {
     }
     check { searchArtists(artists, List.empty, List.empty, true, 1983, 2003) }.expect {
       List(
-        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+        Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
     }
-    check { searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2020) }.expect {
+    check { searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2021) }.expect {
       List(
-        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0)
+        Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
       )
     }
     check { searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) }.expect {
@@ -65,7 +62,7 @@ object ch07_MusicArtistsSearch extends App {
     }
     check { searchArtists(artists, List.empty, List.empty, false, 2019, 2021) }.expect {
       List(
-        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0),
+        Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
@@ -79,17 +76,38 @@ object ch07_MusicArtistsSearch extends App {
     }
     check { searchArtists(artists, List.empty, List("U.S."), false, 0, 0) }.expect {
       List(
-        Artist("Metallica", "Heavy Metal", "U.S.", 1983, true, 0)
+        Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
       )
     }
   }
 
-  // STEP 1: value classes
-  case class Location(name: String)       extends AnyVal
-  case class Genre(name: String)          extends AnyVal
-  case class YearsActiveStart(value: Int) extends AnyVal
-  case class YearsActiveEnd(value: Int)   extends AnyVal
+  // STEP 1: newtypes
+  // In Scala, you could also use opaque types to encode newtypes:
+  object model:
+    opaque type Location = String
+    object Location:
+      def apply(value: String): Location = value // <- you can use a String as a Location only in the scope of model
+      extension(a: Location) def name: String = a
 
+    // Practicing newtypes
+    opaque type Genre = String
+    object Genre:
+      def apply(value: String): Genre = value
+      extension(a: Genre) def name: String = a
+
+    opaque type YearsActiveStart = Int
+    object YearsActiveStart:
+      def apply(value: Int): YearsActiveStart = value
+      extension(a: YearsActiveStart) def value: Int = a
+
+    opaque type YearsActiveEnd = Int
+    object YearsActiveEnd:
+      def apply(value: Int): YearsActiveEnd = value
+      extension(a: YearsActiveEnd) def value: Int = a
+
+  import model._
+  val us: Location = Location("U.S.")
+  // val wontCompile: Location = "U.S." // <- String can't be used as a Location outside of the scope of model
   {
     case class Artist(
         name: String,
@@ -106,7 +124,7 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre.name)) && // <- using Genre
         (locations.isEmpty || locations
@@ -115,10 +133,9 @@ object ch07_MusicArtistsSearch extends App {
         ((artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
         (artist.yearsActiveStart.value <= activeBefore)))                   // <- using YearsActiveStart
       )
-    }
 
     val artists = List(
-      Artist("Metallica", Genre("Heavy Metal"), Location("U.S."), YearsActiveStart(1983), true, YearsActiveEnd(0)),
+      Artist("Metallica", Genre("Heavy Metal"), Location("U.S."), YearsActiveStart(1981), true, YearsActiveEnd(0)),
       Artist(
         "Led Zeppelin",
         Genre("Hard Rock"),
@@ -130,7 +147,7 @@ object ch07_MusicArtistsSearch extends App {
       Artist("Bee Gees", Genre("Pop"), Location("England"), YearsActiveStart(1958), false, YearsActiveEnd(2003))
     )
 
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2020) }.expect {
+    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
       List(Artist("Bee Gees", Genre("Pop"), Location("England"), YearsActiveStart(1958), false, YearsActiveEnd(2003)))
     }
   }
@@ -152,7 +169,7 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre)) &&
         (locations.isEmpty || locations.contains(artist.origin.name)) &&
@@ -160,15 +177,14 @@ object ch07_MusicArtistsSearch extends App {
         (artist.yearsActiveEnd.forall(_ >= activeAfter) && // <- using Option.forall
         (artist.yearsActiveStart <= activeBefore)))
       )
-    }
 
     val artists = List(
-      Artist("Metallica", "Heavy Metal", Location("U.S."), 1983, None),
+      Artist("Metallica", "Heavy Metal", Location("U.S."), 1981, None),
       Artist("Led Zeppelin", "Hard Rock", Location("England"), 1968, Some(1980)),
       Artist("Bee Gees", "Pop", Location("England"), 1958, Some(2003))
     )
 
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2020) }.expect {
+    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
       List(Artist("Bee Gees", "Pop", Location("England"), 1958, Some(2003)))
     }
   }
@@ -218,43 +234,43 @@ object ch07_MusicArtistsSearch extends App {
     )
 
     // 1. users that haven't specified their city or live in Melbourne
-    def f1(users: List[User]): List[User] = {
+    def f1(users: List[User]): List[User] =
       users.filter(_.city.forall(_ == "Melbourne"))
-    }
+
     check(f1(users)).expectThat(_.map(_.name) == List("Alice", "Mallory"))
 
     // 2. users that live in Lagos
-    def f2(users: List[User]): List[User] = {
+    def f2(users: List[User]): List[User] =
       users.filter(_.city.contains("Lagos"))
-    }
+
     check(f2(users)).expectThat(_.map(_.name) == List("Bob"))
 
     // 3. users that like Bee Gees
-    def f3(users: List[User]): List[User] = {
+    def f3(users: List[User]): List[User] =
       users.filter(_.favoriteArtists.contains("Bee Gees"))
-    }
+
     check(f3(users)).expectThat(_.map(_.name) == List("Alice", "Bob", "Mallory"))
 
     // 4. users that live in cities that start with a letter T
-    def f4(users: List[User]): List[User] = {
+    def f4(users: List[User]): List[User] =
       users.filter(_.city.exists(_.startsWith("T")))
-    }
+
     check(f4(users)).expectThat(_.map(_.name) == List("Eve"))
 
     // 5. users that only like artists that have a name longer than 8 characters (or no favorite artists at all)
-    def f5(users: List[User]): List[User] = {
+    def f5(users: List[User]): List[User] =
       users.filter(_.favoriteArtists.forall(_.length > 8))
-    }
+
     check(f5(users)).expectThat(_.map(_.name) == List("Eve", "Trent"))
 
     // 6. users that like some artists whose names start with M
-    def f6(users: List[User]): List[User] = {
+    def f6(users: List[User]): List[User] =
       users.filter(_.favoriteArtists.exists(_.startsWith("M")))
-    }
+
     check(f6(users)).expectThat(_.map(_.name) == List("Mallory"))
   }
 
-  // STEP 2b: new case class
+  // STEP 2b: new product type
   case class PeriodInYears(start: Int, end: Option[Int])
 
   {
@@ -272,7 +288,7 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre)) &&
         (locations.isEmpty || locations.contains(artist.origin.name)) &&
@@ -280,24 +296,25 @@ object ch07_MusicArtistsSearch extends App {
         (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using Option.forall
         (artist.yearsActive.start <= activeBefore)))
       )
-    }
 
     val artists = List(
-      Artist("Metallica", "Heavy Metal", Location("U.S."), PeriodInYears(1983, None)),
+      Artist("Metallica", "Heavy Metal", Location("U.S."), PeriodInYears(1981, None)),
       Artist("Led Zeppelin", "Hard Rock", Location("England"), PeriodInYears(1968, Some(1980))),
       Artist("Bee Gees", "Pop", Location("England"), PeriodInYears(1958, Some(2003)))
     )
 
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2020) }.expect {
+    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
       List(Artist("Bee Gees", "Pop", Location("England"), PeriodInYears(1958, Some(2003))))
     }
   }
 
-  // STEP 3: sealed trait
-  sealed trait MusicGenre
-  case object HeavyMetal extends MusicGenre
-  case object Pop        extends MusicGenre
-  case object HardRock   extends MusicGenre
+  // STEP 3: sum type
+  enum MusicGenre:
+    case HeavyMetal
+    case Pop
+    case HardRock
+
+  import MusicGenre._
 
   {
     case class Artist(
@@ -314,7 +331,7 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre)) && // no change needed
         (locations.isEmpty || locations.contains(artist.origin.name)) &&
@@ -322,33 +339,32 @@ object ch07_MusicArtistsSearch extends App {
         (artist.yearsActive.end.forall(_ >= activeAfter) &&
         (artist.yearsActive.start <= activeBefore)))
       )
-    }
 
     val artists = List(
-      Artist("Metallica", HeavyMetal, Location("U.S."), PeriodInYears(1983, None)),
+      Artist("Metallica", HeavyMetal, Location("U.S."), PeriodInYears(1981, None)),
       Artist("Led Zeppelin", HardRock, Location("England"), PeriodInYears(1968, Some(1980))),
       Artist("Bee Gees", Pop, Location("England"), PeriodInYears(1958, Some(2003)))
     )
 
-    check { searchArtists(artists, List(Pop), List("England"), true, 1950, 2020) }.expect {
+    check { searchArtists(artists, List(Pop), List("England"), true, 1950, 2021) }.expect {
       List(Artist("Bee Gees", Pop, Location("England"), PeriodInYears(1958, Some(2003))))
     }
   }
 
-  // STEP 4: ADT
-  sealed trait YearsActive
-  case class StillActive(since: Int)             extends YearsActive
-  case class ActiveBetween(start: Int, end: Int) extends YearsActive
+  // STEP 4: Algebraic Data Type (ADT) = product type + sum type
+  enum YearsActive:
+    case StillActive(since: Int)
+    case ActiveBetween(start: Int, end: Int)
+
+  import YearsActive._
 
   {
     case class Artist(name: String, genre: MusicGenre, origin: Location, yearsActive: YearsActive)
 
-    def wasArtistActive(artist: Artist, yearStart: Int, yearEnd: Int): Boolean = {
-      artist.yearsActive match {
-        case StillActive(since)        => since <= yearEnd
+    def wasArtistActive(artist: Artist, yearStart: Int, yearEnd: Int): Boolean =
+      artist.yearsActive match
+        case StillActive(since) => since <= yearEnd
         case ActiveBetween(start, end) => start <= yearEnd && end >= yearStart
-      }
-    }
 
     def searchArtistsRaw(
         artists: List[Artist],
@@ -357,37 +373,36 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         (genres.isEmpty || genres.contains(artist.genre)) &&
         (locations.isEmpty || locations.contains(artist.origin)) &&
         (!searchByActiveYears || wasArtistActive(artist, activeAfter, activeBefore))
       )
-    }
 
-    // Modeling conditions as ADT:
-    sealed trait SearchCondition
-    case class SearchByGenre(genres: List[MusicGenre])   extends SearchCondition
-    case class SearchByOrigin(locations: List[Location]) extends SearchCondition
-    case class SearchByActiveYears(start: Int, end: Int) extends SearchCondition
+    // Modeling conditions as ADTs:
+    enum SearchCondition:
+      case SearchByGenre(genres: List[MusicGenre])
+      case SearchByOrigin(locations: List[Location])
+      case SearchByActiveYears(start: Int, end: Int)
+
+    import SearchCondition._
 
     def searchArtists(
         artists: List[Artist],
         requiredConditions: List[SearchCondition]
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         requiredConditions.forall(condition =>
-          condition match {
+          condition match
             case SearchByGenre(genres)           => genres.contains(artist.genre)
             case SearchByOrigin(locations)       => locations.contains(artist.origin)
             case SearchByActiveYears(start, end) => wasArtistActive(artist, start, end)
-          }
         )
       )
-    }
 
     val artists = List(
-      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)),
+      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
       Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
     )
@@ -400,7 +415,7 @@ object ch07_MusicArtistsSearch extends App {
         List(Location("England")),
         true,
         1950,
-        2020
+        2021
       )
     ).expect {
       List(
@@ -414,7 +429,7 @@ object ch07_MusicArtistsSearch extends App {
         List(
           SearchByGenre(List(Pop)),
           SearchByOrigin(List(Location("England"))),
-          SearchByActiveYears(1950, 2020)
+          SearchByActiveYears(1950, 2021)
         )
       )
     ).expect {
@@ -428,7 +443,7 @@ object ch07_MusicArtistsSearch extends App {
         artists,
         List(
           SearchByOrigin(List(Location("England"))),
-          SearchByActiveYears(1950, 2020)
+          SearchByActiveYears(1950, 2021)
         )
       )
     ).expect {
@@ -442,12 +457,12 @@ object ch07_MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          SearchByActiveYears(1950, 2020)
+          SearchByActiveYears(1950, 2021)
         )
       )
     ).expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)),
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
         Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
         Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
       )
@@ -462,7 +477,7 @@ object ch07_MusicArtistsSearch extends App {
       )
     ).expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)),
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
         Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
       )
     }
@@ -472,12 +487,12 @@ object ch07_MusicArtistsSearch extends App {
         artists,
         List(
           SearchByGenre(List(HeavyMetal)),
-          SearchByActiveYears(2019, 2020)
+          SearchByActiveYears(2019, 2021)
         )
       )
     ).expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983))
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981))
       )
     }
 
@@ -507,21 +522,19 @@ object ch07_MusicArtistsSearch extends App {
     }
 
     { // Practicing pattern matching
-      def activeLength(artist: Artist, currentYear: Int): Int = {
-        artist.yearsActive match {
+      def activeLength(artist: Artist, currentYear: Int): Int =
+        artist.yearsActive match
           case StillActive(since)        => currentYear - since
           case ActiveBetween(start, end) => end - start
-        }
-      }
 
       check {
-        activeLength(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983)), 2020)
-      }.expect(37)
+        activeLength(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981)), 2021)
+      }.expect(40)
       check {
-        activeLength(Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)), 2020)
+        activeLength(Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)), 2021)
       }.expect(12)
       check {
-        activeLength(Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003)), 2020)
+        activeLength(Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003)), 2021)
       }.expect(45)
     }
   }
@@ -530,57 +543,54 @@ object ch07_MusicArtistsSearch extends App {
   {
     case class PeriodInYears(start: Int, end: Int)
 
-    sealed trait YearsActive
-    case class StillActive(since: Int, previousPeriods: List[PeriodInYears]) extends YearsActive
-    case class ActiveInPast(periods: List[PeriodInYears])                    extends YearsActive
+    enum YearsActive:
+      case StillActive(since: Int, previousPeriods: List[PeriodInYears])
+      case ActiveInPast(periods: List[PeriodInYears])
+
+    import YearsActive._
 
     case class Artist(name: String, genre: MusicGenre, origin: Location, yearsActive: YearsActive)
 
-    sealed trait SearchCondition
-    case class SearchByGenre(genres: List[MusicGenre])        extends SearchCondition
-    case class SearchByOrigin(locations: List[Location])      extends SearchCondition
-    case class SearchByActiveYears(period: PeriodInYears)     extends SearchCondition
-    case class SearchByActiveLength(howLong: Int, until: Int) extends SearchCondition
+    enum SearchCondition:
+      case SearchByGenre(genres: List[MusicGenre])
+      case SearchByOrigin(locations: List[Location])
+      case SearchByActiveYears(period: PeriodInYears)
+      case SearchByActiveLength(howLong: Int, until: Int)
 
-    def periodOverlapWithPeriods(checkedPeriod: PeriodInYears, periods: List[PeriodInYears]): Boolean = {
+    import SearchCondition._
+
+    def periodOverlapWithPeriods(checkedPeriod: PeriodInYears, periods: List[PeriodInYears]): Boolean =
       periods.exists(p => p.start <= checkedPeriod.end && p.end >= checkedPeriod.start)
-    }
 
-    def wasArtistActive(artist: Artist, searchedPeriod: PeriodInYears): Boolean = {
-      artist.yearsActive match {
+    def wasArtistActive(artist: Artist, searchedPeriod: PeriodInYears): Boolean =
+      artist.yearsActive match
         case StillActive(since, previousPeriods) =>
           since <= searchedPeriod.end || periodOverlapWithPeriods(searchedPeriod, previousPeriods)
         case ActiveInPast(periods) => periodOverlapWithPeriods(searchedPeriod, periods)
-      }
-    }
 
-    def activeLength(artist: Artist, currentYear: Int): Int = {
-      val periods = artist.yearsActive match {
+    def activeLength(artist: Artist, currentYear: Int): Int =
+      val periods = artist.yearsActive match
         case StillActive(since, previousPeriods) => previousPeriods.appended(PeriodInYears(since, currentYear))
         case ActiveInPast(periods)               => periods
-      }
       periods.map(p => p.end - p.start).foldLeft(0)((x, y) => x + y)
-    }
 
     def searchArtists(
         artists: List[Artist],
         requiredConditions: List[SearchCondition]
-    ): List[Artist] = {
+    ): List[Artist] =
       artists.filter(artist =>
         requiredConditions.forall(condition =>
-          condition match {
+          condition match
             case SearchByGenre(genres)       => genres.contains(artist.genre)
             case SearchByOrigin(locations)   => locations.contains(artist.origin)
             case SearchByActiveYears(period) => wasArtistActive(artist, period)
             case SearchByActiveLength(howLong, until) =>
               activeLength(artist, until) >= howLong
-          }
         )
       )
-    }
 
     val artists = List(
-      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983, List.empty)),
+      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
       Artist("Led Zeppelin", HardRock, Location("England"), ActiveInPast(List(PeriodInYears(1968, 1980)))),
       Artist(
         "Bee Gees",
@@ -596,7 +606,7 @@ object ch07_MusicArtistsSearch extends App {
         List(
           SearchByGenre(List(Pop)),
           SearchByOrigin(List(Location("England"))),
-          SearchByActiveYears(PeriodInYears(1950, 2020))
+          SearchByActiveYears(PeriodInYears(1950, 2021))
         )
       )
     }.expect {
@@ -615,7 +625,7 @@ object ch07_MusicArtistsSearch extends App {
         artists,
         List(
           SearchByOrigin(List(Location("England"))),
-          SearchByActiveYears(PeriodInYears(1950, 2020))
+          SearchByActiveYears(PeriodInYears(1950, 2021))
         )
       )
     }.expect {
@@ -634,12 +644,12 @@ object ch07_MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          SearchByActiveYears(PeriodInYears(1950, 2020))
+          SearchByActiveYears(PeriodInYears(1950, 2021))
         )
       )
     }.expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983, List.empty)),
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
         Artist("Led Zeppelin", HardRock, Location("England"), ActiveInPast(List(PeriodInYears(1968, 1980)))),
         Artist(
           "Bee Gees",
@@ -659,7 +669,7 @@ object ch07_MusicArtistsSearch extends App {
       )
     }.expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983, List.empty)),
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
         Artist(
           "Bee Gees",
           Pop,
@@ -673,12 +683,12 @@ object ch07_MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          SearchByActiveYears(PeriodInYears(2019, 2020))
+          SearchByActiveYears(PeriodInYears(2019, 2021))
         )
       )
     }.expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983, List.empty))
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty))
       )
     }
 
@@ -704,7 +714,7 @@ object ch07_MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          SearchByActiveLength(48, 2020)
+          SearchByActiveLength(48, 2021)
         )
       )
     }.expect {
@@ -722,7 +732,7 @@ object ch07_MusicArtistsSearch extends App {
       searchArtists(
         artists,
         List(
-          SearchByActiveLength(48, 2020)
+          SearchByActiveLength(48, 2021)
         )
       )
     }.expect {
@@ -741,7 +751,7 @@ object ch07_MusicArtistsSearch extends App {
         artists,
         List(
           SearchByOrigin(List(Location("U.S."))),
-          SearchByActiveLength(40, 2020)
+          SearchByActiveLength(48, 2021)
         )
       )
     }.expect {
@@ -753,11 +763,11 @@ object ch07_MusicArtistsSearch extends App {
         artists,
         List(
           SearchByOrigin(List(Location("U.S."))),
-          SearchByActiveLength(37, 2020)
+          SearchByActiveLength(40, 2021)
         )
       )
     }.expect {
-      List(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983, List.empty)))
+      List(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)))
     }
 
     check {
@@ -765,12 +775,12 @@ object ch07_MusicArtistsSearch extends App {
         artists,
         List(
           SearchByOrigin(List(Location("U.S."), Location("England"))),
-          SearchByActiveLength(37, 2020)
+          SearchByActiveLength(40, 2021)
         )
       )
     }.expect {
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1983, List.empty)),
+        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
         Artist(
           "Bee Gees",
           Pop,

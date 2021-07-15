@@ -1,5 +1,8 @@
 import cats.effect.IO
 import ch11_TravelGuide._
+import ch11_TravelGuide.location._
+import ch11_TravelGuide.PopCultureSubject._
+import ch11_TravelGuide.AttractionOrdering._
 import org.apache.jena.query.QuerySolution
 
 object ch11_WikidataDataAccess extends App {
@@ -75,7 +78,7 @@ object ch11_WikidataDataAccess extends App {
       for {
         solutions <- execQuery(query)
         artists <- IO.delay(
-                    solutions.map(s =>
+                    solutions.map[Artist](s =>
                       Artist(name = s.getLiteral("artistLabel").getString, followers = s.getLiteral("followers").getInt)
                     )
                   )
@@ -100,7 +103,7 @@ object ch11_WikidataDataAccess extends App {
       for {
         solutions <- execQuery(query)
         movies <- IO.delay(
-                   solutions.map(s =>
+                   solutions.map[Movie](s =>
                      Movie(name = s.getLiteral("subjectLabel").getString, boxOffice = s.getLiteral("boxOffice").getInt)
                    )
                  )

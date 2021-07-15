@@ -2,6 +2,9 @@ import cats.effect.{IO, Resource}
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import ch11_TravelGuide._
+import ch11_TravelGuide.location._
+import ch11_TravelGuide.PopCultureSubject._
+import ch11_TravelGuide.AttractionOrdering._
 import ch11_TravelGuide.Version3.travelGuide
 import ch11_WikidataDataAccess.getSparqlDataAccess
 import ch12_TravelGuide.{SearchReport, Version4, Version5}
@@ -228,9 +231,9 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   test("travel guide should include artists originating from the attraction's location") {
     // given an external data source with an attraction named "Tower Bridge"
     // at a location that brought us "Queen"
-    val attractionName = "Tower Bridge"
-    val london         = Location(LocationId("Q84"), "London", 8_908_081)
-    val queen          = Artist("Queen", 2_050_559)
+    val attractionName   = "Tower Bridge"
+    val london: Location = Location(LocationId("Q84"), "London", 8_908_081)
+    val queen: Artist    = Artist("Queen", 2_050_559)
     val dataAccess = new DataAccess {
       def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
         IO.pure(List(Attraction(attractionName, None, london)))
@@ -252,9 +255,9 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   test("travel guide should include movies set in the attraction's location") {
     // given an external data source with an attraction named "Golden Gate Bridge"
     // at a location where "Inside Out" was taking place in
-    val attractionName = "Golden Gate Bridge"
-    val sanFrancisco   = Location(LocationId("Q62"), "San Francisco", 883_963)
-    val insideOut      = Movie("Inside Out", 857_611_174)
+    val attractionName         = "Golden Gate Bridge"
+    val sanFrancisco: Location = Location(LocationId("Q62"), "San Francisco", 883_963)
+    val insideOut: Movie       = Movie("Inside Out", 857_611_174)
     val dataAccess = new DataAccess {
       def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
         IO.pure(List(Attraction(attractionName, None, sanFrancisco)))
