@@ -21,7 +21,7 @@ object ch10_CastingDieConcurrently extends App {
   // 2. cast two dies concurrently, store each result in an atomic reference that holds a List, and return the final list as a result
   check.executedIO(for {
     storedCasts <- Ref.of[IO, List[Int]](List.empty)
-    singleCast  = castTheDie().flatMap(result => storedCasts.update(_.appended(result)))
+    singleCast   = castTheDie().flatMap(result => storedCasts.update(_.appended(result)))
     _           <- List(singleCast, singleCast).parSequence
     casts       <- storedCasts.get
   } yield casts)
@@ -29,7 +29,7 @@ object ch10_CastingDieConcurrently extends App {
   // 3. cast three dies concurrently, store each result in an atomic reference that holds a List, and return its value as a result
   check.executedIO(for {
     storedCasts <- Ref.of[IO, List[Int]](List.empty)
-    singleCast  = castTheDie().flatMap(result => storedCasts.update(_.appended(result)))
+    singleCast   = castTheDie().flatMap(result => storedCasts.update(_.appended(result)))
     _           <- List.fill(3)(singleCast).parSequence // introduce List.fill
     casts       <- storedCasts.get
   } yield casts)
@@ -37,7 +37,7 @@ object ch10_CastingDieConcurrently extends App {
   // 4. cast one hundred dies concurrently, store the total number of sixes in an atomic ref, and return its value as a result
   check.executedIO(for {
     storedCasts <- Ref.of[IO, Int](0)
-    singleCast  = castTheDie().flatMap(result => if (result == 6) storedCasts.update(_ + 1) else IO.unit)
+    singleCast   = castTheDie().flatMap(result => if (result == 6) storedCasts.update(_ + 1) else IO.unit)
     _           <- List.fill(100)(singleCast).parSequence
     casts       <- storedCasts.get
   } yield casts)
@@ -71,15 +71,18 @@ object ch10_CastingDieConcurrently extends App {
         t
       }
     )
-    val ecs = executors.map(ExecutionContext.fromExecutor)
+    val ecs       = executors.map(ExecutionContext.fromExecutor)
 
-    val scheduler = new ScheduledThreadPoolExecutor(1, { (r: Runnable) =>
-      val t = new Thread(r)
-      t.setName("scheduler")
-      t.setDaemon(true)
-      t.setPriority(Thread.MAX_PRIORITY)
-      t
-    })
+    val scheduler = new ScheduledThreadPoolExecutor(
+      1,
+      { (r: Runnable) =>
+        val t = new Thread(r)
+        t.setName("scheduler")
+        t.setDaemon(true)
+        t.setPriority(Thread.MAX_PRIORITY)
+        t
+      }
+    )
     scheduler.setRemoveOnCancelPolicy(true)
 
     IORuntime(

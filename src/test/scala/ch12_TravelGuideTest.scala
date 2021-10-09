@@ -224,8 +224,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
-  /**
-    *  STEP 3a: test side effects without using any mocking libraries
+  /**  STEP 3a: test side effects without using any mocking libraries
     *  - testing using stubs
     */
   test("travel guide should include artists originating from the attraction's location") {
@@ -234,7 +233,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     val attractionName   = "Tower Bridge"
     val london: Location = Location(LocationId("Q84"), "London", 8_908_081)
     val queen: Artist    = Artist("Queen", 2_050_559)
-    val dataAccess = new DataAccess {
+    val dataAccess       = new DataAccess {
       def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
         IO.pure(List(Attraction(attractionName, None, london)))
 
@@ -258,7 +257,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     val attractionName         = "Golden Gate Bridge"
     val sanFrancisco: Location = Location(LocationId("Q62"), "San Francisco", 883_963)
     val insideOut: Movie       = Movie("Inside Out", 857_611_174)
-    val dataAccess = new DataAccess {
+    val dataAccess             = new DataAccess {
       def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
         IO.pure(List(Attraction(attractionName, None, sanFrancisco)))
 
@@ -275,8 +274,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     assert(guide.exists(_.subjects == List(insideOut)))
   }
 
-  /**
-    *  STEP 3b: test side effects without using any mocking libraries
+  /**  STEP 3b: test side effects without using any mocking libraries
     *  - testing using a real SPARQL server
     */
   def localSparqlServer: Resource[IO, FusekiServer] = {
@@ -393,8 +391,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
-  /**
-    * STEP 4: develop new functionalities in a test-driven way
+  /** STEP 4: develop new functionalities in a test-driven way
     */
   // this function is very straightforward and cleans up the following tests significantly.
   // What's important is what's left in the tests, how they document the function and convey this new functionality.
@@ -432,8 +429,8 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     // then we get a search report with bad guides (0 artists, 0 movies means the score is < 55)
     assert(
       result == Left(
-          SearchReport(List(TravelGuide(yellowstone, List.empty)), problems = List.empty)
-        )
+        SearchReport(List(TravelGuide(yellowstone, List.empty)), problems = List.empty)
+      )
     )
   }
 
@@ -480,10 +477,10 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
       new DataAccess { // it's more complicated case, so it's better to define it directly, without helpers
         def findAttractions(name: String, ordering: AttractionOrdering, limit: Int) =
           IO.pure(List(yosemite, yellowstone))
-        def findArtistsFromLocation(locationId: LocationId, limit: Int) =
+        def findArtistsFromLocation(locationId: LocationId, limit: Int)             =
           if (locationId == yosemite.location.id) IO.delay(throw new Exception("Yosemite artists fetching failed"))
           else IO.pure(List.empty)
-        def findMoviesAboutLocation(locationId: LocationId, limit: Int) = IO.pure(List.empty)
+        def findMoviesAboutLocation(locationId: LocationId, limit: Int)             = IO.pure(List.empty)
       }
 
     // when we want to get a travel guide
@@ -492,16 +489,15 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     // then we get a search report with one bad guide (< 55) and list of errors
     assert(
       result == Left(
-          SearchReport(
-            badGuides = List(TravelGuide(yellowstone, List.empty)),
-            problems = List("Yosemite artists fetching failed")
-          )
+        SearchReport(
+          badGuides = List(TravelGuide(yellowstone, List.empty)),
+          problems = List("Yosemite artists fetching failed")
         )
+      )
     )
   } // this test will fail for Version4, but passes for Version5 which was written after Version4 and this test (TDD)
 
-  /**
-    * BONUS: semi-end-to-end tests. Tests that test the whole application without the real external service.
+  /** BONUS: semi-end-to-end tests. Tests that test the whole application without the real external service.
     * It can verify that everything works correctly by looking at some simple happy paths.
     */
   def testLocation(id: Int): Location =
@@ -516,8 +512,8 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     // only one of them being an origin for some artists
     val attractionName      = "test-attraction"
     val locations           = List.range(0, 100).map(testLocation) // one hundred locations
-    val locationWithArtists = testLocation(1) // only the second one has artists in the data access layer below
-    val dataAccess =
+    val locationWithArtists = testLocation(1)                      // only the second one has artists in the data access layer below
+    val dataAccess          =
       new DataAccess { // we could use a helper function that takes locations and return dataAccess, but this is more straightforward: tests should not use too much magic
         def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
           IO.pure(locations.map(location => Attraction(attractionName, None, location)))
@@ -543,8 +539,8 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     // only one of them being used in multiple movies
     val attractionName     = "test-attraction"
     val locations          = List.range(0, 100).map(testLocation) // one hundred locations
-    val locationWithMovies = testLocation(1) // only the second one has movies in the data access layer below
-    val dataAccess =
+    val locationWithMovies = testLocation(1)                      // only the second one has movies in the data access layer below
+    val dataAccess         =
       new DataAccess {
         def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]] =
           IO.pure(locations.map(location => Attraction(attractionName, None, location)))

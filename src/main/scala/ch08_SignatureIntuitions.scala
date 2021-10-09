@@ -50,7 +50,7 @@ object ch08_SignatureIntuitions {
   def f27(x: String): Option[Int]                             = x.toIntOption
   def f28[A](x: Option[A], alternative: Option[A]): Option[A] = x.orElse(alternative)
   def f29[A, B](x: Option[A], y: B): Either[B, A]             = x.toRight(y) // *
-  def f30[A, B](x: Option[A], y: B): Either[A, B]             = x.toLeft(y) // *
+  def f30[A, B](x: Option[A], y: B): Either[A, B]             = x.toLeft(y)  // *
 
   def f31[A](x: List[Option[A]]): Option[List[A]] = x.sequence
 

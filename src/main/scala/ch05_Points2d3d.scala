@@ -1,5 +1,4 @@
-/**
-  * Given lists of coordinates,
+/** Given lists of coordinates,
   * create all possible 2d & 3d points.
   *
   * SKILLS:

@@ -1,5 +1,4 @@
-/**
-  * SKILLS:
+/** SKILLS:
   * b) writing algorithms using flatMap instead of for loops
   */
 object ch05_BookFriendRecommendations extends App {
@@ -19,18 +18,18 @@ object ch05_BookFriendRecommendations extends App {
   val friendBooks = friends.map(recommendedBooks)
   assert(
     friendBooks == List(
-        List(Book("FP in Scala", List("Chiusano", "Bjarnason")), Book("Scala in Depth", List("Suereth"))),
-        List(Book("Harry Potter", List("Rowling")), Book("The Lord of the Rings", List("Tolkien")))
-      )
+      List(Book("FP in Scala", List("Chiusano", "Bjarnason")), Book("Scala in Depth", List("Suereth"))),
+      List(Book("Harry Potter", List("Rowling")), Book("The Lord of the Rings", List("Tolkien")))
+    )
   )
 
   val recommendations = friends.flatMap(recommendedBooks)
   assert(
     recommendations == List(
-        Book("FP in Scala", List("Chiusano", "Bjarnason")),
-        Book("Scala in Depth", List("Suereth")),
-        Book("Harry Potter", List("Rowling")),
-        Book("The Lord of the Rings", List("Tolkien"))
-      )
+      Book("FP in Scala", List("Chiusano", "Bjarnason")),
+      Book("Scala in Depth", List("Suereth")),
+      Book("Harry Potter", List("Rowling")),
+      Book("The Lord of the Rings", List("Tolkien"))
+    )
   )
 }

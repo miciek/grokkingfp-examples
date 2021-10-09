@@ -6,16 +6,16 @@ lazy val root = (project in file("."))
     scalaVersion := "3.0.0",
     scalacOptions ++= List("-unchecked"),
     libraryDependencies ++= Seq(
-        "org.typelevel"     %% "cats-effect"     % "3.1.1",
-        "co.fs2"            %% "fs2-core"        % "3.0.5",
-        "org.scalatest"     %% "scalatest"       % "3.2.9" % Test,
-        "org.scalatestplus" %% "scalacheck-1-15" % "3.2.9.0" % Test,
-        // imperative libraries (used in Java):
-        "com.typesafe.akka" % "akka-actor_2.13"  % "2.6.15",
-        "org.apache.jena"   % "apache-jena-libs" % "4.0.0",
-        "org.apache.jena"   % "jena-fuseki-main" % "4.0.0",
-        "org.slf4j"         % "slf4j-simple"     % "1.7.30"
-      ),
+      "org.typelevel"     %% "cats-effect"      % "3.1.1",
+      "co.fs2"            %% "fs2-core"         % "3.0.5",
+      "org.scalatest"     %% "scalatest"        % "3.2.9"   % Test,
+      "org.scalatestplus" %% "scalacheck-1-15"  % "3.2.9.0" % Test,
+      // imperative libraries (used in Java):
+      "com.typesafe.akka"  % "akka-actor_2.13"  % "2.6.15",
+      "org.apache.jena"    % "apache-jena-libs" % "4.0.0",
+      "org.apache.jena"    % "jena-fuseki-main" % "4.0.0",
+      "org.slf4j"          % "slf4j-simple"     % "1.7.30"
+    ),
     run / fork := true,
     run / javaOptions += "-ea",
     addCommandAlias(

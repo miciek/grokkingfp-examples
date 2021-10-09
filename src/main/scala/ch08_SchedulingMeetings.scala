@@ -5,8 +5,7 @@ import cats.effect.unsafe.implicits.global
 
 object ch08_SchedulingMeetings {
 
-  /**
-    * PREREQUISITE 1: MeetingTime model
+  /** PREREQUISITE 1: MeetingTime model
     *
     * We use MeetingTime defined in Java: [[ch08_SchedulingMeetingsImpure.MeetingTime]]
     * We add apply method to be able to use it exactly like we would use a case class in Scala:
@@ -18,8 +17,7 @@ object ch08_SchedulingMeetings {
     // we can now write MeetingTime(6, 10) instead of new MeetingTime(6, 10)
   }
 
-  /**
-    * PREREQUISITE 2: Impure, unsafe and side-effectful API calls
+  /** PREREQUISITE 2: Impure, unsafe and side-effectful API calls
     * See [[ch08_SchedulingMeetingsImpure.calendarEntriesApiCall()]]
     * and [[ch08_SchedulingMeetingsImpure.createMeetingApiCall()]]
     *
@@ -59,8 +57,7 @@ object ch08_SchedulingMeetings {
     }
   } // PROBLEMS: multiple responsibilities, no failure handling, signature lies
 
-  /**
-    * STEP 1: Introduce IO to disentangle concerns
+  /** STEP 1: Introduce IO to disentangle concerns
     * See [[ch08_CastingDie]] first
     */
   def calendarEntries(name: String): IO[List[MeetingTime]] = {
@@ -111,7 +108,7 @@ object ch08_SchedulingMeetings {
     def schedule(person1: String, person2: String, lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- scheduledMeetings(person1, person2)
-        meetings         = possibleMeetings(existingMeetings, 8, 16, lengthHours)
+        meetings          = possibleMeetings(existingMeetings, 8, 16, lengthHours)
       } yield meetings.headOption
     }
   }
@@ -221,11 +218,11 @@ object ch08_SchedulingMeetings {
     def scheduledMeetings(person1: String, person2: String): IO[List[MeetingTime]] = {
       for {
         person1Entries <- calendarEntries(person1)
-                           .orElse(calendarEntries(person1))
-                           .orElse(IO.pure(List.empty))
+                            .orElse(calendarEntries(person1))
+                            .orElse(IO.pure(List.empty))
         person2Entries <- calendarEntries(person2)
-                           .orElse(calendarEntries(person2))
-                           .orElse(IO.pure(List.empty))
+                            .orElse(calendarEntries(person2))
+                            .orElse(IO.pure(List.empty))
       } yield person1Entries.appendedAll(person2Entries)
     }
 
@@ -233,9 +230,9 @@ object ch08_SchedulingMeetings {
     def schedule(person1: String, person2: String, lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- scheduledMeetings(person1, person2)
-                             .orElse(scheduledMeetings(person1, person2))
-                             .orElse(IO.pure(List.empty))
-        meetings = possibleMeetings(existingMeetings, 8, 16, lengthHours)
+                              .orElse(scheduledMeetings(person1, person2))
+                              .orElse(IO.pure(List.empty))
+        meetings          = possibleMeetings(existingMeetings, 8, 16, lengthHours)
       } yield meetings.headOption
     }
 
@@ -247,9 +244,9 @@ object ch08_SchedulingMeetings {
     def schedule(person1: String, person2: String, lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- scheduledMeetings(person1, person2)
-                             .orElse(scheduledMeetings(person1, person2))
-                             .orElse(IO.pure(List.empty))
-        meetings = possibleMeetings(existingMeetings, 8, 16, lengthHours)
+                              .orElse(scheduledMeetings(person1, person2))
+                              .orElse(IO.pure(List.empty))
+        meetings          = possibleMeetings(existingMeetings, 8, 16, lengthHours)
       } yield meetings.headOption
     }
   }
@@ -312,14 +309,14 @@ object ch08_SchedulingMeetings {
     def schedule(person1: String, person2: String, lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- scheduledMeetings(person1, person2)
-                             .orElse(scheduledMeetings(person1, person2))
-                             .orElse(IO.pure(List.empty))
-        meetings        = possibleMeetings(existingMeetings, 8, 16, lengthHours)
-        possibleMeeting = meetings.headOption
-        _ <- possibleMeeting match {
-              case Some(meeting) => createMeeting(List(person1, person2), meeting)
-              case None          => IO.unit // same as IO.pure(())
-            }
+                              .orElse(scheduledMeetings(person1, person2))
+                              .orElse(IO.pure(List.empty))
+        meetings          = possibleMeetings(existingMeetings, 8, 16, lengthHours)
+        possibleMeeting   = meetings.headOption
+        _                <- possibleMeeting match {
+                              case Some(meeting) => createMeeting(List(person1, person2), meeting)
+                              case None          => IO.unit // same as IO.pure(())
+                            }
       } yield possibleMeeting
     }
   }
@@ -373,10 +370,13 @@ object ch08_SchedulingMeetings {
 
   private def runRetry = {
     var calls = 0
-    retry(IO.delay {
-      calls = calls + 1
-      throw new Exception("failed")
-    }, 10).attempt.unsafeRunSync()
+    retry(
+      IO.delay {
+        calls = calls + 1
+        throw new Exception("failed")
+      },
+      10
+    ).attempt.unsafeRunSync()
     check(calls).expect(11)
   }
 
@@ -384,13 +384,13 @@ object ch08_SchedulingMeetings {
     def schedule(person1: String, person2: String, lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- retry(scheduledMeetings(person1, person2), 10)
-                             .orElse(IO.pure(List.empty))
-        meetings        = possibleMeetings(existingMeetings, 8, 16, lengthHours)
-        possibleMeeting = meetings.headOption
-        _ <- possibleMeeting match {
-              case Some(meeting) => retry(createMeeting(List(person1, person2), meeting), 10)
-              case None          => IO.unit
-            }
+                              .orElse(IO.pure(List.empty))
+        meetings          = possibleMeetings(existingMeetings, 8, 16, lengthHours)
+        possibleMeeting   = meetings.headOption
+        _                <- possibleMeeting match {
+                              case Some(meeting) => retry(createMeeting(List(person1, person2), meeting), 10)
+                              case None          => IO.unit
+                            }
       } yield possibleMeeting
     }
   }
@@ -431,11 +431,11 @@ object ch08_SchedulingMeetings {
     def schedule(attendees: List[String], lengthHours: Int): IO[Option[MeetingTime]] = {
       for {
         existingMeetings <- scheduledMeetings(attendees)
-        possibleMeeting  = possibleMeetings(existingMeetings, 8, 16, lengthHours).headOption
-        _ <- possibleMeeting match {
-              case Some(meeting) => createMeeting(attendees, meeting)
-              case None          => IO.unit
-            }
+        possibleMeeting   = possibleMeetings(existingMeetings, 8, 16, lengthHours).headOption
+        _                <- possibleMeeting match {
+                              case Some(meeting) => createMeeting(attendees, meeting)
+                              case None          => IO.unit
+                            }
       } yield possibleMeeting
     }
   }
