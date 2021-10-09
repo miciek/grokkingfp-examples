@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
         "org.typelevel"     %% "cats-effect"     % "3.1.1",
         "co.fs2"            %% "fs2-core"        % "3.0.5",
-        "org.scalatest"     %% "scalatest"       % "3.2.9" % Test,
+        "org.scalatest"     %% "scalatest"       % "3.2.10" % Test,
         "org.scalatestplus" %% "scalacheck-1-15" % "3.2.9.0" % Test,
         // imperative libraries (used in Java):
         "com.typesafe.akka" % "akka-actor_2.13"  % "2.6.15",
