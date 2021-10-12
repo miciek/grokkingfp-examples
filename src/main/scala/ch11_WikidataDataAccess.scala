@@ -43,21 +43,21 @@ object ch11_WikidataDataAccess extends App {
         |""".stripMargin
 
       for {
-        solutions <- execQuery(query)
+        solutions   <- execQuery(query)
         attractions <- IO.delay(
-                        solutions.map(s =>
-                          Attraction( // introduce named parameters
-                            name = s.getLiteral("attractionLabel").getString,
-                            description =
-                              if (s.contains("description")) Some(s.getLiteral("description").getString) else None,
-                            location = Location(
-                              LocationId(s.getResource("location").getLocalName),
-                              s.getLiteral("locationLabel").getString,
-                              s.getLiteral("population").getInt
-                            )
-                          )
-                        )
-                      )
+                         solutions.map(s =>
+                           Attraction( // introduce named parameters
+                             name = s.getLiteral("attractionLabel").getString,
+                             description =
+                               if (s.contains("description")) Some(s.getLiteral("description").getString) else None,
+                             location = Location(
+                               LocationId(s.getResource("location").getLocalName),
+                               s.getLiteral("locationLabel").getString,
+                               s.getLiteral("population").getInt
+                             )
+                           )
+                         )
+                       )
       } yield attractions
     }
 
@@ -77,11 +77,12 @@ object ch11_WikidataDataAccess extends App {
 
       for {
         solutions <- execQuery(query)
-        artists <- IO.delay(
-                    solutions.map[Artist](s =>
-                      Artist(name = s.getLiteral("artistLabel").getString, followers = s.getLiteral("followers").getInt)
-                    )
-                  )
+        artists   <-
+          IO.delay(
+            solutions.map[Artist](s =>
+              Artist(name = s.getLiteral("artistLabel").getString, followers = s.getLiteral("followers").getInt)
+            )
+          )
       } yield artists
     }
 
@@ -102,11 +103,11 @@ object ch11_WikidataDataAccess extends App {
 
       for {
         solutions <- execQuery(query)
-        movies <- IO.delay(
-                   solutions.map[Movie](s =>
-                     Movie(name = s.getLiteral("subjectLabel").getString, boxOffice = s.getLiteral("boxOffice").getInt)
-                   )
-                 )
+        movies    <- IO.delay(
+                       solutions.map[Movie](s =>
+                         Movie(name = s.getLiteral("subjectLabel").getString, boxOffice = s.getLiteral("boxOffice").getInt)
+                       )
+                     )
       } yield movies
     }
 

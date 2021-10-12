@@ -51,11 +51,11 @@ object ch06_TvShows extends App {
       val dash         = rawShow.indexOf('-')
 
       for {
-        name <- Option.when(bracketOpen > 0)(rawShow.substring(0, bracketOpen).trim)
+        name      <- Option.when(bracketOpen > 0)(rawShow.substring(0, bracketOpen).trim)
         yearStart <- Option.when(bracketOpen != -1 && dash > bracketOpen + 1)(
-                      rawShow.substring(bracketOpen + 1, dash).toInt
-                    )
-        yearEnd <- Option.when(dash != -1 && bracketClose > dash + 1)(rawShow.substring(dash + 1, bracketClose).toInt)
+                       rawShow.substring(bracketOpen + 1, dash).toInt
+                     )
+        yearEnd   <- Option.when(dash != -1 && bracketClose > dash + 1)(rawShow.substring(dash + 1, bracketClose).toInt)
       } yield TvShow(name, yearStart, yearEnd)
     }
 
@@ -80,9 +80,9 @@ object ch06_TvShows extends App {
       val dash        = rawShow.indexOf('-')
       for {
         yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1)
-                    Some(rawShow.substring(bracketOpen + 1, dash))
-                  else None
-        year <- yearStr.trim.toIntOption
+                     Some(rawShow.substring(bracketOpen + 1, dash))
+                   else None
+        year    <- yearStr.trim.toIntOption
       } yield year
     }
 
@@ -95,9 +95,9 @@ object ch06_TvShows extends App {
       val bracketClose = rawShow.indexOf(')')
       for {
         yearStr <- if (dash != -1 && bracketClose > dash + 1)
-                    Some(rawShow.substring(dash + 1, bracketClose))
-                  else None
-        year <- yearStr.toIntOption
+                     Some(rawShow.substring(dash + 1, bracketClose))
+                   else None
+        year    <- yearStr.toIntOption
       } yield year
     }
 
@@ -128,9 +128,9 @@ object ch06_TvShows extends App {
       val bracketClose = rawShow.indexOf(')')
       for {
         yearStr <- if (dash == -1 && bracketOpen != -1 && bracketClose > bracketOpen)
-                    Some(rawShow.substring(bracketOpen + 1, bracketClose))
-                  else None
-        year <- yearStr.toIntOption
+                     Some(rawShow.substring(bracketOpen + 1, bracketClose))
+                   else None
+        year    <- yearStr.toIntOption
       } yield year
     }
 
@@ -257,9 +257,9 @@ object ch06_TvShows extends App {
       val dash        = rawShow.indexOf('-')
       for {
         yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1)
-                    Right(rawShow.substring(bracketOpen + 1, dash))
-                  else Left(s"Can't extract start year from $rawShow")
-        year <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
+                     Right(rawShow.substring(bracketOpen + 1, dash))
+                   else Left(s"Can't extract start year from $rawShow")
+        year    <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
     }
 
@@ -273,9 +273,9 @@ object ch06_TvShows extends App {
       val bracketClose = rawShow.indexOf(')')
       for {
         yearStr <- if (dash != -1 && bracketClose > dash + 1)
-                    Right(rawShow.substring(dash + 1, bracketClose))
-                  else Left(s"Can't extract end year from $rawShow")
-        year <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
+                     Right(rawShow.substring(dash + 1, bracketClose))
+                   else Left(s"Can't extract end year from $rawShow")
+        year    <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
     }
 
@@ -285,11 +285,13 @@ object ch06_TvShows extends App {
       val bracketClose = rawShow.indexOf(')')
 
       for {
-        yearStr <- if (dash == -1 && bracketOpen != -1 &&
-                       bracketClose > bracketOpen)
-                    Right(rawShow.substring(bracketOpen + 1, bracketClose))
-                  else Left(s"Can't extract single year from $rawShow")
-        year <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
+        yearStr <- if (
+                     dash == -1 && bracketOpen != -1 &&
+                     bracketClose > bracketOpen
+                   )
+                     Right(rawShow.substring(bracketOpen + 1, bracketClose))
+                   else Left(s"Can't extract single year from $rawShow")
+        year    <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
     }
 

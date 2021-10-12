@@ -1,8 +1,7 @@
 import java.util
 import scala.jdk.CollectionConverters._
 
-/**
-  * Given the list of all interesting books,
+/** Given the list of all interesting books,
   * return a feed of movie recommendations.
   *
   * SKILLS:
@@ -45,9 +44,9 @@ object ch05_BookAdaptations extends App {
   val a1 = books.map(book => book.authors)
   assert(
     a1 == List(
-        List("Chiusano", "Bjarnason"),
-        List("Tolkien")
-      )
+      List("Chiusano", "Bjarnason"),
+      List("Tolkien")
+    )
   )
 
   val a2 = books.map(book => book.authors).flatten
@@ -88,9 +87,9 @@ object ch05_BookAdaptations extends App {
 
   assert(
     c1 == List(
-        "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
-        "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
-      )
+      "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
+      "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
+    )
   )
 
   val c2 = for {

@@ -1,7 +1,6 @@
 import scala.collection.mutable
 
-/**
-  * Given the list of points and radiuses,
+/** Given the list of points and radiuses,
   * calculate which points are inside circles defined by these radiuses.
   *
   * SKILLS:
@@ -38,11 +37,11 @@ object ch05_PointsInsideCircles extends App {
   println(c1)
   assert(
     c1 == List(
-        "Point(5,2) is within a radius of 2: false",
-        "Point(1,1) is within a radius of 2: true",
-        "Point(5,2) is within a radius of 1: false",
-        "Point(1,1) is within a radius of 1: false"
-      )
+      "Point(5,2) is within a radius of 2: false",
+      "Point(1,1) is within a radius of 2: true",
+      "Point(5,2) is within a radius of 1: false",
+      "Point(1,1) is within a radius of 1: false"
+    )
   )
 
   val d1 = for {
@@ -75,7 +74,7 @@ object ch05_PointsInsideCircles extends App {
   assert(d3 == imperative.toList)
 
   val riskyRadiuses = List(-10, 0, 2)
-  val d1r_intro = for {
+  val d1r_intro     = for {
     r     <- riskyRadiuses
     point <- points.filter(p => isInside(p, r))
   } yield s"$point is within a radius of $r"
@@ -97,7 +96,7 @@ object ch05_PointsInsideCircles extends App {
   println(d1r)
 
   val d2r = for {
-    r <- riskyRadiuses
+    r     <- riskyRadiuses
     if r > 0
     point <- points
     if isInside(point, r)

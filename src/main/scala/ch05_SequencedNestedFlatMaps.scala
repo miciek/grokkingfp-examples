@@ -1,5 +1,4 @@
-/**
-  * SKILLS:
+/** SKILLS:
   * b) writing algorithms using flatMap instead of for loops
   */
 object ch05_SequencedNestedFlatMaps extends App {

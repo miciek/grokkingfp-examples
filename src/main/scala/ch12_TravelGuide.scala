@@ -22,8 +22,8 @@ object ch12_TravelGuide {
     * Here is a fixed version that passes the tests.
     */
   def guideScore(guide: TravelGuide): Int = {
-    val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
-    val quantityScore    = Math.min(40, guide.subjects.size * 10)
+    val descriptionScore     = guide.attraction.description.map(_ => 30).getOrElse(0)
+    val quantityScore        = Math.min(40, guide.subjects.size * 10)
     val totalFollowers: Long = guide.subjects
       .map(_ match {
         case Artist(_, followers) => followers.toLong
@@ -46,13 +46,13 @@ object ch12_TravelGuide {
   def guideScoreBigInt(guide: TravelGuide): Int = {
     val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
     val quantityScore    = Math.min(40, guide.subjects.size * 10)
-    val totalFollowers = guide.subjects
+    val totalFollowers   = guide.subjects
       .map(_ match {
         case Artist(_, followers) => BigInt(followers)
         case _                    => BigInt(0)
       })
       .sum
-    val totalBoxOffice = guide.subjects
+    val totalBoxOffice   = guide.subjects
       .map(_ match {
         case Movie(_, boxOffice) => BigInt(boxOffice)
         case _                   => BigInt(0)
@@ -95,7 +95,7 @@ object ch12_TravelGuide {
       guides.sortBy(guideScore).reverse.headOption match {
         case Some(bestGuide) =>
           if (guideScore(bestGuide) > 55) Right(bestGuide) else Left(SearchReport(guides, List.empty))
-        case None => Left(SearchReport(List.empty, List.empty))
+        case None            => Left(SearchReport(List.empty, List.empty))
       }
     }
 
@@ -104,7 +104,7 @@ object ch12_TravelGuide {
         .findAttractions(attractionName, ByLocationPopulation, 3)
         .attempt
         .flatMap(_ match {
-          case Left(exception) => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
+          case Left(exception)    => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
           case Right(attractions) =>
             attractions
               .map(attraction => travelGuideForAttraction(dataAccess, attraction))
@@ -133,10 +133,10 @@ object ch12_TravelGuide {
     check.executedIO(dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yellowstone"))) // Right
     check.executedIO(
       dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yosemite"))
-    ) // Left without errors
+    )                                                                                                       // Left without errors
     check.executedIO(
       dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Hacking attempt \""))
-    ) // Left with errors
+    )                                                                                                       // Left with errors
   }
 
   object Version5 {
@@ -146,13 +146,13 @@ object ch12_TravelGuide {
       val guides: List[TravelGuide] = errorsOrGuides.collect(_ match {
         case Right(travelGuide) => travelGuide
       })
-      val errors: List[String] = errorsOrGuides.collect(_ match {
+      val errors: List[String]      = errorsOrGuides.collect(_ match {
         case Left(exception) => exception.getMessage
       })
       guides.sortBy(guideScore).reverse.headOption match {
         case Some(bestGuide) =>
           if (guideScore(bestGuide) > 55) Right(bestGuide) else Left(SearchReport(guides, errors))
-        case None => Left(SearchReport(List.empty, errors))
+        case None            => Left(SearchReport(List.empty, errors))
       }
     }
 
@@ -161,7 +161,7 @@ object ch12_TravelGuide {
         .findAttractions(attractionName, ByLocationPopulation, 3)
         .attempt
         .flatMap(_ match {
-          case Left(exception) => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
+          case Left(exception)    => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
           case Right(attractions) =>
             attractions
               .map(attraction => travelGuideForAttraction(dataAccess, attraction))
@@ -176,10 +176,10 @@ object ch12_TravelGuide {
     check.executedIO(dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Yellowstone"))) // Right
     check.executedIO(
       dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Yosemite"))
-    ) // Left without errors
+    )                                                                                                       // Left without errors
     check.executedIO(
       dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Hacking attempt \""))
-    ) // Left with errors
+    )                                                                                                       // Left with errors
   }
 
   def main(args: Array[String]): Unit = {

@@ -96,7 +96,7 @@ object ch04_WordScoringScala extends App {
         words.filter(word => wordScore(word) > 5)
       }
 
-      val result = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
+      val result  = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
       println(result)
       assert(result == List("java"))
       val result2 = highScoringWords0(w => score(w) + bonus(w) - penalty(w), words)
@@ -114,7 +114,7 @@ object ch04_WordScoringScala extends App {
       }
 
       // PROBLEM still there:
-      val result = highScoringWords(w => score(w) + bonus(w) - penalty(w), words, 1)
+      val result  = highScoringWords(w => score(w) + bonus(w) - penalty(w), words, 1)
       println(result)
       assert(result == List("java"))
       val result2 = highScoringWords(w => score(w) + bonus(w) - penalty(w), words, 0)
