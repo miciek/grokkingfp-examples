@@ -58,11 +58,10 @@ object ch08_CastingDie extends App {
     // aOption + bOption
 
     // we need flatMap (for comprehension)
-    val result: Option[Int] =
-      for {
-        a <- aOption
-        b <- bOption
-      } yield a + b
+    val result: Option[Int] = for {
+      a <- aOption
+      b <- bOption
+    } yield a + b
 
     println(result)
 

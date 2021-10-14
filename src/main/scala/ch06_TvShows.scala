@@ -70,8 +70,7 @@ object ch06_TvShows extends App {
   {
     def extractName(rawShow: String): Option[String] = {
       val bracketOpen = rawShow.indexOf('(')
-      if (bracketOpen > 0)
-        Some(rawShow.substring(0, bracketOpen).trim)
+      if (bracketOpen > 0) Some(rawShow.substring(0, bracketOpen).trim)
       else None
     }
 
@@ -79,8 +78,7 @@ object ch06_TvShows extends App {
       val bracketOpen = rawShow.indexOf('(')
       val dash        = rawShow.indexOf('-')
       for {
-        yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1)
-                     Some(rawShow.substring(bracketOpen + 1, dash))
+        yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1) Some(rawShow.substring(bracketOpen + 1, dash))
                    else None
         year    <- yearStr.trim.toIntOption
       } yield year
@@ -94,8 +92,7 @@ object ch06_TvShows extends App {
       val dash         = rawShow.indexOf('-')
       val bracketClose = rawShow.indexOf(')')
       for {
-        yearStr <- if (dash != -1 && bracketClose > dash + 1)
-                     Some(rawShow.substring(dash + 1, bracketClose))
+        yearStr <- if (dash != -1 && bracketClose > dash + 1) Some(rawShow.substring(dash + 1, bracketClose))
                    else None
         year    <- yearStr.toIntOption
       } yield year
@@ -246,18 +243,15 @@ object ch06_TvShows extends App {
 
     def extractName(rawShow: String): Either[String, String] = {
       val bracketOpen = rawShow.indexOf('(')
-      if (bracketOpen > 0)
-        Right(rawShow.substring(0, bracketOpen).trim)
-      else
-        Left(s"Can't extract name from $rawShow")
+      if (bracketOpen > 0) Right(rawShow.substring(0, bracketOpen).trim)
+      else Left(s"Can't extract name from $rawShow")
     }
 
     def extractYearStart(rawShow: String): Either[String, Int] = {
       val bracketOpen = rawShow.indexOf('(')
       val dash        = rawShow.indexOf('-')
       for {
-        yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1)
-                     Right(rawShow.substring(bracketOpen + 1, dash))
+        yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1) Right(rawShow.substring(bracketOpen + 1, dash))
                    else Left(s"Can't extract start year from $rawShow")
         year    <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
@@ -272,8 +266,7 @@ object ch06_TvShows extends App {
       val dash         = rawShow.indexOf('-')
       val bracketClose = rawShow.indexOf(')')
       for {
-        yearStr <- if (dash != -1 && bracketClose > dash + 1)
-                     Right(rawShow.substring(dash + 1, bracketClose))
+        yearStr <- if (dash != -1 && bracketClose > dash + 1) Right(rawShow.substring(dash + 1, bracketClose))
                    else Left(s"Can't extract end year from $rawShow")
         year    <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
@@ -285,12 +278,12 @@ object ch06_TvShows extends App {
       val bracketClose = rawShow.indexOf(')')
 
       for {
-        yearStr <- if (
-                     dash == -1 && bracketOpen != -1 &&
-                     bracketClose > bracketOpen
-                   )
-                     Right(rawShow.substring(bracketOpen + 1, bracketClose))
-                   else Left(s"Can't extract single year from $rawShow")
+        yearStr <-
+          if (
+            dash == -1 && bracketOpen != -1 &&
+            bracketClose > bracketOpen
+          ) Right(rawShow.substring(bracketOpen + 1, bracketClose))
+          else Left(s"Can't extract single year from $rawShow")
         year    <- yearStr.toIntOption.toRight(s"Can't parse $yearStr")
       } yield year
     }

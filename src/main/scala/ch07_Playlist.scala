@@ -27,7 +27,7 @@ case class Playlist(name: String, kind: PlaylistKind, songs: List[Song])
 
 object ch07_Playlist extends App {
   val fooFighters = Artist("Foo Fighters")
-  val playlist1 = Playlist(
+  val playlist1   = Playlist(
     "This is Foo Fighters",
     BasedOnArtist(fooFighters),
     List(Song(fooFighters, "Breakout"), Song(fooFighters, "Learn To Fly"))
@@ -47,10 +47,11 @@ object ch07_Playlist extends App {
 
   def gatherSongs(playlists: List[Playlist], artist: Artist, genre: MusicGenre): List[Song] =
     playlists.foldLeft(List.empty[Song])((songs, playlist) =>
-      val matchingSongs = playlist.kind match
-        case CuratedByUser(user)   => playlist.songs.filter(_.artist == artist)
-        case BasedOnArtist(playlistArtist) => if (playlistArtist == artist) playlist.songs else List.empty
-        case BasedOnGenres(genres) => if (genres.contains(genre)) playlist.songs else List.empty
+      val matchingSongs =
+        playlist.kind match
+          case CuratedByUser(user)           => playlist.songs.filter(_.artist == artist)
+          case BasedOnArtist(playlistArtist) => if (playlistArtist == artist) playlist.songs else List.empty
+          case BasedOnGenres(genres)         => if (genres.contains(genre)) playlist.songs else List.empty
       songs.appendedAll(matchingSongs)
     )
 

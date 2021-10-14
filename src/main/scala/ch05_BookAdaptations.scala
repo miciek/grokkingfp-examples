@@ -22,22 +22,22 @@ object ch05_BookAdaptations extends App {
   assert(scalaBooksQty == 1)
 
   def bookAdaptations(author: String): List[Movie] = {
-    if (author == "Tolkien")
-      List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
-    else
-      List.empty
+    if (author == "Tolkien") List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
+    else List.empty
   }
 
   def recommendationFeed(books: List[Book]) = {
     val result = new util.ArrayList[String]()
-    for (book <- books)
-      for (author <- book.authors)
+    for (book <- books) {
+      for (author <- book.authors) {
         for (movie <- bookAdaptations(author)) {
           result.add(
             s"You may like ${movie.title}, " +
             s"because you liked $author's ${book.title}"
           )
         }
+      }
+    }
     result
   }
 
@@ -96,8 +96,7 @@ object ch05_BookAdaptations extends App {
     book   <- books
     author <- book.authors
     movie  <- bookAdaptations(author)
-  } yield s"You may like ${movie.title}, " +
-  s"because you liked $author's ${book.title}"
+  } yield s"You may like ${movie.title}, " + s"because you liked $author's ${book.title}"
 
   assert(c1 == c2)
   assert(c1 == recommendationFeed(books).asScala.toList)

@@ -16,3 +16,5 @@ jobs:
       run: sbt test
     - name: Run all examples
       run: sbt runAll
+    - name: Check formatting
+      run: sbt 'scalafmtSbtCheck; scalafmtCheck'

@@ -1,22 +1,22 @@
 lazy val root = (project in file("."))
   .settings(
-    name := "grokkingfp-examples",
+    name         := "grokkingfp-examples",
     organization := "Michał Płachta (Manning)",
-    version := "1.0",
+    version      := "1.0",
     scalaVersion := "3.0.2",
     scalacOptions ++= List("-unchecked"),
     libraryDependencies ++= Seq(
-        "org.typelevel"     %% "cats-effect"     % "3.2.9",
-        "co.fs2"            %% "fs2-core"        % "3.1.5",
-        "org.scalatest"     %% "scalatest"       % "3.2.10" % Test,
-        "org.scalatestplus" %% "scalacheck-1-15" % "3.2.10.0" % Test,
-        // imperative libraries:
-        "com.typesafe.akka" % "akka-actor_2.13"  % "2.6.16",
-        "org.apache.jena"   % "apache-jena-libs" % "4.2.0",
-        "org.apache.jena"   % "jena-fuseki-main" % "4.2.0",
-        "org.slf4j"         % "slf4j-simple"     % "1.7.32"
-      ),
-    run / fork := true,
+      "org.typelevel"     %% "cats-effect"      % "3.2.9",
+      "co.fs2"            %% "fs2-core"         % "3.1.5",
+      "org.scalatest"     %% "scalatest"        % "3.2.10"   % Test,
+      "org.scalatestplus" %% "scalacheck-1-15"  % "3.2.10.0" % Test,
+      // imperative libraries:
+      "com.typesafe.akka"  % "akka-actor_2.13"  % "2.6.16",
+      "org.apache.jena"    % "apache-jena-libs" % "4.2.0",
+      "org.apache.jena"    % "jena-fuseki-main" % "4.2.0",
+      "org.slf4j"          % "slf4j-simple"     % "1.7.32"
+    ),
+    run / fork   := true,
     run / javaOptions += "-ea",
     addCommandAlias(
       "runAll",

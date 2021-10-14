@@ -14,7 +14,7 @@ object ch10_CastingDieConcurrently extends App {
   // Practicing refs and concurrent IOs:
   // 1. wait 1 second, then cast two dies concurrently, wait for both of them and return their sum
   check.executedIO(for {
-    _      <- IO.sleep(1.second) // introduce 1.second
+    _ <- IO.sleep(1.second) // introduce 1.second
     result <- List(castTheDie(), castTheDie()).parSequence
   } yield result)
 
@@ -30,7 +30,7 @@ object ch10_CastingDieConcurrently extends App {
   check.executedIO(for {
     storedCasts <- Ref.of[IO, List[Int]](List.empty)
     singleCast   = castTheDie().flatMap(result => storedCasts.update(_.appended(result)))
-    _           <- List.fill(3)(singleCast).parSequence // introduce List.fill
+    _ <- List.fill(3)(singleCast).parSequence // introduce List.fill
     casts       <- storedCasts.get
   } yield casts)
 

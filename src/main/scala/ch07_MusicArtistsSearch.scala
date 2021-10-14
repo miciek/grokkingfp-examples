@@ -16,13 +16,12 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] =
-      artists.filter(artist =>
-        (genres.isEmpty || genres.contains(artist.genre)) &&
-        (locations.isEmpty || locations.contains(artist.origin)) &&
-        (!searchByActiveYears || ((artist.isActive || artist.yearsActiveEnd >= activeAfter) &&
-        (artist.yearsActiveStart <= activeBefore)))
-      )
+    ): List[Artist] = artists.filter(artist =>
+      (genres.isEmpty || genres.contains(artist.genre)) &&
+      (locations.isEmpty || locations.contains(artist.origin)) &&
+      (!searchByActiveYears || ((artist.isActive || artist.yearsActiveEnd >= activeAfter) &&
+      (artist.yearsActiveStart <= activeBefore)))
+    )
 
     val artists = List(
       Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
@@ -86,24 +85,24 @@ object ch07_MusicArtistsSearch extends App {
   object model:
     opaque type Location = String
     object Location:
-      def apply(value: String): Location = value // <- you can use a String as a Location only in the scope of model
-      extension(a: Location) def name: String = a
+      def apply(value: String): Location       = value // <- you can use a String as a Location only in the scope of model
+      extension (a: Location) def name: String = a
 
     // Practicing newtypes
     opaque type Genre = String
     object Genre:
-      def apply(value: String): Genre = value
-      extension(a: Genre) def name: String = a
+      def apply(value: String): Genre       = value
+      extension (a: Genre) def name: String = a
 
     opaque type YearsActiveStart = Int
     object YearsActiveStart:
-      def apply(value: Int): YearsActiveStart = value
-      extension(a: YearsActiveStart) def value: Int = a
+      def apply(value: Int): YearsActiveStart        = value
+      extension (a: YearsActiveStart) def value: Int = a
 
     opaque type YearsActiveEnd = Int
     object YearsActiveEnd:
-      def apply(value: Int): YearsActiveEnd = value
-      extension(a: YearsActiveEnd) def value: Int = a
+      def apply(value: Int): YearsActiveEnd        = value
+      extension (a: YearsActiveEnd) def value: Int = a
 
   import model._
   val us: Location = Location("U.S.")
@@ -124,15 +123,14 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] =
-      artists.filter(artist =>
-        (genres.isEmpty || genres.contains(artist.genre.name)) && // <- using Genre
-        (locations.isEmpty || locations
-          .contains(artist.origin.name)) && // <- using Location
-        (!searchByActiveYears ||
-        ((artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
-        (artist.yearsActiveStart.value <= activeBefore)))                   // <- using YearsActiveStart
-      )
+    ): List[Artist] = artists.filter(artist =>
+      (genres.isEmpty || genres.contains(artist.genre.name)) &&           // <- using Genre
+      (locations.isEmpty || locations
+        .contains(artist.origin.name)) &&                                 // <- using Location
+      (!searchByActiveYears ||
+      ((artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
+      (artist.yearsActiveStart.value <= activeBefore))) // <- using YearsActiveStart
+    )
 
     val artists = List(
       Artist("Metallica", Genre("Heavy Metal"), Location("U.S."), YearsActiveStart(1981), true, YearsActiveEnd(0)),
@@ -169,14 +167,13 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] =
-      artists.filter(artist =>
-        (genres.isEmpty || genres.contains(artist.genre)) &&
-        (locations.isEmpty || locations.contains(artist.origin.name)) &&
-        (!searchByActiveYears ||
-        (artist.yearsActiveEnd.forall(_ >= activeAfter) && // <- using Option.forall
-        (artist.yearsActiveStart <= activeBefore)))
-      )
+    ): List[Artist] = artists.filter(artist =>
+      (genres.isEmpty || genres.contains(artist.genre)) &&
+      (locations.isEmpty || locations.contains(artist.origin.name)) &&
+      (!searchByActiveYears ||
+      (artist.yearsActiveEnd.forall(_ >= activeAfter) && // <- using Option.forall
+      (artist.yearsActiveStart <= activeBefore)))
+    )
 
     val artists = List(
       Artist("Metallica", "Heavy Metal", Location("U.S."), 1981, None),
@@ -234,38 +231,32 @@ object ch07_MusicArtistsSearch extends App {
     )
 
     // 1. users that haven't specified their city or live in Melbourne
-    def f1(users: List[User]): List[User] =
-      users.filter(_.city.forall(_ == "Melbourne"))
+    def f1(users: List[User]): List[User] = users.filter(_.city.forall(_ == "Melbourne"))
 
     check(f1(users)).expectThat(_.map(_.name) == List("Alice", "Mallory"))
 
     // 2. users that live in Lagos
-    def f2(users: List[User]): List[User] =
-      users.filter(_.city.contains("Lagos"))
+    def f2(users: List[User]): List[User] = users.filter(_.city.contains("Lagos"))
 
     check(f2(users)).expectThat(_.map(_.name) == List("Bob"))
 
     // 3. users that like Bee Gees
-    def f3(users: List[User]): List[User] =
-      users.filter(_.favoriteArtists.contains("Bee Gees"))
+    def f3(users: List[User]): List[User] = users.filter(_.favoriteArtists.contains("Bee Gees"))
 
     check(f3(users)).expectThat(_.map(_.name) == List("Alice", "Bob", "Mallory"))
 
     // 4. users that live in cities that start with a letter T
-    def f4(users: List[User]): List[User] =
-      users.filter(_.city.exists(_.startsWith("T")))
+    def f4(users: List[User]): List[User] = users.filter(_.city.exists(_.startsWith("T")))
 
     check(f4(users)).expectThat(_.map(_.name) == List("Eve"))
 
     // 5. users that only like artists that have a name longer than 8 characters (or no favorite artists at all)
-    def f5(users: List[User]): List[User] =
-      users.filter(_.favoriteArtists.forall(_.length > 8))
+    def f5(users: List[User]): List[User] = users.filter(_.favoriteArtists.forall(_.length > 8))
 
     check(f5(users)).expectThat(_.map(_.name) == List("Eve", "Trent"))
 
     // 6. users that like some artists whose names start with M
-    def f6(users: List[User]): List[User] =
-      users.filter(_.favoriteArtists.exists(_.startsWith("M")))
+    def f6(users: List[User]): List[User] = users.filter(_.favoriteArtists.exists(_.startsWith("M")))
 
     check(f6(users)).expectThat(_.map(_.name) == List("Mallory"))
   }
@@ -288,14 +279,13 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] =
-      artists.filter(artist =>
-        (genres.isEmpty || genres.contains(artist.genre)) &&
-        (locations.isEmpty || locations.contains(artist.origin.name)) &&
-        (!searchByActiveYears ||
-        (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using Option.forall
-        (artist.yearsActive.start <= activeBefore)))
-      )
+    ): List[Artist] = artists.filter(artist =>
+      (genres.isEmpty || genres.contains(artist.genre)) &&
+      (locations.isEmpty || locations.contains(artist.origin.name)) &&
+      (!searchByActiveYears ||
+      (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using Option.forall
+      (artist.yearsActive.start <= activeBefore)))
+    )
 
     val artists = List(
       Artist("Metallica", "Heavy Metal", Location("U.S."), PeriodInYears(1981, None)),
@@ -331,14 +321,13 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] =
-      artists.filter(artist =>
-        (genres.isEmpty || genres.contains(artist.genre)) && // no change needed
-        (locations.isEmpty || locations.contains(artist.origin.name)) &&
-        (!searchByActiveYears ||
-        (artist.yearsActive.end.forall(_ >= activeAfter) &&
-        (artist.yearsActive.start <= activeBefore)))
-      )
+    ): List[Artist] = artists.filter(artist =>
+      (genres.isEmpty || genres.contains(artist.genre)) && // no change needed
+      (locations.isEmpty || locations.contains(artist.origin.name)) &&
+      (!searchByActiveYears ||
+      (artist.yearsActive.end.forall(_ >= activeAfter) &&
+      (artist.yearsActive.start <= activeBefore)))
+    )
 
     val artists = List(
       Artist("Metallica", HeavyMetal, Location("U.S."), PeriodInYears(1981, None)),
@@ -363,7 +352,7 @@ object ch07_MusicArtistsSearch extends App {
 
     def wasArtistActive(artist: Artist, yearStart: Int, yearEnd: Int): Boolean =
       artist.yearsActive match
-        case StillActive(since) => since <= yearEnd
+        case StillActive(since)        => since <= yearEnd
         case ActiveBetween(start, end) => start <= yearEnd && end >= yearStart
 
     def searchArtistsRaw(
@@ -373,12 +362,11 @@ object ch07_MusicArtistsSearch extends App {
         searchByActiveYears: Boolean,
         activeAfter: Int,
         activeBefore: Int
-    ): List[Artist] =
-      artists.filter(artist =>
-        (genres.isEmpty || genres.contains(artist.genre)) &&
-        (locations.isEmpty || locations.contains(artist.origin)) &&
-        (!searchByActiveYears || wasArtistActive(artist, activeAfter, activeBefore))
-      )
+    ): List[Artist] = artists.filter(artist =>
+      (genres.isEmpty || genres.contains(artist.genre)) &&
+      (locations.isEmpty || locations.contains(artist.origin)) &&
+      (!searchByActiveYears || wasArtistActive(artist, activeAfter, activeBefore))
+    )
 
     // Modeling conditions as ADTs:
     enum SearchCondition:
@@ -391,15 +379,14 @@ object ch07_MusicArtistsSearch extends App {
     def searchArtists(
         artists: List[Artist],
         requiredConditions: List[SearchCondition]
-    ): List[Artist] =
-      artists.filter(artist =>
-        requiredConditions.forall(condition =>
-          condition match
-            case SearchByGenre(genres)           => genres.contains(artist.genre)
-            case SearchByOrigin(locations)       => locations.contains(artist.origin)
-            case SearchByActiveYears(start, end) => wasArtistActive(artist, start, end)
-        )
+    ): List[Artist] = artists.filter(artist =>
+      requiredConditions.forall(condition =>
+        condition match
+          case SearchByGenre(genres)           => genres.contains(artist.genre)
+          case SearchByOrigin(locations)       => locations.contains(artist.origin)
+          case SearchByActiveYears(start, end) => wasArtistActive(artist, start, end)
       )
+    )
 
     val artists = List(
       Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
@@ -562,32 +549,30 @@ object ch07_MusicArtistsSearch extends App {
     def periodOverlapWithPeriods(checkedPeriod: PeriodInYears, periods: List[PeriodInYears]): Boolean =
       periods.exists(p => p.start <= checkedPeriod.end && p.end >= checkedPeriod.start)
 
-    def wasArtistActive(artist: Artist, searchedPeriod: PeriodInYears): Boolean =
-      artist.yearsActive match
-        case StillActive(since, previousPeriods) =>
-          since <= searchedPeriod.end || periodOverlapWithPeriods(searchedPeriod, previousPeriods)
-        case ActiveInPast(periods) => periodOverlapWithPeriods(searchedPeriod, periods)
+    def wasArtistActive(artist: Artist, searchedPeriod: PeriodInYears): Boolean = artist.yearsActive match
+      case StillActive(since, previousPeriods) =>
+        since <= searchedPeriod.end || periodOverlapWithPeriods(searchedPeriod, previousPeriods)
+      case ActiveInPast(periods)               => periodOverlapWithPeriods(searchedPeriod, periods)
 
     def activeLength(artist: Artist, currentYear: Int): Int =
-      val periods = artist.yearsActive match
-        case StillActive(since, previousPeriods) => previousPeriods.appended(PeriodInYears(since, currentYear))
-        case ActiveInPast(periods)               => periods
+      val periods =
+        artist.yearsActive match
+          case StillActive(since, previousPeriods) => previousPeriods.appended(PeriodInYears(since, currentYear))
+          case ActiveInPast(periods)               => periods
       periods.map(p => p.end - p.start).foldLeft(0)((x, y) => x + y)
 
     def searchArtists(
         artists: List[Artist],
         requiredConditions: List[SearchCondition]
-    ): List[Artist] =
-      artists.filter(artist =>
-        requiredConditions.forall(condition =>
-          condition match
-            case SearchByGenre(genres)       => genres.contains(artist.genre)
-            case SearchByOrigin(locations)   => locations.contains(artist.origin)
-            case SearchByActiveYears(period) => wasArtistActive(artist, period)
-            case SearchByActiveLength(howLong, until) =>
-              activeLength(artist, until) >= howLong
-        )
+    ): List[Artist] = artists.filter(artist =>
+      requiredConditions.forall(condition =>
+        condition match
+          case SearchByGenre(genres)                => genres.contains(artist.genre)
+          case SearchByOrigin(locations)            => locations.contains(artist.origin)
+          case SearchByActiveYears(period)          => wasArtistActive(artist, period)
+          case SearchByActiveLength(howLong, until) => activeLength(artist, until) >= howLong
       )
+    )
 
     val artists = List(
       Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),

@@ -8,19 +8,17 @@ import scala.concurrent.duration._
 
 object ch10_CheckIns {
 
-  /**
-    * PREREQUISITE: model
+  /** PREREQUISITE: model
     */
   object model:
     opaque type City = String
     object City:
-      def apply(name: String): City = name
-      extension(city: City) def name: String = city
+      def apply(name: String): City           = name
+      extension (city: City) def name: String = city
     case class CityStats(city: City, checkIns: Int)
   import model._
 
-  /**
-    * PREREQUISITE: a stream of user check-ins
+  /** PREREQUISITE: a stream of user check-ins
     */
   val checkIns: Stream[IO, City] =
     Stream(City("Sydney"), City("Dublin"), City("Cape Town"), City("Lima"), City("Singapore"))
@@ -37,8 +35,7 @@ object ch10_CheckIns {
     }
   }
 
-  /**
-    * STEP 1: sequential & few ranking updates
+  /** STEP 1: sequential & few ranking updates
     * (or more ranking updates, but slow)
     */
   def topCities(cityCheckIns: Map[City, Int]): List[CityStats] = {
@@ -52,15 +49,14 @@ object ch10_CheckIns {
   }
 
   private def step1 = { // Coffee Break: Many things in a single thread
-    val checkInsSmall: Stream[IO, City] =
-      Stream(
-        City("Sydney"),
-        City("Sydney"),
-        City("Cape Town"),
-        City("Singapore"),
-        City("Cape Town"),
-        City("Sydney")
-      ).covary[IO]
+    val checkInsSmall: Stream[IO, City] = Stream(
+      City("Sydney"),
+      City("Sydney"),
+      City("Cape Town"),
+      City("Singapore"),
+      City("Cape Town"),
+      City("Sydney")
+    ).covary[IO]
 
     def processCheckInsRaw(checkIns: Stream[IO, City]): IO[Unit] = {
       checkIns
@@ -83,7 +79,7 @@ object ch10_CheckIns {
       checkIns
         .scan(Map.empty[City, Int])((cityCheckIns, city) =>
           cityCheckIns.updatedWith(city)(_.map(_ + 1).orElse(Some(1)))
-        ) // introduce updatedWith
+        )                    // introduce updatedWith
         .map(topCities)
         .foreach(IO.println) // introduce IO.println
         .compile
@@ -119,8 +115,7 @@ object ch10_CheckIns {
 
   // PROBLEMS: the current version is updated only every 100k elements (if you make it lower, it takes a lot longer)
 
-  /**
-    * STEP 2: concurrent & up-to-date (real time, no batching)
+  /** STEP 2: concurrent & up-to-date (real time, no batching)
     */
   private def step2 = { // Ref intro
     { // update intro
@@ -165,32 +160,31 @@ object ch10_CheckIns {
 
   private def parSequenceWithSleepingIntro = { // parSequence with sleeping intro
     val exampleSequential: IO[Int] = for {
-      counter  <- Ref.of[IO, Int](0)
+      counter <- Ref.of[IO, Int](0)
       program1 = counter.update(_ + 2)
       program2 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 3)) // introduce IO.sleep
       program3 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 4))
-      _        <- List(program1, program2, program3).sequence
-      result   <- counter.get
+      _       <- List(program1, program2, program3).sequence
+      result  <- counter.get
     } yield result
 
     println("The following will run for around 2 seconds")
     check.timed(exampleSequential.unsafeRunSync()).expect(9)
 
     val exampleConcurrent: IO[Int] = for {
-      counter  <- Ref.of[IO, Int](0)
+      counter <- Ref.of[IO, Int](0)
       program1 = counter.update(_ + 2)
       program2 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 3))
       program3 = IO.sleep(FiniteDuration(1, TimeUnit.SECONDS)).flatMap(_ => counter.update(_ + 4))
-      _        <- List(program1, program2, program3).parSequence
-      result   <- counter.get
+      _       <- List(program1, program2, program3).parSequence
+      result  <- counter.get
     } yield result
 
     println("The following will run for around 1 second")
     check.timed(exampleConcurrent.unsafeRunSync()).expect(9)
   }
 
-  /**
-    * See [[ch10_CastingDieConcurrently]] for parSequence exercises
+  /** See [[ch10_CastingDieConcurrently]] for parSequence exercises
     */
   // final version
   def storeCheckIn(storedCheckIns: Ref[IO, Map[City, Int]])(city: City): IO[Unit] = {
@@ -249,23 +243,23 @@ object ch10_CheckIns {
     // before Coffee Break:
     def processCheckInsNoOutput(checkIns: Stream[IO, City]): IO[Unit] = {
       for {
-        storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
-        storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
+        storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
+        storedRanking  <- Ref.of[IO, List[CityStats]](List.empty)
         rankingProgram  = updateRanking(storedCheckIns, storedRanking)
         checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
-        _               <- List(rankingProgram, checkInsProgram).parSequence
+        _              <- List(rankingProgram, checkInsProgram).parSequence
       } yield ()
     }
 
     // Coffee Break: Concurrent programs
     def processCheckIns(checkIns: Stream[IO, City]): IO[Unit] = {
       for {
-        storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
-        storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
+        storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
+        storedRanking  <- Ref.of[IO, List[CityStats]](List.empty)
         rankingProgram  = updateRanking(storedCheckIns, storedRanking)
         checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
         outputProgram   = IO.sleep(1.second).flatMap(_ => storedRanking.get).flatMap(IO.println).foreverM
-        _               <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
+        _              <- List(rankingProgram, checkInsProgram, outputProgram).parSequence
       } yield ()
     }
   }
@@ -278,19 +272,18 @@ object ch10_CheckIns {
 
   // PROBLEM: our program doesn't return so we need to decide the way we want to consume rankings (here, println every 1 second)
 
-  /**
-    * STEP 3: concurrent & up-to-date, return immediately and pass the controls to the caller
+  /** STEP 3: concurrent & up-to-date, return immediately and pass the controls to the caller
     */
   case class ProcessingCheckIns(currentRanking: IO[List[CityStats]], stop: IO[Unit])
 
   object Version3 {
     def processCheckIns(checkIns: Stream[IO, City]): IO[ProcessingCheckIns] = {
       for {
-        storedCheckIns  <- Ref.of[IO, Map[City, Int]](Map.empty)
-        storedRanking   <- Ref.of[IO, List[CityStats]](List.empty)
+        storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
+        storedRanking  <- Ref.of[IO, List[CityStats]](List.empty)
         rankingProgram  = updateRanking(storedCheckIns, storedRanking)
         checkInsProgram = checkIns.evalMap(storeCheckIn(storedCheckIns)).compile.drain
-        fiber           <- List(rankingProgram, checkInsProgram).parSequence.start
+        fiber          <- List(rankingProgram, checkInsProgram).parSequence.start
       } yield ProcessingCheckIns(storedRanking.get, fiber.cancel)
     }
   }

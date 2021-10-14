@@ -9,8 +9,7 @@ import scala.jdk.javaapi.CollectionConverters.asScala
 
 object ch11_TravelGuide {
 
-  /**
-    * STEP 1
+  /** STEP 1
     * MODEL: just immutable values (reused in the whole application).
     *
     * Note that we have a single model for the whole application, but sometimes it may be beneficial
@@ -19,8 +18,8 @@ object ch11_TravelGuide {
   object location:
     opaque type LocationId = String
     object LocationId:
-      def apply(value: String): LocationId = value
-      extension(a: LocationId) def value: String = a
+      def apply(value: String): LocationId        = value
+      extension (a: LocationId) def value: String = a
 
     case class Location(id: LocationId, name: String, population: Int)
 
@@ -36,14 +35,13 @@ object ch11_TravelGuide {
 
   case class TravelGuide(attraction: Attraction, subjects: List[PopCultureSubject])
 
-  /**
-    * STEP 2
+  /** STEP 2
     * DATA ACCESS (just an interface providing pure functions, implementation completely separated)
     */
   enum AttractionOrdering:
     case ByName
     case ByLocationPopulation
-  
+
   import AttractionOrdering._
 
   trait DataAccess:
@@ -51,27 +49,24 @@ object ch11_TravelGuide {
     def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
     def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
 
-  /**
-    * STEP 3: first version of a TravelGuide finder
+  /** STEP 3: first version of a TravelGuide finder
     */
   object Version1 {
     def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
         attractions <- data.findAttractions(attractionName, ByLocationPopulation, 1)
-        guide <- attractions.headOption match {
-                  case None => IO.pure(None)
-                  case Some(attraction) =>
-                    for {
-                      artists <- data.findArtistsFromLocation(attraction.location.id, 2)
-                      movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
-                    } yield Some(TravelGuide(attraction, artists ++ movies))
-                }
+        guide       <- attractions.headOption match {
+                         case None             => IO.pure(None)
+                         case Some(attraction) => for {
+                             artists <- data.findArtistsFromLocation(attraction.location.id, 2)
+                             movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
+                           } yield Some(TravelGuide(attraction, artists ++ movies))
+                       }
       } yield guide
     }
   }
 
-  /**
-    * STEP 4: implementing real data access
+  /** STEP 4: implementing real data access
     * @see [[ch11_QueryingWikidata]] for a simple Wikidata query using Apache Jena imperatively
     */
   private def runStep4 = {
@@ -135,7 +130,7 @@ object ch11_TravelGuide {
                      """
 
       for {
-        solutions   <- execQuery(getConnection, query)
+        solutions <- execQuery(getConnection, query)
         attractions <- solutions.traverse(parseAttraction) // or map(parseAttraction).sequence
       } yield attractions
     }
@@ -157,21 +152,18 @@ object ch11_TravelGuide {
     // connection.close() // PROBLEM we are not able to close each connection used by the getConnection clients
     // and we can't pass connection directly because it's a mutable, stateful value
 
-    /**
-    * @see [[ch11_WikidataDataAccess]] for a Wikidata Sparql endpoint implementation using Apache Jena
-    *      and final version of all DataAccess functions
-    */
+    /** @see [[ch11_WikidataDataAccess]] for a Wikidata Sparql endpoint implementation using Apache Jena
+      *      and final version of all DataAccess functions
+      */
   }
 
-  /**
-    * STEP 5: connecting the dots
+  /** STEP 5: connecting the dots
     */
   // mostly IMPURE CODE, out of the functional core
   private def runStep5 = {
-    def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] =
-      IO.blocking(
-        asScala(connection.query(QueryFactory.create(query)).execSelect()).toList
-      ) // it looks OK, but it's not and we'll see why
+    def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] = IO.blocking(
+      asScala(connection.query(QueryFactory.create(query)).execSelect()).toList
+    ) // it looks OK, but it's not and we'll see why
 
     val connection: RDFConnection = RDFConnectionRemote.create
       .destination("https://query.wikidata.org/")
@@ -188,8 +180,7 @@ object ch11_TravelGuide {
     connection.close()
   }
 
-  /**
-    * STEP 6: searching for the best travel guide
+  /** STEP 6: searching for the best travel guide
     * requirements:
     * - 30 points for a description
     * - 10 points for each artist and movie (max 40pts)
@@ -199,13 +190,13 @@ object ch11_TravelGuide {
   def guideScore(guide: TravelGuide): Int = {
     val descriptionScore = guide.attraction.description.map(_ => 30).getOrElse(0)
     val quantityScore    = Math.min(40, guide.subjects.size * 10)
-    val totalFollowers = guide.subjects
+    val totalFollowers   = guide.subjects
       .map(_ match {
         case Artist(_, followers) => followers
         case _                    => 0
       })
       .sum
-    val totalBoxOffice = guide.subjects
+    val totalBoxOffice   = guide.subjects
       .map(_ match {
         case Movie(_, boxOffice) => boxOffice
         case _                   => 0
@@ -221,26 +212,25 @@ object ch11_TravelGuide {
     def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
         attractions <- data.findAttractions(attractionName, ByLocationPopulation, 3)
-        guides <- attractions
-                   .map(attraction =>
-                     for {
-                       artists <- data.findArtistsFromLocation(attraction.location.id, 2)
-                       movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
-                     } yield TravelGuide(attraction, artists ++ movies)
-                   )
-                   .sequence
+        guides      <- attractions
+                         .map(attraction =>
+                           for {
+                             artists <- data.findArtistsFromLocation(attraction.location.id, 2)
+                             movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
+                           } yield TravelGuide(attraction, artists ++ movies)
+                         )
+                         .sequence
       } yield guides.sortBy(guideScore).reverse.headOption
     }
   }
   // PROBLEM: it may not work, because we are leaking closable resources (in this case query executions)
 
-  /**
-    * STEP 7: handle resource leaks (query execution and connection)
+  /** STEP 7: handle resource leaks (query execution and connection)
     */
   def createExecution(connection: RDFConnection, query: String): IO[QueryExecution] = IO.blocking(
     connection.query(QueryFactory.create(query))
   )
-  def closeExecution(execution: QueryExecution): IO[Unit] = IO.blocking(
+  def closeExecution(execution: QueryExecution): IO[Unit]                           = IO.blocking(
     execution.close()
   )
 
@@ -268,10 +258,9 @@ object ch11_TravelGuide {
 
   // introduce Resource
   def execQuery(connection: RDFConnection)(query: String): IO[List[QuerySolution]] = {
-    val executionResource: Resource[IO, QueryExecution] =
-      Resource.make(createExecution(connection, query))(
-        closeExecution
-      ) // or Resource.fromAutoCloseable(createExecution)
+    val executionResource: Resource[IO, QueryExecution] = Resource.make(createExecution(connection, query))(
+      closeExecution
+    ) // or Resource.fromAutoCloseable(createExecution)
 
     executionResource.use(execution => IO.blocking(asScala(execution.execSelect()).toList))
   }
@@ -296,7 +285,7 @@ object ch11_TravelGuide {
 
   // Resource has map! TODO: Practicing section, Resource.use, flatMap, map (chapter 5), fromAutocloseable
   val queryExecResource: Resource[IO, String => IO[List[QuerySolution]]] = connectionResource.map(execQuery)
-  val dataAccessResource: Resource[IO, DataAccess] =
+  val dataAccessResource: Resource[IO, DataAccess]                       =
     connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
 
   private def runVersion2WithMappedResource = {
@@ -305,22 +294,23 @@ object ch11_TravelGuide {
 
   // PROBLEM: we make all queries sequentially, but we can make parallel queries in two attractions
 
-  /**
-    * STEP 8: make it concurrent (and fast)
+  /** STEP 8: make it concurrent (and fast)
     */
   object Version3 {
     // Coffee Break: making it concurrent
     def travelGuide(data: DataAccess, attractionName: String): IO[Option[TravelGuide]] = {
       for {
         attractions <- data.findAttractions(attractionName, ByLocationPopulation, 3)
-        guides <- attractions
-                   .map(attraction =>
-                     List(
-                       data.findArtistsFromLocation(attraction.location.id, 2),
-                       data.findMoviesAboutLocation(attraction.location.id, 2)
-                     ).parSequence.map(_.flatten).map(popCultureSubjects => TravelGuide(attraction, popCultureSubjects))
-                   )
-                   .parSequence
+        guides      <- attractions
+                         .map(attraction =>
+                           List(
+                             data.findArtistsFromLocation(attraction.location.id, 2),
+                             data.findMoviesAboutLocation(attraction.location.id, 2)
+                           ).parSequence.map(_.flatten).map(popCultureSubjects =>
+                             TravelGuide(attraction, popCultureSubjects)
+                           )
+                         )
+                         .parSequence
       } yield guides.sortBy(guideScore).reverse.headOption
     }
   }
@@ -333,8 +323,7 @@ object ch11_TravelGuide {
 
   // PROBLEM: we are repeating the same queries, but the results don't change that often.
 
-  /**
-    * STEP 9: make it faster
+  /** STEP 9: make it faster
     * we don't have to execute queries, we can cache them locally
     */
   def cachedExecQuery(connection: RDFConnection, cache: Ref[IO, Map[String, List[QuerySolution]]])(
@@ -342,14 +331,13 @@ object ch11_TravelGuide {
   ): IO[List[QuerySolution]] = {
     for {
       cachedQueries <- cache.get
-      solutions <- cachedQueries.get(query) match {
-                    case Some(cachedSolutions) => IO.pure(cachedSolutions)
-                    case None =>
-                      for {
-                        realSolutions <- execQuery(connection)(query)
-                        _             <- cache.update(_.updated(query, realSolutions))
-                      } yield realSolutions
-                  }
+      solutions     <- cachedQueries.get(query) match {
+                         case Some(cachedSolutions) => IO.pure(cachedSolutions)
+                         case None                  => for {
+                             realSolutions <- execQuery(connection)(query)
+                             _             <- cache.update(_.updated(query, realSolutions))
+                           } yield realSolutions
+                       }
     } yield solutions
   }
 
@@ -357,11 +345,11 @@ object ch11_TravelGuide {
     check.executedIO(
       connectionResource.use(connection =>
         for {
-          cache        <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
+          cache       <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
           cachedSparql = getSparqlDataAccess(cachedExecQuery(connection, cache))
-          result1      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-          result2      <- Version3.travelGuide(cachedSparql, "Yellowstone")
-          result3      <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result1     <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result2     <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result3     <- Version3.travelGuide(cachedSparql, "Yellowstone")
         } yield result1.toList.appendedAll(result2).appendedAll(result3)
       )
     ) // the second and third execution will take a lot less time because all queries are cached!

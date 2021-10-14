@@ -9,23 +9,20 @@ import scala.jdk.CollectionConverters.MapHasAsScala
 
 object ch09_CurrencyExchange {
 
-  /**
-    * PREREQUISITE: model
+  /** PREREQUISITE: model
     */
   object model:
     opaque type Currency = String
     object Currency:
-      def apply(name: String): Currency = name
-      extension(currency: Currency) def name: String = currency
+      def apply(name: String): Currency               = name
+      extension (currency: Currency) def name: String = currency
   import model._
 
-  /**
-    * PREREQUISITE: retry function from ch8
+  /** PREREQUISITE: retry function from ch8
     */
   import ch08_SchedulingMeetings.retry
 
-  /**
-    * PREREQUISITE: Impure, unsafe and side-effectful API call
+  /** PREREQUISITE: Impure, unsafe and side-effectful API call
     *
     * See [[ch09_CurrencyExchangeImpure.exchangeRatesTableApiCall]]
     *
@@ -39,8 +36,7 @@ object ch09_CurrencyExchange {
     }.toMap) // implementation is not important, we just use the signature in the book
   }
 
-  /**
-    * STEP 0: Using immutable Maps
+  /** STEP 0: Using immutable Maps
     */
   private def runStep0 = {
     // create
@@ -106,7 +102,7 @@ object ch09_CurrencyExchange {
 
   // Tuples, zip, & drop:
   private def tuplesZipDrop = {
-    val rates = List(BigDecimal(0.81), BigDecimal(0.82), BigDecimal(0.83))
+    val rates: List[BigDecimal]                   = List(BigDecimal(0.81), BigDecimal(0.82), BigDecimal(0.83))
     val ratePairs: List[(BigDecimal, BigDecimal)] = List(
       (BigDecimal(0.81), BigDecimal(0.82)),
       (BigDecimal(0.82), BigDecimal(0.83))
@@ -201,8 +197,7 @@ object ch09_CurrencyExchange {
     }
   }
 
-  /**
-    * STEP 1: Using IO
+  /** STEP 1: Using IO
     */
   {
     for {
@@ -213,9 +208,9 @@ object ch09_CurrencyExchange {
   object Version1 {
     def lastRates(from: Currency, to: Currency): IO[List[BigDecimal]] = {
       for {
-        table1     <- retry(exchangeTable(from), 10)
-        table2     <- retry(exchangeTable(from), 10)
-        table3     <- retry(exchangeTable(from), 10)
+        table1    <- retry(exchangeTable(from), 10)
+        table2    <- retry(exchangeTable(from), 10)
+        table3    <- retry(exchangeTable(from), 10)
         lastTables = List(table1, table2, table3)
       } yield lastTables.flatMap(extractSingleCurrencyRate(to))
     }
@@ -233,8 +228,7 @@ object ch09_CurrencyExchange {
 
   // PROBLEMS: just one decision, we'd like to repeat until successful + hardcoded 3 currencyTable fetches
 
-  /**
-    * STEP 2: Using IO + recursion
+  /** STEP 2: Using IO + recursion
     */
   private def runStep2 = { // recursion
     import Version1.lastRates
@@ -270,7 +264,7 @@ object ch09_CurrencyExchange {
 
     def exchangeInfinitely(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
       for {
-        rates  <- lastRates(from, to) // here we use flatMap, so no code below will be executed until we get rates
+        rates <- lastRates(from, to) // here we use flatMap, so no code below will be executed until we get rates
         result <- exchangeInfinitely(amount, from, to)
       } yield result
     }
@@ -296,10 +290,10 @@ object ch09_CurrencyExchange {
   def currencyRate(from: Currency, to: Currency): IO[BigDecimal] = {
     for {
       table <- retry(exchangeTable(from), 10)
-      rate <- extractSingleCurrencyRate(to)(table) match {
-               case Some(value) => IO.pure(value)
-               case None        => currencyRate(from, to)
-             }
+      rate  <- extractSingleCurrencyRate(to)(table) match {
+                 case Some(value) => IO.pure(value)
+                 case None        => currencyRate(from, to)
+               }
     } yield rate
   }
 
@@ -343,8 +337,7 @@ object ch09_CurrencyExchange {
 
   // PROBLEMS: we analyse three elements and discard them, we don't use a sliding window, each computation is isolated, no time between calls
 
-  /**
-    * STEP 3: Using Stream
+  /** STEP 3: Using Stream
     * See [[ch09_Stream123s]] first for a Java Stream introduction.
     * See [[ch09_CastingDieStream]] for fs2 Stream introduction.
     */
@@ -402,8 +395,7 @@ object ch09_CurrencyExchange {
       .expectThat(_ > 750)
   }
 
-  /**
-    * STEP 4: Combining streams
+  /** STEP 4: Combining streams
     */
   val delay: FiniteDuration   = FiniteDuration(1, TimeUnit.SECONDS)
   val ticks: Stream[IO, Unit] = Stream.fixedRate[IO](delay)

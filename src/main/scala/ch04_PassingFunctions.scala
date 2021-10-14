@@ -4,8 +4,7 @@ object ch04_PassingFunctions extends App {
 
     println(inc(2))
 
-    def score(word: String): Int =
-      word.replaceAll("a", "").length
+    def score(word: String): Int = word.replaceAll("a", "").length
 
     println(score("java"))
     assert(score("java") == 2)
@@ -24,8 +23,7 @@ object ch04_PassingFunctions extends App {
     println(byLength)
     assert(byLength == List("ada", "rust", "scala"))
 
-    def numberOfS(s: String): Int =
-      s.length - s.replaceAll("s", "").length
+    def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length
 
     val byNumberOfS = List("rust", "ada").sortBy(numberOfS)
     println(byNumberOfS)
@@ -52,8 +50,7 @@ object ch04_PassingFunctions extends App {
     println(lengths)
     assert(lengths == List(5, 4, 3))
 
-    def numberOfS(s: String): Int =
-      s.length - s.replaceAll("s", "").length
+    def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length
 
     val numberOfSs = List("rust", "ada").map(numberOfS)
     println(numberOfSs)
@@ -80,8 +77,7 @@ object ch04_PassingFunctions extends App {
     println(longWords)
     assert(longWords == List("rust", "ada"))
 
-    def numberOfS(s: String): Int =
-      s.length - s.replaceAll("s", "").length
+    def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length
 
     val withLotsS = List("rust", "ada").filter(word => numberOfS(word) > 2)
     println(withLotsS)
@@ -112,8 +108,7 @@ object ch04_PassingFunctions extends App {
     println(totalLength)
     assert(totalLength == 12)
 
-    def numberOfS(s: String): Int =
-      s.length - s.replaceAll("s", "").length
+    def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length
 
     val totalS = List("scala", "haskell", "rust", "ada").foldLeft(0)((total, str) => total + numberOfS(str))
     println(totalS)

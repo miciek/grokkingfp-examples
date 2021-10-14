@@ -32,8 +32,8 @@ object ch05_PointsInsideCircles extends App {
   val c1 = for {
     r     <- radiuses
     point <- points
-  } yield s"$point is within a radius of $r: " +
-  isInside(point, r).toString
+  } yield s"$point is within a radius of $r: " + isInside(point, r).toString
+
   println(c1)
   assert(
     c1 == List(
@@ -61,8 +61,7 @@ object ch05_PointsInsideCircles extends App {
   assert(d2 == List("Point(1,1) is within a radius of 2"))
   assert(d2 == imperative.toList)
 
-  def insideFilter(point: Point, radius: Int): List[Point] =
-    if (isInside(point, radius)) List(point) else List.empty
+  def insideFilter(point: Point, radius: Int): List[Point] = if (isInside(point, radius)) List(point) else List.empty
 
   val d3 = for {
     r       <- radiuses
@@ -104,8 +103,7 @@ object ch05_PointsInsideCircles extends App {
   assert(d2r == List("Point(1,1) is within a radius of 2"))
   println(d2r)
 
-  def validateRadius(radius: Int): List[Int] =
-    if (radius > 0) List(radius) else List.empty
+  def validateRadius(radius: Int): List[Int] = if (radius > 0) List(radius) else List.empty
 
   val d3r = for {
     r           <- riskyRadiuses

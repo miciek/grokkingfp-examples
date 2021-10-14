@@ -67,15 +67,14 @@ object ch12_TravelGuide {
   /** We needed to parametrize the connection with a different URL. This can be used in tests and production
     * and avoids hardcoding the URLs (they can be provided from an external config)
     */
-  def connectionResource(address: String, endpoint: String): Resource[IO, RDFConnection] =
-    Resource.make(
-      IO.blocking(
-        RDFConnectionRemote.create
-          .destination(address)
-          .queryEndpoint(endpoint)
-          .build
-      )
-    )(connection => IO.blocking(connection.close()))
+  def connectionResource(address: String, endpoint: String): Resource[IO, RDFConnection] = Resource.make(
+    IO.blocking(
+      RDFConnectionRemote.create
+        .destination(address)
+        .queryEndpoint(endpoint)
+        .build
+    )
+  )(connection => IO.blocking(connection.close()))
 
   /** STEP 4: develop new functionalities in a test-driven way.
     */
@@ -105,8 +104,7 @@ object ch12_TravelGuide {
         .attempt
         .flatMap(_ match {
           case Left(exception)    => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
-          case Right(attractions) =>
-            attractions
+          case Right(attractions) => attractions
               .map(attraction => travelGuideForAttraction(dataAccess, attraction))
               .parSequence
               .map(findGoodGuide)
@@ -150,8 +148,7 @@ object ch12_TravelGuide {
         case Left(exception) => exception.getMessage
       })
       guides.sortBy(guideScore).reverse.headOption match {
-        case Some(bestGuide) =>
-          if (guideScore(bestGuide) > 55) Right(bestGuide) else Left(SearchReport(guides, errors))
+        case Some(bestGuide) => if (guideScore(bestGuide) > 55) Right(bestGuide) else Left(SearchReport(guides, errors))
         case None            => Left(SearchReport(List.empty, errors))
       }
     }
@@ -162,8 +159,7 @@ object ch12_TravelGuide {
         .attempt
         .flatMap(_ match {
           case Left(exception)    => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
-          case Right(attractions) =>
-            attractions
+          case Right(attractions) => attractions
               .map(attraction => travelGuideForAttraction(dataAccess, attraction))
               .map(_.attempt) // note that we attempt on individual IO values, so it needs to be before parSequence
               .parSequence

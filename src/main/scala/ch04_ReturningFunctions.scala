@@ -21,11 +21,9 @@ object ch04_ReturningFunctions extends App {
     assert(longWords == List("ada"))
     assert(List("scala", "ada").filter(shorterThan(7)) == List("scala", "ada"))
 
-    def numberOfS(s: String): Int =
-      s.length - s.replaceAll("s", "").length
+    def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length
 
-    def containsS(moreThan: Int): String => Boolean =
-      s => numberOfS(s) > moreThan
+    def containsS(moreThan: Int): String => Boolean = s => numberOfS(s) > moreThan
 
     val withLotsS = List("rust", "ada").filter(containsS(2))
     println(withLotsS)
@@ -56,11 +54,9 @@ object ch04_ReturningFunctions extends App {
     assert(longWords == List("ada"))
     assert(List("scala", "ada").filter(shorterThan(7)) == List("scala", "ada"))
 
-    def numberOfS(s: String): Int =
-      s.length - s.replaceAll("s", "").length
+    def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length
 
-    def containsS(moreThan: Int)(s: String): Boolean =
-      numberOfS(s) > moreThan
+    def containsS(moreThan: Int)(s: String): Boolean = numberOfS(s) > moreThan
 
     val withLotsS = List("rust", "ada").filter(containsS(2))
     println(withLotsS)
