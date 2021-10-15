@@ -1,4 +1,4 @@
-object ShoppingCartScala {
+object ShoppingCart {
   def getDiscountPercentage(items: List[String]): Int = {
     if (items.contains("Book")) {
       5
@@ -9,11 +9,11 @@ object ShoppingCartScala {
 }
 
 object ch02_ShoppingCartDiscountsScala extends App {
-  assert(ShoppingCartScala.getDiscountPercentage(List.empty) == 0)
+  assert(ShoppingCart.getDiscountPercentage(List.empty) == 0)
 
   val justApple = List("Apple")
-  assert(ShoppingCartScala.getDiscountPercentage(justApple) == 0)
+  assert(ShoppingCart.getDiscountPercentage(justApple) == 0)
 
   val appleAndBook = List("Apple", "Book")
-  assert(ShoppingCartScala.getDiscountPercentage(appleAndBook) == 5)
+  assert(ShoppingCart.getDiscountPercentage(appleAndBook) == 5)
 }

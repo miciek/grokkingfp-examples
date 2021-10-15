@@ -2,120 +2,120 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class ShoppingCartBad {
-    private List<String> items = new ArrayList<>();
-    private boolean bookAdded = false;
-
-    public void addItem(String item) {
-        items.add(item);
-        if(item.equals("Book")) {
-            bookAdded = true;
-        }
-    }
-
-    public int getDiscountPercentage() {
-        if(bookAdded) {
-            return 5;
-        } else {
-            return 0;
-        }
-    }
-
-    public List<String> getItems() {
-        return items;
-    }
-}
-
-class ShoppingCartCopying {
-    private List<String> items = new ArrayList<>();
-    private boolean bookAdded = false;
-
-    public void addItem(String item) {
-        items.add(item);
-        if(item.equals("Book")) {
-            bookAdded = true;
-        }
-    }
-
-    public int getDiscountPercentage() {
-        if(bookAdded) {
-            return 5;
-        } else {
-            return 0;
-        }
-    }
-
-    public List<String> getItems() {
-        return new ArrayList<>(items);
-    }
-}
-
-class ShoppingCartWithRemove {
-    private List<String> items = new ArrayList<>();
-    private boolean bookAdded = false;
-
-    public void addItem(String item) {
-        items.add(item);
-        if(item.equals("Book")) {
-            bookAdded = true;
-        }
-    }
-
-    public int getDiscountPercentage() {
-        if(bookAdded) {
-            return 5;
-        } else {
-            return 0;
-        }
-    }
-
-    public List<String> getItems() {
-        return new ArrayList<>(items);
-    }
-
-    public void removeItem(String item) {
-        items.remove(item);
-        if(item.equals("Book")) {
-            bookAdded = false;
-        }
-    }
-}
-
-class ShoppingCartRecalculating {
-    private List<String> items = new ArrayList<>();
-
-    public void addItem(String item) {
-        items.add(item);
-    }
-
-    public int getDiscountPercentage() {
-        if(items.contains("Book")) {
-            return 5;
-        } else {
-            return 0;
-        }
-    }
-
-    public List<String> getItems() {
-        return new ArrayList<>(items);
-    }
-
-    public void removeItem(String item) {
-        items.remove(item);
-    }
-}
-
-class ShoppingCart {
-    public static int getDiscountPercentage(List<String> items) {
-        if(items.contains("Book")) {
-            return 5;
-        } else {
-            return 0;
-        }
-    }
-}
-
 public class ch02_ShoppingCartDiscounts {
+    static class ShoppingCartBad {
+        private List<String> items = new ArrayList<>();
+        private boolean bookAdded = false;
+
+        public void addItem(String item) {
+            items.add(item);
+            if(item.equals("Book")) {
+                bookAdded = true;
+            }
+        }
+
+        public int getDiscountPercentage() {
+            if(bookAdded) {
+                return 5;
+            } else {
+                return 0;
+            }
+        }
+
+        public List<String> getItems() {
+            return items;
+        }
+    }
+
+    static class ShoppingCartCopying {
+        private List<String> items = new ArrayList<>();
+        private boolean bookAdded = false;
+
+        public void addItem(String item) {
+            items.add(item);
+            if(item.equals("Book")) {
+                bookAdded = true;
+            }
+        }
+
+        public int getDiscountPercentage() {
+            if(bookAdded) {
+                return 5;
+            } else {
+                return 0;
+            }
+        }
+
+        public List<String> getItems() {
+            return new ArrayList<>(items);
+        }
+    }
+
+    static class ShoppingCartWithRemove {
+        private List<String> items = new ArrayList<>();
+        private boolean bookAdded = false;
+
+        public void addItem(String item) {
+            items.add(item);
+            if(item.equals("Book")) {
+                bookAdded = true;
+            }
+        }
+
+        public int getDiscountPercentage() {
+            if(bookAdded) {
+                return 5;
+            } else {
+                return 0;
+            }
+        }
+
+        public List<String> getItems() {
+            return new ArrayList<>(items);
+        }
+
+        public void removeItem(String item) {
+            items.remove(item);
+            if(item.equals("Book")) {
+                bookAdded = false;
+            }
+        }
+    }
+
+    static class ShoppingCartRecalculating {
+        private List<String> items = new ArrayList<>();
+
+        public void addItem(String item) {
+            items.add(item);
+        }
+
+        public int getDiscountPercentage() {
+            if(items.contains("Book")) {
+                return 5;
+            } else {
+                return 0;
+            }
+        }
+
+        public List<String> getItems() {
+            return new ArrayList<>(items);
+        }
+
+        public void removeItem(String item) {
+            items.remove(item);
+        }
+    }
+
+    class ShoppingCart {
+        public static int getDiscountPercentage(List<String> items) {
+            if(items.contains("Book")) {
+                return 5;
+            } else {
+                return 0;
+            }
+        }
+    }
+
     public static void main(String[] args) {
         ShoppingCartBad cartBad = new ShoppingCartBad();
         cartBad.addItem("Apple");
@@ -132,7 +132,7 @@ public class ch02_ShoppingCartDiscounts {
         itemsBad.remove("Book");
 
         assert(!cartBad.getItems().contains("Book")); // no book is in the cart
-        assert(cartBad.getDiscountPercentage() == 5); // BUT DISCOUNT IS 5!
+        assert(cartBad.getDiscountPercentage() == 5); // BUT THE DISCOUNT IS 5!
 
         // SOLUTION 1: COPYING
         ShoppingCartCopying cartCopying = new ShoppingCartCopying();
