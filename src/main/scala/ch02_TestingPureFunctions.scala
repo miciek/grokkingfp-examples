@@ -30,7 +30,7 @@ object ch02_TestingPureFunctions extends App {
   }
 
   assert(getTipPercentage(List("Alice", "Bob")) == 10)
-  assert(getTipPercentage(List("Alice", "Bob", "Charlie", "Danny", "Emily", "Frank")) == 20)
+  assert(getTipPercentage(List("Alice", "Bob", "Charlie", "Danny", "Emily", "Wojtek")) == 20)
   assert(getTipPercentage(List.empty) == 0)
 
   def getFirstCharacter(s: String): Char = {
