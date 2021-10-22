@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
+// Coffee Break exercise
 public class ch02_TipCalculation {
     class TipCalculatorBad {
         private List<String> names = new ArrayList<>();
@@ -87,15 +88,18 @@ public class ch02_TipCalculation {
     public static void main(String[] args) {
         List<String> names = new ArrayList<>();
         assert(TipCalculator.getTipPercentage(names) == 0);
+        System.out.println(TipCalculator.getTipPercentage(names));
 
         names.add("Alice");
         names.add("Bob");
         names.add("Charlie");
         assert(TipCalculator.getTipPercentage(names) == 10);
+        System.out.println(TipCalculator.getTipPercentage(names));
 
         names.add("Daniel");
         names.add("Emily");
         names.add("Frank");
         assert(TipCalculator.getTipPercentage(names) == 20);
+        System.out.println(TipCalculator.getTipPercentage(names));
     }
 }

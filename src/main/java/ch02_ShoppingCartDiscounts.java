@@ -117,59 +117,70 @@ public class ch02_ShoppingCartDiscounts {
     }
 
     public static void main(String[] args) {
-        ShoppingCartBad cartBad = new ShoppingCartBad();
-        cartBad.addItem("Apple");
-        assert(cartBad.getDiscountPercentage() == 0);
+        {
+            ShoppingCartBad cart = new ShoppingCartBad(); // ShoppingCart in the book
+            cart.addItem("Apple");
+            assert (cart.getDiscountPercentage() == 0);
+            System.out.println(cart.getDiscountPercentage());
 
-        cartBad.addItem("Lemon");
-        assert(cartBad.getDiscountPercentage() == 0);
+            cart.addItem("Lemon"); // not in the book, but lemons are great!
+            assert (cart.getDiscountPercentage() == 0);
+            System.out.println(cart.getDiscountPercentage());
 
-        cartBad.addItem("Book");
-        assert(cartBad.getDiscountPercentage() == 5);
+            cart.addItem("Book");
+            assert (cart.getDiscountPercentage() == 5);
+            System.out.println(cart.getDiscountPercentage());
 
-        // PROBLEM 1:
-        List<String> itemsBad = cartBad.getItems();
-        itemsBad.remove("Book");
+            // PROBLEM 1:
+            List<String> itemsBad = cart.getItems();
+            itemsBad.remove("Book");
 
-        assert(!cartBad.getItems().contains("Book")); // no book is in the cart
-        assert(cartBad.getDiscountPercentage() == 5); // BUT THE DISCOUNT IS 5!
+            assert(!cart.getItems().contains("Book")); // no book is in the cart
+            assert(cart.getDiscountPercentage() == 5); // BUT THE DISCOUNT IS 5!
+        }
 
         // SOLUTION 1: COPYING
-        ShoppingCartCopying cartCopying = new ShoppingCartCopying();
-        cartCopying.addItem("Apple");
-        assert(cartCopying.getDiscountPercentage() == 0);
+        {
+            ShoppingCartCopying cart = new ShoppingCartCopying(); // ShoppingCart in the book
+            cart.addItem("Apple");
+            assert (cart.getDiscountPercentage() == 0);
 
-        cartCopying.addItem("Lemon");
-        assert(cartCopying.getDiscountPercentage() == 0);
+            cart.addItem("Lemon"); // not in the book, adding anything that isn't a "Book" shouldn't affect the result
+            assert (cart.getDiscountPercentage() == 0);
 
-        cartCopying.addItem("Book");
-        assert(cartCopying.getDiscountPercentage() == 5);
+            cart.addItem("Book");
+            assert (cart.getDiscountPercentage() == 5);
 
-        List<String> itemsCopying = cartCopying.getItems();
-        itemsCopying.remove("Book");
+            List<String> itemsCopying = cart.getItems();
+            itemsCopying.remove("Book");
 
-        assert(cartCopying.getItems().contains("Book")); // book is in the cart
-        assert(cartCopying.getDiscountPercentage() == 5); // so the discount is 5
+            assert (cart.getItems().contains("Book")); // book is in the cart
+            assert (cart.getDiscountPercentage() == 5); // so the discount is 5
+        }
 
         // PROBLEM 2:
-        ShoppingCartWithRemove cartWithRemove = new ShoppingCartWithRemove();
-        cartWithRemove.addItem("Book");
-        cartWithRemove.addItem("Book"); // adding second book
-        assert(cartWithRemove.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
-        cartWithRemove.removeItem("Book");
+        {
+            ShoppingCartWithRemove cart = new ShoppingCartWithRemove(); // ShoppingCart in the book
+            cart.addItem("Book");
+            cart.addItem("Book"); // adding a second book
+            assert (cart.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
+            cart.removeItem("Book");
 
-        assert(cartWithRemove.getItems().contains("Book")); // a book is in the cart
-        assert(cartWithRemove.getDiscountPercentage() == 0); // BUT THE DISCOUNT IS 0!
+            assert (cart.getItems().contains("Book")); // a book is in the cart
+            assert (cart.getDiscountPercentage() == 0); // BUT THE DISCOUNT IS 0!
+        }
 
         // SOLUTION 2: RECALCULATING
-        ShoppingCartRecalculating cartRecalculating = new ShoppingCartRecalculating();
-        cartRecalculating.addItem("Book");
-        cartRecalculating.addItem("Book"); // adding second book
-        assert(cartRecalculating.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
-        cartRecalculating.removeItem("Book");
+        {
+            ShoppingCartRecalculating cart = new ShoppingCartRecalculating(); // ShoppingCart in the book
+            cart.addItem("Book");
+            cart.addItem("Book"); // adding a second book
+            assert (cart.getDiscountPercentage() == 5); // calling getDiscountPercentage() returns 5
+            cart.removeItem("Book");
 
-        assert(cartRecalculating.getItems().contains("Book")); // a book is in the cart
-        assert(cartRecalculating.getDiscountPercentage() == 5); // and the discount is 5
+            assert (cart.getItems().contains("Book")); // a book is in the cart
+            assert (cart.getDiscountPercentage() == 5); // and the discount is 5
+        }
 
         // PROBLEM 3
         // so much code to calculate a simple discount...
@@ -187,11 +198,14 @@ public class ch02_ShoppingCartDiscounts {
         // imperative usage
         List<String> items = new ArrayList<>();
         assert(ShoppingCart.getDiscountPercentage(items) == 0);
+        System.out.println(ShoppingCart.getDiscountPercentage(items));
 
         items.add("Apple");
         assert(ShoppingCart.getDiscountPercentage(items) == 0);
+        System.out.println(ShoppingCart.getDiscountPercentage(items));
 
         items.add("Book");
         assert(ShoppingCart.getDiscountPercentage(items) == 5);
+        System.out.println(ShoppingCart.getDiscountPercentage(items));
     }
 }
