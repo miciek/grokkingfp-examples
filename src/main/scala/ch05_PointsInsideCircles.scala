@@ -2,10 +2,6 @@ import scala.collection.mutable
 
 /** Given the list of points and radiuses,
   * calculate which points are inside circles defined by these radiuses.
-  *
-  * SKILLS:
-  * c) writing algorithms in a readable way using for comprehensions
-  * d) using conditions in algorithms inside for comprehensions
   */
 object ch05_PointsInsideCircles extends App {
   case class Point(x: Int, y: Int)

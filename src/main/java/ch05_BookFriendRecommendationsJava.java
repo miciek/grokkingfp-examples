@@ -17,7 +17,7 @@ public class ch05_BookFriendRecommendationsJava {
             for (String author : book.authors)
                 for (Movie movie : bookAdaptations(author)) {
                     result.add(String.format(
-                            "You may like %s, because you liked %s’s %s",
+                            "You may like %s, because you liked %s's %s",
                             movie.title, author, book.title));
                 }
         return result;
@@ -27,6 +27,10 @@ public class ch05_BookFriendRecommendationsJava {
         List<Book> books = Arrays.asList(new Book("FP in Scala", Arrays.asList("Chiusano", "Bjarnason")),
                 new Book("The Hobbit", Arrays.asList("Tolkien")));
         System.out.println(recommendationFeed(books));
+        assert(recommendationFeed(books).toString().equals(
+            "[You may like An Unexpected Journey, because you liked Tolkien's The Hobbit, "+
+            "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit]"
+        ));
     }
 }
 
