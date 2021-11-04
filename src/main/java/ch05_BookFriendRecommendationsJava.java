@@ -31,6 +31,15 @@ public class ch05_BookFriendRecommendationsJava {
             "[You may like An Unexpected Journey, because you liked Tolkien's The Hobbit, "+
             "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit]"
         ));
+
+        // Java uses statements:
+        List<Integer> xs = Arrays.asList(1, 2, 3, 4, 5);
+        List<Integer> result = new ArrayList<>();
+
+        for (Integer x: xs) {
+            result.add(x * x);
+        }
+        assert(result.toString().equals("[1, 4, 9, 16, 25]"));
     }
 }
 

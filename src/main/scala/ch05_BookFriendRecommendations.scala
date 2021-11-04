@@ -35,4 +35,11 @@ object ch05_BookFriendRecommendations extends App {
     .flatMap(recommendedBooks)
     .flatMap(_.authors)
   check(recommendedAuthors).expect(List("Chiusano", "Bjarnason", "Sfregola", "Rowling", "Tolkien"))
+
+  // in FP, we use expressions:
+  val xs     = List(1, 2, 3, 4, 5)
+  val result = for {
+    x <- xs
+  } yield x * x
+  check(result).expect(List(1, 4, 9, 16, 25))
 }
