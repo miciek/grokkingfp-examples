@@ -49,6 +49,8 @@ lazy val root = (project in file("."))
       ";runMain ch05_Points2d3d" +
       ";runMain ch05_RandomForComprehensions" +
       ";runMain ch05_PointsInsideCircles" +
+      ";runMain ch05_StatementsVsExpressionsJava" +
+      ";runMain ch05_StatementsVsExpressions" +
       ";runMain ch05_Events" +
       ";runMain ch06_TvShows" +
       ";runMain ch06_TvShowsJava" +
