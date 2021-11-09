@@ -1,23 +1,32 @@
 object ch06_TvShows extends App {
   case class TvShow(title: String, start: Int, end: Int)
 
-  {
-    val shows = List(TvShow("Breaking Bad", 2008, 2013), TvShow("The Wire", 2002, 2008), TvShow("Mad Men", 2007, 2015))
+  val shows = List(TvShow("Breaking Bad", 2008, 2013), TvShow("The Wire", 2002, 2008), TvShow("Mad Men", 2007, 2015))
 
-    def sortShows(shows: List[TvShow]): List[TvShow] = {
-      shows
-        .sortBy(tvShow => tvShow.end - tvShow.start) // sortBy gets a function that returns an Int for a given TvShow
-        .reverse                                     // sortBy sorts in natural order (from the smallest Int to the highest one), so we return a reverse of the List
-    }
-
-    println(sortShows(shows))
-    assert(sortShows(shows).map(_.title) == List("Mad Men", "The Wire", "Breaking Bad"))
+  def sortShows(shows: List[TvShow]): List[TvShow] = {
+    shows
+      .sortBy(tvShow => tvShow.end - tvShow.start) // sortBy gets a function that returns an Int for a given TvShow
+      .reverse                                     // sortBy sorts in natural order (from the smallest Int to the highest one), so we return a reverse of the List
   }
+
+  sortShows(shows).map(_.title) === (List("Mad Men", "The Wire", "Breaking Bad"))
 
   val rawShows = List("Breaking Bad (2008-2013)", "The Wire (2002-2008)", "Mad Men (2007-2015)")
 
+  {
+    def parseShows(rawShows: List[String]): List[TvShow] = ??? // we need to implement it next
+
+    def sortRawShows(rawShows: List[String]): List[TvShow] = {
+      val tvShows = parseShows(rawShows)
+      sortShows(tvShows)
+    }
+
+    println(sortRawShows)
+  }
+
   val invalidRawShows = List("Breaking Bad, 2008-2013", "The Wire (from 2002 until 2008)", "Mad Men (9/10)")
 
+  // STEP 0: ad-hoc solution (PROBLEM: exceptions)
   {
     def parseShow(rawShow: String): TvShow = {
       // first get the indices of the separator characters
@@ -37,68 +46,61 @@ object ch06_TvShows extends App {
       rawShows.map(parseShow)
     }
 
-    println(parseShows(rawShows))
-    assert(parseShows(rawShows).map(_.title) == List("Breaking Bad", "The Wire", "Mad Men"))
+    parseShows(rawShows).map(_.title) === List("Breaking Bad", "The Wire", "Mad Men")
 
     // INVALID INPUT
     // parseShows(invalidRawShows)
   }
 
-  {
-    def parseShow(rawShow: String): Option[TvShow] = {
-      val bracketOpen  = rawShow.indexOf('(')
-      val bracketClose = rawShow.indexOf(')')
-      val dash         = rawShow.indexOf('-')
-
-      for {
-        name      <- Option.when(bracketOpen > 0)(rawShow.substring(0, bracketOpen).trim)
-        yearStart <- Option.when(bracketOpen != -1 && dash > bracketOpen + 1)(
-                       rawShow.substring(bracketOpen + 1, dash).toInt
-                     )
-        yearEnd   <- Option.when(dash != -1 && bracketClose > dash + 1)(rawShow.substring(dash + 1, bracketClose).toInt)
-      } yield TvShow(name, yearStart, yearEnd)
-    }
-
-    println(parseShow("Breaking Bad, 2008-2013"))
-    assert(parseShow("Breaking Bad (2008-2013)").contains(TvShow("Breaking Bad", 2008, 2013)))
+  // STEP 1a: using Option without implementing it yet
+  // let's first see how we would use and test it:
+  def testOptionBasedParseShow(parseShow: String => Option[TvShow]) = {
+    parseShow("The Wire (2002-2008)") === Some(TvShow("The Wire", 2002, 2008))
+    parseShow("The Wire aired from 2002 to 2008") === None
+    parseShow("Breaking Bad (2008-2013)") === Some(TvShow("Breaking Bad", 2008, 2013))
+    parseShow("Mad Men (2007-2015)") === Some(TvShow("Mad Men", 2007, 2015))
+    parseShow("Scrubs (2001-2010)") === Some(TvShow("Scrubs", 2001, 2010))
 
     // INVALID INPUT
-    assert(parseShow(") - (Breaking Bad, 2008-2013").isEmpty)
-    assert(parseShow("Mad Men (-2015)").isEmpty)
+    parseShow(") - (Breaking Bad, 2008-2013") === None
+    parseShow("Mad Men (-2015)") === None
+    parseShow("The Wire ( 2002 - 2008 )") === None
+    parseShow("Stranger Things (2016-)") === None
   }
 
-  {
-    def extractName(rawShow: String): Option[String] = {
-      val bracketOpen = rawShow.indexOf('(')
-      if (bracketOpen > 0) Some(rawShow.substring(0, bracketOpen).trim)
-      else None
-    }
+  // STEP 1b: using Option, but implementing smaller functions that return Options first:
+  def extractYearStart(rawShow: String): Option[Int] = {
+    val bracketOpen = rawShow.indexOf('(')
+    val dash        = rawShow.indexOf('-')
+    for {
+      yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1) Some(rawShow.substring(bracketOpen + 1, dash))
+                 else None
+      year    <- yearStr.trim.toIntOption
+    } yield year
+  }
 
-    def extractYearStart(rawShow: String): Option[Int] = {
-      val bracketOpen = rawShow.indexOf('(')
-      val dash        = rawShow.indexOf('-')
-      for {
-        yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1) Some(rawShow.substring(bracketOpen + 1, dash))
-                   else None
-        year    <- yearStr.trim.toIntOption
-      } yield year
-    }
+  extractYearStart("Breaking Bad (2008-2013)") === Some(2008)
+  extractYearStart("Mad Men (-2015)") === None
+  extractYearStart("(2002- N/A ) The Wire") === Some(2002)
 
-    check(extractYearStart("Breaking Bad (2008-2013)")).expect(Some(2008))
-    check(extractYearStart("Mad Men (-2015)")).expect(None)
-    check(extractYearStart("(2002- 2008 ) The Wire")).expect(Some(2002))
+  def extractName(rawShow: String): Option[String] = {
+    val bracketOpen = rawShow.indexOf('(')
+    if (bracketOpen > 0) Some(rawShow.substring(0, bracketOpen).trim)
+    else None
+  }
 
-    def extractYearEnd(rawShow: String): Option[Int] = {
-      val dash         = rawShow.indexOf('-')
-      val bracketClose = rawShow.indexOf(')')
-      for {
-        yearStr <- if (dash != -1 && bracketClose > dash + 1) Some(rawShow.substring(dash + 1, bracketClose))
-                   else None
-        year    <- yearStr.toIntOption
-      } yield year
-    }
+  def extractYearEnd(rawShow: String): Option[Int] = {
+    val dash         = rawShow.indexOf('-')
+    val bracketClose = rawShow.indexOf(')')
+    for {
+      yearStr <- if (dash != -1 && bracketClose > dash + 1) Some(rawShow.substring(dash + 1, bracketClose))
+                 else None
+      year    <- yearStr.toIntOption
+    } yield year
+  }
 
-    def parseShow1(rawShow: String): Option[TvShow] = {
+  { // Step 1c: using Option and composing smaller function into bigger one:
+    def parseShow(rawShow: String): Option[TvShow] = {
       for {
         name      <- extractName(rawShow)
         yearStart <- extractYearStart(rawShow)
@@ -106,114 +108,155 @@ object ch06_TvShows extends App {
       } yield TvShow(name, yearStart, yearEnd)
     }
 
-    val chernobyl = parseShow1("Chernobyl (2019)")
+    // it passes all tests:
+    testOptionBasedParseShow(parseShow)
 
-    println(chernobyl)
-    assert(chernobyl.isEmpty)
-
-    println(parseShow1("Breaking Bad, 2008-2013"))
-    assert(parseShow1("Breaking Bad (2008-2013)").contains(TvShow("Breaking Bad", 2008, 2013)))
-
-    // INVALID INPUT
-    check(parseShow1("Breaking Bad (2008-2013)")).expect(Some(TvShow("Breaking Bad", 2008, 2013)))
-    check(parseShow1("Mad Men (-2015)")).expect(None)
-    check(parseShow1("The Wire ( 2002 - 2008 )")).expect(None)
-
-    def extractSingleYear(rawShow: String): Option[Int] = {
-      val dash         = rawShow.indexOf('-')
-      val bracketOpen  = rawShow.indexOf('(')
-      val bracketClose = rawShow.indexOf(')')
-      for {
-        yearStr <- if (dash == -1 && bracketOpen != -1 && bracketClose > bracketOpen)
-                     Some(rawShow.substring(bracketOpen + 1, bracketClose))
-                   else None
-        year    <- yearStr.toIntOption
-      } yield year
-    }
-
-    def parseShow(rawShow: String): Option[TvShow] = {
-      for {
-        name      <- extractName(rawShow)
-        yearStart <- extractYearStart(rawShow).orElse(extractSingleYear(rawShow))
-        yearEnd   <- extractYearEnd(rawShow).orElse(extractSingleYear(rawShow))
-      } yield TvShow(name, yearStart, yearEnd)
-    }
-
-    val chernobyl2 = parseShow("Chernobyl (2019)")
-
-    println(chernobyl2)
-    assert(chernobyl2.contains(TvShow("Chernobyl", 2019, 2019)))
-
-    { // Practicing functional error handling
-      def extractSingleYearOrYearEnd(rawShow: String): Option[Int] =
-        extractSingleYear(rawShow).orElse(extractYearEnd(rawShow))
-
-      def extractAnyYear(rawShow: String): Option[Int] =
-        extractYearStart(rawShow).orElse(extractYearEnd(rawShow)).orElse(extractSingleYear(rawShow))
-
-      def extractYearIfNameExists(rawShow: String): Option[Int] =
-        extractName(rawShow).flatMap(name => extractSingleYear(rawShow))
-
-      def extractAnyYearIfNameExists(rawShow: String): Option[Int] =
-        extractName(rawShow).flatMap(name => extractAnyYear(rawShow))
-
-      println(extractSingleYearOrYearEnd("A (-2019)"))
-      println(extractSingleYearOrYearEnd("A (2018)"))
-      println(extractSingleYearOrYearEnd("B (2016-)"))
-      println(extractAnyYear("B (2019)"))
-      println(extractAnyYear("B (-2017)"))
-      println(extractAnyYear("B (2016-)"))
-      println(extractAnyYear("B (-)"))
-      println(extractYearIfNameExists("C (2020)"))
-      println(extractYearIfNameExists("(2020)"))
-      println(extractYearIfNameExists("(2020-)"))
-      println(extractAnyYearIfNameExists("A(2021)"))
-      println(extractAnyYearIfNameExists("(2021)"))
-    }
-
-    def parseShows1(rawShows: List[String]): List[TvShow] = {
-      rawShows          // List[String]
-        .map(parseShow) // List[Option[TvShow]]
-        .map(_.toList)  // List[List[TvShow]]
-        .flatten        // List[TvShow]
-    }
-
-    println(parseShows1(List("Chernobyl [2019]", "Breaking Bad (2008-2013)")))
-    println(parseShows1(List("Chernobyl [2019]", "Breaking Bad")))
-
-    def addOrResign(parsedShows: Option[List[TvShow]], newParsedShow: Option[TvShow]): Option[List[TvShow]] = {
-      for {
-        shows      <- parsedShows
-        parsedShow <- newParsedShow
-      } yield shows.appended(parsedShow)
-    }
-
-    check {
-      addOrResign(Some(List.empty), Some(TvShow("Chernobyl", 2019, 2019)))
-    }.expect(Some(List(TvShow("Chernobyl", 2019, 2019))))
-    check {
-      addOrResign(Some(List(TvShow("Chernobyl", 2019, 2019))), Some(TvShow("The Wire", 2002, 2008)))
-    }.expect(Some(List(TvShow("Chernobyl", 2019, 2019), TvShow("The Wire", 2002, 2008))))
-    check {
-      addOrResign(None, Some(TvShow("Chernobyl", 2019, 2019)))
-    }.expect(None)
-    check {
-      addOrResign(Some(List(TvShow("Chernobyl", 2019, 2019))), None)
-    }.expect(None)
-    check {
-      addOrResign(None, None)
-    }.expect(None)
-
-    def parseShows(rawShows: List[String]): Option[List[TvShow]] = {
-      val initialResult: Option[List[TvShow]] = Some(List.empty)
-      rawShows
-        .map(parseShow)
-        .foldLeft(initialResult)(addOrResign)
-    }
-
-    println(parseShows(List("Chernobyl (2019)", "Breaking Bad (2008-2013)")))
-    println(parseShows(List("Chernobyl [2019]", "Breaking Bad")))
+    // but it doesn't work with some exceptional undocumented cases:
+    parseShow("Chernobyl (2019)") === None
   }
+
+  { // (alternative) Step 1d: as a reminder, we can also implement it using bare flatMaps/maps (see chapter 5):
+    def parseShow(rawShow: String): Option[TvShow] = {
+      extractName(rawShow).flatMap(name =>
+        extractYearStart(rawShow).flatMap(yearStart =>
+          extractYearEnd(rawShow).map(yearEnd =>
+            TvShow(name, yearStart, yearEnd)
+          )
+        )
+      )
+    }
+
+    // it passes all tests:
+    testOptionBasedParseShow(parseShow)
+
+    // but it doesn't work with some exceptional undocumented cases:
+    parseShow("Chernobyl (2019)") === None
+  }
+
+  def extractSingleYear(rawShow: String): Option[Int] = {
+    val dash         = rawShow.indexOf('-')
+    val bracketOpen  = rawShow.indexOf('(')
+    val bracketClose = rawShow.indexOf(')')
+    for {
+      yearStr <- if (dash == -1 && bracketOpen != -1 && bracketClose > bracketOpen)
+                   Some(rawShow.substring(bracketOpen + 1, bracketClose))
+                 else None
+      year    <- yearStr.toIntOption
+    } yield year
+  }
+
+  // Step 1d: using Option and orElse
+  def parseShow(rawShow: String): Option[TvShow] = {
+    for {
+      name      <- extractName(rawShow)
+      yearStart <- extractYearStart(rawShow).orElse(extractSingleYear(rawShow))
+      yearEnd   <- extractYearEnd(rawShow).orElse(extractSingleYear(rawShow))
+    } yield TvShow(name, yearStart, yearEnd)
+  }
+
+  // it passes all tests:
+  testOptionBasedParseShow(parseShow)
+
+  // and is able to parse Chernobyl, too:
+  parseShow("Chernobyl (2019)") === Some(TvShow("Chernobyl", 2019, 2019))
+
+  { // introducing orElse
+    val seven: Option[Int] = Some(7)
+    val eight: Option[Int] = Some(8)
+    val none: Option[Int]  = None
+
+    seven.orElse(eight) === Some(7)
+    none.orElse(eight) === Some(8)
+    seven.orElse(none) === Some(7)
+    none.orElse(none) === None
+
+    val chernobyl = "Chernobyl (2019)"
+    extractYearStart(chernobyl) === None
+    extractSingleYear(chernobyl) === Some(2019)
+    extractYearStart(chernobyl).orElse(extractSingleYear(chernobyl)) === Some(2019)
+    extractYearStart(chernobyl).orElse(extractSingleYear("not-a-year")) === None
+  }
+
+  { // Practicing functional error handling
+    def extractSingleYearOrYearEnd(rawShow: String): Option[Int] =
+      extractSingleYear(rawShow).orElse(extractYearEnd(rawShow))
+
+    def extractAnyYear(rawShow: String): Option[Int] =
+      extractYearStart(rawShow).orElse(extractYearEnd(rawShow)).orElse(extractSingleYear(rawShow))
+
+    def extractSingleYearIfNameExists(rawShow: String): Option[Int] =
+      extractName(rawShow).flatMap(name => extractSingleYear(rawShow))
+
+    def extractAnyYearIfNameExists(rawShow: String): Option[Int] =
+      extractName(rawShow).flatMap(name => extractAnyYear(rawShow))
+
+    extractSingleYearOrYearEnd("A (1992-)") === None
+    extractSingleYearOrYearEnd("B (2002)") === Some(2002)
+    extractSingleYearOrYearEnd("C (-2012)") === Some(2012)
+    extractSingleYearOrYearEnd("(2022)") === Some(2022)
+    extractSingleYearOrYearEnd("E (-)") === None
+
+    extractAnyYear("A (1992-)") === Some(1992)
+    extractAnyYear("B (2002)") === Some(2002)
+    extractAnyYear("C (-2012)") === Some(2012)
+    extractAnyYear("(2022)") === Some(2022)
+    extractAnyYear("E (-)") === None
+
+    extractSingleYearIfNameExists("A (1992-)") === None
+    extractSingleYearIfNameExists("B (2002)") === Some(2002)
+    extractSingleYearIfNameExists("C (-2012)") === None
+    extractSingleYearIfNameExists("(2022)") === None
+    extractSingleYearIfNameExists("E (-)") === None
+
+    extractAnyYearIfNameExists("A (1992-)") === Some(1992)
+    extractAnyYearIfNameExists("B (2002)") === Some(2002)
+    extractAnyYearIfNameExists("C (-2012)") === Some(2012)
+    extractAnyYearIfNameExists("(2022)") === None
+    extractAnyYearIfNameExists("E (-)") === None
+  }
+
+  def parseShows1(rawShows: List[String]): List[TvShow] = {
+    rawShows          // List[String]
+      .map(parseShow) // List[Option[TvShow]]
+      .map(_.toList)  // List[List[TvShow]]
+      .flatten        // List[TvShow]
+  }
+
+  println(parseShows1(List("Chernobyl [2019]", "Breaking Bad (2008-2013)")))
+  println(parseShows1(List("Chernobyl [2019]", "Breaking Bad")))
+
+  def addOrResign(parsedShows: Option[List[TvShow]], newParsedShow: Option[TvShow]): Option[List[TvShow]] = {
+    for {
+      shows      <- parsedShows
+      parsedShow <- newParsedShow
+    } yield shows.appended(parsedShow)
+  }
+
+  check {
+    addOrResign(Some(List.empty), Some(TvShow("Chernobyl", 2019, 2019)))
+  }.expect(Some(List(TvShow("Chernobyl", 2019, 2019))))
+  check {
+    addOrResign(Some(List(TvShow("Chernobyl", 2019, 2019))), Some(TvShow("The Wire", 2002, 2008)))
+  }.expect(Some(List(TvShow("Chernobyl", 2019, 2019), TvShow("The Wire", 2002, 2008))))
+  check {
+    addOrResign(None, Some(TvShow("Chernobyl", 2019, 2019)))
+  }.expect(None)
+  check {
+    addOrResign(Some(List(TvShow("Chernobyl", 2019, 2019))), None)
+  }.expect(None)
+  check {
+    addOrResign(None, None)
+  }.expect(None)
+
+  def parseShows(rawShows: List[String]): Option[List[TvShow]] = {
+    val initialResult: Option[List[TvShow]] = Some(List.empty)
+    rawShows
+      .map(parseShow)
+      .foldLeft(initialResult)(addOrResign)
+  }
+
+  println(parseShows(List("Chernobyl (2019)", "Breaking Bad (2008-2013)")))
+  println(parseShows(List("Chernobyl [2019]", "Breaking Bad")))
 
   // Either
   {

@@ -35,7 +35,7 @@ public class ch06_TvShowsJava {
         else throw new Exception();
     }
 
-    public static TvShow parseShow2(String rawShow) throws Exception {
+    public static TvShow parseShowWithSingleYear(String rawShow) throws Exception {
         String name = extractName(rawShow);
         Integer yearStart = null;
         try {
@@ -54,7 +54,14 @@ public class ch06_TvShowsJava {
 
     public static void main(String[] args) throws Exception {
         System.out.println(parseShow("The Wire (2002-2008)"));
-        System.out.println(parseShow2("The Wire (2002-2008)"));
+        try {
+            System.out.println(parseShow("Chernobyl (2019)"));
+        } catch(Exception e) {
+            System.out.println("Exception thrown: " + e.getMessage());
+        }
+
+        System.out.println(parseShowWithSingleYear("The Wire (2002-2008)"));
+        System.out.println(parseShowWithSingleYear("Chernobyl (2019)"));
     }
 }
 

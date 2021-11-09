@@ -2,6 +2,9 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.implicits._
 
+/** This file is not part of the book. It's just a helper used to
+  * print results and assert on their values in book examples.
+  */
 object check {
   def apply[A](result: A): Assert[A] = {
     println(result)
@@ -32,7 +35,7 @@ object check {
 
   class Assert[A](result: A) {
     def expect(expected: A): A = {
-      assert(result == expected)
+      assert(result == expected, s"$result != $expected")
       result
     }
 
@@ -44,5 +47,22 @@ object check {
 
   private def retry[A](action: IO[A], maxRetries: Int): IO[A] = {
     List.range(0, maxRetries).foldLeft(action)((program, _) => program.orElse(action))
+  }
+}
+
+implicit class BookOutputChecker[A](value: => A) {
+
+  /** Checks that the value on the left is exactly the same as the value on the right.
+    * (Needed to verify all the code snippets in the book.)
+    */
+  def ===(expected: A): A = {
+    check(value).expect(expected)
+  }
+
+  /** Checks that the value on the left satisfies the condition on the right.
+    * (Needed to verify all the code snippets in the book.)
+    */
+  def ===(checkResult: A => Boolean): A = {
+    check(value).expectThat(checkResult)
   }
 }
