@@ -30,79 +30,87 @@ object ch07_MusicArtistsSearch extends App {
     )
 
     // coffee break cases:
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
-      List(Artist("Bee Gees", "Pop", "England", 1958, false, 2003))
-    }
-    check { searchArtists(artists, List.empty, List("England"), true, 1950, 2021) }.expect {
+    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) === List(Artist(
+      "Bee Gees",
+      "Pop",
+      "England",
+      1958,
+      false,
+      2003
+    ))
+
+    searchArtists(artists, List.empty, List("England"), true, 1950, 2022) ===
       List(
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
-    }
-    check { searchArtists(artists, List.empty, List.empty, true, 1950, 1979) }.expect {
+
+    searchArtists(artists, List.empty, List.empty, true, 1950, 1979) ===
       List(
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
-    }
-    check { searchArtists(artists, List.empty, List.empty, true, 1983, 2003) }.expect {
+
+    searchArtists(artists, List.empty, List.empty, true, 1983, 2003) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
-    }
-    check { searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2021) }.expect {
+
+    searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2022) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
       )
-    }
-    check { searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) }.expect {
-      List.empty
-    }
-    check { searchArtists(artists, List.empty, List.empty, false, 2019, 2021) }.expect {
+
+    searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) === List.empty
+
+    searchArtists(artists, List.empty, List.empty, false, 2019, 2022) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
-    }
 
     // additional cases:
-    check { searchArtists(artists, List.empty, List.empty, true, 1950, 1959) }.expect {
+    searchArtists(artists, List.empty, List.empty, true, 1950, 1959) ===
       List(
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
-    }
-    check { searchArtists(artists, List.empty, List("U.S."), false, 0, 0) }.expect {
+
+    searchArtists(artists, List.empty, List("U.S."), false, 0, 0) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
       )
-    }
   }
 
   // STEP 1: newtypes
   // In Scala, you could also use opaque types to encode newtypes:
-  object model:
+  object model {
     opaque type Location = String
-    object Location:
+    object Location {
       def apply(value: String): Location       = value // <- you can use a String as a Location only in the scope of model
       extension (a: Location) def name: String = a
+    }
 
     // Practicing newtypes
     opaque type Genre = String
-    object Genre:
+    object Genre {
       def apply(value: String): Genre       = value
       extension (a: Genre) def name: String = a
+    }
 
     opaque type YearsActiveStart = Int
-    object YearsActiveStart:
+    object YearsActiveStart {
       def apply(value: Int): YearsActiveStart        = value
       extension (a: YearsActiveStart) def value: Int = a
+    }
 
     opaque type YearsActiveEnd = Int
-    object YearsActiveEnd:
+    object YearsActiveEnd {
       def apply(value: Int): YearsActiveEnd        = value
       extension (a: YearsActiveEnd) def value: Int = a
+    }
+  }
 
   import model._
   val us: Location = Location("U.S.")
@@ -116,6 +124,7 @@ object ch07_MusicArtistsSearch extends App {
         isActive: Boolean,
         yearsActiveEnd: YearsActiveEnd
     )
+
     def searchArtists(
         artists: List[Artist],
         genres: List[String],
@@ -145,9 +154,8 @@ object ch07_MusicArtistsSearch extends App {
       Artist("Bee Gees", Genre("Pop"), Location("England"), YearsActiveStart(1958), false, YearsActiveEnd(2003))
     )
 
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
+    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ===
       List(Artist("Bee Gees", Genre("Pop"), Location("England"), YearsActiveStart(1958), false, YearsActiveEnd(2003)))
-    }
   }
 
   // STEP 2a: Option type
@@ -181,9 +189,8 @@ object ch07_MusicArtistsSearch extends App {
       Artist("Bee Gees", "Pop", Location("England"), 1958, Some(2003))
     )
 
-    check { searchArtists(artists, List("Pop"), List("England"), true, 1950, 2021) }.expect {
+    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ===
       List(Artist("Bee Gees", "Pop", Location("England"), 1958, Some(2003)))
-    }
   }
 
   { // Option higher-order functions (see TvShows as well)
@@ -283,8 +290,8 @@ object ch07_MusicArtistsSearch extends App {
       (genres.isEmpty || genres.contains(artist.genre)) &&
       (locations.isEmpty || locations.contains(artist.origin.name)) &&
       (!searchByActiveYears ||
-      (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using Option.forall
-      (artist.yearsActive.start <= activeBefore)))
+      (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using new product type (end)
+      (artist.yearsActive.start <= activeBefore))) // <- using new product type (start)
     )
 
     val artists = List(
@@ -299,10 +306,11 @@ object ch07_MusicArtistsSearch extends App {
   }
 
   // STEP 3: sum type
-  enum MusicGenre:
+  enum MusicGenre {
     case HeavyMetal
     case Pop
     case HardRock
+  }
 
   import MusicGenre._
 
@@ -341,9 +349,10 @@ object ch07_MusicArtistsSearch extends App {
   }
 
   // STEP 4: Algebraic Data Type (ADT) = product type + sum type
-  enum YearsActive:
+  enum YearsActive {
     case StillActive(since: Int)
     case ActiveBetween(start: Int, end: Int)
+  }
 
   import YearsActive._
 
