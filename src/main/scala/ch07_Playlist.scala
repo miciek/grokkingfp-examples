@@ -1,29 +1,31 @@
-object newtypes:
+object model {
   opaque type User = String
-  object User:
+  object User {
     def apply(name: String): User = name
+  }
 
   opaque type Artist = String
-  object Artist:
+  object Artist {
     def apply(name: String): Artist = name
+  }
 
-import newtypes._
+  case class Song(artist: Artist, title: String)
 
-case class Song(artist: Artist, title: String)
+  enum MusicGenre {
+    case House
+    case Funk
+    case HipHop
+  }
 
-enum MusicGenre:
-  case House
-  case Funk
-  case HipHop
-import MusicGenre._
+  enum PlaylistKind {
+    case CuratedByUser(user: User)
+    case BasedOnArtist(artist: Artist)
+    case BasedOnGenres(genres: Set[MusicGenre])
+  }
 
-enum PlaylistKind:
-  case CuratedByUser(user: User)
-  case BasedOnArtist(artist: Artist)
-  case BasedOnGenres(genres: Set[MusicGenre])
-import PlaylistKind._
-
-case class Playlist(name: String, kind: PlaylistKind, songs: List[Song])
+  case class Playlist(name: String, kind: PlaylistKind, songs: List[Song])
+}
+import model._, model.MusicGenre._, model.PlaylistKind._
 
 object ch07_Playlist extends App {
   val fooFighters = Artist("Foo Fighters")
@@ -47,11 +49,11 @@ object ch07_Playlist extends App {
 
   def gatherSongs(playlists: List[Playlist], artist: Artist, genre: MusicGenre): List[Song] =
     playlists.foldLeft(List.empty[Song])((songs, playlist) =>
-      val matchingSongs =
-        playlist.kind match
-          case CuratedByUser(user)           => playlist.songs.filter(_.artist == artist)
-          case BasedOnArtist(playlistArtist) => if (playlistArtist == artist) playlist.songs else List.empty
-          case BasedOnGenres(genres)         => if (genres.contains(genre)) playlist.songs else List.empty
+      val matchingSongs = playlist.kind match {
+        case CuratedByUser(user)           => playlist.songs.filter(_.artist == artist)
+        case BasedOnArtist(playlistArtist) => if (playlistArtist == artist) playlist.songs else List.empty
+        case BasedOnGenres(genres)         => if (genres.contains(genre)) playlist.songs else List.empty
+      }
       songs.appendedAll(matchingSongs)
     )
 
