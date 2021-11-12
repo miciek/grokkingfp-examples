@@ -1,9 +1,9 @@
 lazy val root = (project in file("."))
   .settings(
-    name         := "grokkingfp-examples",
-    organization := "Michał Płachta (Manning)",
-    version      := "1.0",
-    scalaVersion := "3.1.0",
+    name            := "grokkingfp-examples",
+    organization    := "Michał Płachta (Manning)",
+    version         := "1.0",
+    scalaVersion    := "3.1.0",
     scalacOptions ++= List("-unchecked"),
     libraryDependencies ++= Seq(
       "org.typelevel"     %% "cats-effect"      % "3.2.9",
@@ -16,7 +16,10 @@ lazy val root = (project in file("."))
       "org.apache.jena"    % "jena-fuseki-main" % "4.2.0",
       "org.slf4j"          % "slf4j-simple"     % "1.7.32"
     ),
-    run / fork   := true,
+    initialCommands := s"""
+      import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global
+    """,
+    run / fork      := true,
     run / javaOptions += "-ea",
     addCommandAlias(
       "runAll",
