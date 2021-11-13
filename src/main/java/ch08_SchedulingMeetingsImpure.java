@@ -7,8 +7,8 @@ public class ch08_SchedulingMeetingsImpure {
      * We use MeetingTime defined here in both Java and Scala versions.
      * Note this is written in Java, but in the spirit of immutability.
      * <p>
-     * In Scala, this would look like:
-     * case class MeetingTime(start: Int, end: Int)
+     * In Scala, this looks like:
+     * case class MeetingTime(startHour: Int, endHour: Int)
      */
     static class MeetingTime {
         public final int startHour;
@@ -69,18 +69,7 @@ public class ch08_SchedulingMeetingsImpure {
         // Note that it also may fail fail, similarly to calendarEntriesApiCall, but we don't show it in the book:
         // Random rand = new Random();
         // if (rand.nextFloat() < 0.25) throw new RuntimeException("Connection error");
-        System.out.printf("SIDE-EFFECT: Created meeting from %s to %s for %s\n", meetingTime.startHour, meetingTime.endHour, Arrays.toString(names.toArray()));
-    }
-
-    /*
-     * PREREQUISITE 3: potentially unsafe, side-effectful functions that print and read lines from stdout/in
-     */
-    static void consolePrint(String message) {
-        System.out.println(message);
-    }
-
-    static String consoleGet() {
-        return new Scanner(System.in).nextLine();
+        System.out.printf("SIDE-EFFECT: Created meeting %s for %s\n", meetingTime, Arrays.toString(names.toArray()));
     }
 
     /**
@@ -97,6 +86,8 @@ public class ch08_SchedulingMeetingsImpure {
     }
 
     /**
+     * STEP 0: imperative implementation of the happy path (assuming no failures)
+     * 
      * Less evil version of imperative schedule function (below) used to show happy path of the business logic.
      * API calls don't throw any errors, but they still may return different results for the same parameters (randomly).
      */
