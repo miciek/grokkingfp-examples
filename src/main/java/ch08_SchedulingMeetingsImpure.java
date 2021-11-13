@@ -10,7 +10,7 @@ public class ch08_SchedulingMeetingsImpure {
      * In Scala, this looks like:
      * case class MeetingTime(startHour: Int, endHour: Int)
      */
-    static class MeetingTime {
+    static class MeetingTime { // or: record MeetingTime(int startHour, int endHour) {};
         public final int startHour;
         public final int endHour;
 
@@ -35,12 +35,14 @@ public class ch08_SchedulingMeetingsImpure {
 
         @Override
         public String toString() {
-            return "MeetingTime{" +
+            return "MeetingTime[" +
                     "startHour=" + startHour +
                     ", endHour=" + endHour +
-                    '}';
+                    ']';
         }
     }
+    // In modern Java you can also replace this class with the record type
+    // record MeetingTime(int startHour, int endHour) {};
 
     /*
      * PREREQUISITE 2: unsafe functions that we'll use to simulate external API calls
@@ -68,7 +70,7 @@ public class ch08_SchedulingMeetingsImpure {
     static void createMeetingApiCall(List<String> names, MeetingTime meetingTime) {
         // Note that it also may fail fail, similarly to calendarEntriesApiCall, but we don't show it in the book:
         // Random rand = new Random();
-        // if (rand.nextFloat() < 0.25) throw new RuntimeException("Connection error");
+        // if(rand.nextFloat() < 0.25) throw new RuntimeException("💣");
         System.out.printf("SIDE-EFFECT: Created meeting %s for %s\n", meetingTime, Arrays.toString(names.toArray()));
     }
 
@@ -87,13 +89,14 @@ public class ch08_SchedulingMeetingsImpure {
 
     /**
      * STEP 0: imperative implementation of the happy path (assuming no failures)
-     * 
-     * Less evil version of imperative schedule function (below) used to show happy path of the business logic.
+     *
+     * For demonstration purposes we are showing a slightly different version than in the book. It's a
+     * less evil version of the proper imperative schedule function (below) used to show happy path of the business logic.
      * API calls don't throw any errors, but they still may return different results for the same parameters (randomly).
      */
     static MeetingTime scheduleNoFailures(String person1, String person2, int lengthHours) {
-        List<MeetingTime> person1Entries = calendarEntriesApiCallNoFailures(person1);
-        List<MeetingTime> person2Entries = calendarEntriesApiCallNoFailures(person2);
+        List<MeetingTime> person1Entries = calendarEntriesApiCallNoFailures(person1); // this is different than in the book
+        List<MeetingTime> person2Entries = calendarEntriesApiCallNoFailures(person2); // the book version fails a lot!
 
         List<MeetingTime> scheduledMeetings = new ArrayList<>();
         scheduledMeetings.addAll(person1Entries);

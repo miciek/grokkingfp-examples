@@ -27,7 +27,7 @@ public class ch08_SchedulingMeetingsAPI {
     static void createMeetingApiCall(List<String> names, MeetingTime meetingTime) {
         // Note that it also may fail fail, similarly to calendarEntriesApiCall, but we don't show it in the book:
         // Random rand = new Random();
-        // if (rand.nextFloat() < 0.25) throw new RuntimeException("Connection error");
+        // if(rand.nextFloat() < 0.25) throw new RuntimeException("💣");
         System.out.printf("SIDE-EFFECT: Created meeting %s for %s\n", meetingTime, Arrays.toString(names.toArray()));
     }
 }
