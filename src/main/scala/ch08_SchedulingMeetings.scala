@@ -138,14 +138,14 @@ object ch08_SchedulingMeetings {
   }
 
   private def lazyEvaluation = {
-    val program = IO.pure(2021).orElse(IO.delay(throw new Exception()))
+    val program = IO.pure(2022).orElse(IO.delay(throw new Exception()))
     check(program).expectThat(_.isInstanceOf[IO[Int]])
-    check(program.unsafeRunSync()).expect(2021)
+    check(program.unsafeRunSync()).expect(2022)
   }
 
   private def eagerEvaluation = {
     try {
-      val program = IO.pure(2021).orElse(IO.pure(throw new Exception()))
+      val program = IO.pure(2022).orElse(IO.pure(throw new Exception()))
       check(program).expectThat(_.isInstanceOf[IO[Int]])
     } catch {
       case e: Throwable => assert(e.getMessage == null)
@@ -243,6 +243,12 @@ object ch08_SchedulingMeetings {
   // PROBLEMS: signature lies
 
   // STEP 3: using signatures to indicate that function describes IO (+ functional core example)
+
+  // note that schedulingProgram doesn't know anything about consoleGet/Print
+  // we import then now:
+  def consoleGet(): String                = ch08_ConsoleInterface.consoleGet()
+  def consolePrint(message: String): Unit = ch08_ConsoleInterface.consolePrint(message)
+
   {
     import Version2.schedule
 
@@ -254,11 +260,6 @@ object ch08_SchedulingMeetings {
         _               <- showMeeting(possibleMeeting)
       } yield ()
     }
-
-    // note that schedulingProgram doesn't know anything about consoleGet/Print
-    // we import then now:
-    import ch08_ConsoleInterface.consoleGet
-    import ch08_ConsoleInterface.consolePrint
 
     // and use them to "configure" schedulingProgram to use console as IO
     schedulingProgram(IO.delay(consoleGet()), meeting => IO.delay(consolePrint(meeting.toString)))
@@ -323,9 +324,9 @@ object ch08_SchedulingMeetings {
     List
       .range(0, maxRetries)
       .map(_ => action)
-      .foldLeft(action)((program, nextAction) => {
-        program.orElse(nextAction)
-      })
+      .foldLeft(action)((program, retryAction) =>
+        program.orElse(retryAction)
+      )
   }
 
   private def runRetry = {
@@ -476,7 +477,7 @@ object ch08_SchedulingMeetings {
   }
 
   // BONUS: sequence works on other types as well! e.g. on List[Option]
-  {
+  private def bonus4 = {
     val years: List[Option[Int]]      = List(Some(2019), None, Some(2021))
     val resultNone: Option[List[Int]] = years.sequence
     check(resultNone).expect(None)
@@ -504,5 +505,6 @@ object ch08_SchedulingMeetings {
     bonus1
     bonus2
     bonus3
+    bonus4
   }
 }

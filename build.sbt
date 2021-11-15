@@ -61,6 +61,7 @@ lazy val root = (project in file("."))
       ";runMain ch07_Playlist" +
       ";runMain ch08_SchedulingMeetingsImpure" +
       ";runMain ch08_SchedulingMeetings" +
+      ";runMain ch08_CardGame" +
       ";runMain ch08_CastingDie" +
       ";runMain ch09_CurrencyExchange" +
       ";runMain ch09_Stream123s" +
