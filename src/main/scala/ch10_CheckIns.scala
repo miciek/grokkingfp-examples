@@ -10,12 +10,16 @@ object ch10_CheckIns {
 
   /** PREREQUISITE: model
     */
-  object model:
+  object model {
     opaque type City = String
-    object City:
+
+    object City {
       def apply(name: String): City           = name
       extension (city: City) def name: String = city
+    }
+
     case class CityStats(city: City, checkIns: Int)
+  }
   import model._
 
   /** PREREQUISITE: a stream of user check-ins
