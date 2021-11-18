@@ -1,11 +1,10 @@
 import cats.effect.IO
 import ch11_TravelGuide._
-import ch11_TravelGuide.location._
-import ch11_TravelGuide.PopCultureSubject._
+import ch11_TravelGuide.model._, PopCultureSubject._
 import ch11_TravelGuide.AttractionOrdering._
 import org.apache.jena.query.QuerySolution
 
-object ch11_WikidataDataAccess extends App {
+object ch11_WikidataDataAccess {
 
   def getSparqlDataAccess(execQuery: String => IO[List[QuerySolution]]): DataAccess = new DataAccess {
     val prefixes = """

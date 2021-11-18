@@ -2,8 +2,8 @@ import cats.effect.{IO, Resource}
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import ch11_TravelGuide._
-import ch11_TravelGuide.location._
-import ch11_TravelGuide.PopCultureSubject._
+import ch11_TravelGuide.model._
+import ch11_TravelGuide.model.PopCultureSubject._
 import ch11_TravelGuide.AttractionOrdering._
 import ch11_TravelGuide.Version3.travelGuide
 import ch11_WikidataDataAccess.getSparqlDataAccess

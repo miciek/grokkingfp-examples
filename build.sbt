@@ -17,7 +17,10 @@ lazy val root = (project in file("."))
       "org.slf4j"          % "slf4j-simple"     % "1.7.32"
     ),
     initialCommands := s"""
-      import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global, scala.concurrent.duration._, java.util.concurrent._
+      import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global
+      import scala.concurrent.duration._, java.util.concurrent._
+      import scala.jdk.javaapi.CollectionConverters.asScala
+      import org.apache.jena.query._, org.apache.jena.rdfconnection._
     """,
     run / fork      := true,
     run / javaOptions += "-ea",

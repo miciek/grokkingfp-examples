@@ -5,6 +5,7 @@ import ch11_WikidataDataAccess.getSparqlDataAccess
 import org.apache.jena.query.{QueryExecution, QueryFactory, QuerySolution}
 import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
 
+import scala.concurrent.duration._
 import scala.jdk.javaapi.CollectionConverters.asScala
 
 object ch11_TravelGuide {
@@ -15,39 +16,45 @@ object ch11_TravelGuide {
     * Note that we have a single model for the whole application, but sometimes it may be beneficial
     * to have separate ones for data access and business domain (see the book).
     */
-  object location:
+  object model {
     opaque type LocationId = String
     object LocationId:
       def apply(value: String): LocationId        = value
       extension (a: LocationId) def value: String = a
 
     case class Location(id: LocationId, name: String, population: Int)
+    case class Attraction(name: String, description: Option[String], location: Location)
+    enum PopCultureSubject {
+      case Artist(name: String, followers: Int)
+      case Movie(name: String, boxOffice: Int)
+    }
 
-  import location._
+    case class TravelGuide(attraction: Attraction, subjects: List[PopCultureSubject])
+  }
 
-  case class Attraction(name: String, description: Option[String], location: Location)
-
-  enum PopCultureSubject:
-    case Artist(name: String, followers: Int)
-    case Movie(name: String, boxOffice: Int)
-
-  import PopCultureSubject._
-
-  case class TravelGuide(attraction: Attraction, subjects: List[PopCultureSubject])
+  import model._, model.PopCultureSubject._
 
   /** STEP 2
     * DATA ACCESS (just an interface providing pure functions, implementation completely separated)
     */
-  enum AttractionOrdering:
+  enum AttractionOrdering {
     case ByName
     case ByLocationPopulation
-
+  }
   import AttractionOrdering._
 
-  trait DataAccess:
+  trait DataAccess             {
     def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]]
     def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
     def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
+  }
+  object DataAccessAlternative { // alternatively DataAccess can be modeled as a product type:
+    case class DataAccess( // NOTE: WE DON'T USE IT IN THE BOOK, we use the type above
+        findAttractions: (String, AttractionOrdering, Int) => IO[List[Attraction]],
+        findArtistsFromLocation: (LocationId, Int) => IO[List[Artist]],
+        findMoviesAboutLocation: (LocationId, Int) => IO[List[Movie]]
+    )
+  }
 
   /** STEP 3: first version of a TravelGuide finder
     */
@@ -60,7 +67,7 @@ object ch11_TravelGuide {
                          case Some(attraction) => for {
                              artists <- data.findArtistsFromLocation(attraction.location.id, 2)
                              movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
-                           } yield Some(TravelGuide(attraction, artists ++ movies))
+                           } yield Some(TravelGuide(attraction, artists.appendedAll(movies)))
                        }
       } yield guide
     }
@@ -217,7 +224,7 @@ object ch11_TravelGuide {
                            for {
                              artists <- data.findArtistsFromLocation(attraction.location.id, 2)
                              movies  <- data.findMoviesAboutLocation(attraction.location.id, 2)
-                           } yield TravelGuide(attraction, artists ++ movies)
+                           } yield TravelGuide(attraction, artists.appendedAll(movies))
                          )
                          .sequence
       } yield guides.sortBy(guideScore).reverse.headOption
@@ -355,6 +362,26 @@ object ch11_TravelGuide {
     ) // the second and third execution will take a lot less time because all queries are cached!
   }
 
+  /** BONUS: make it resilient
+    * let's fail fast if requests take too long (timeout 30s)
+    */
+  private def runCachedVersionWithTimeouts = {
+    check.executedIO(
+      connectionResource.use(connection =>
+        for {
+          cache       <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
+          cachedSparql =
+            getSparqlDataAccess(
+              cachedExecQuery(connection, cache).map(_.timeout(30.seconds)) // note that we map over a functions result.
+            ) // each query will fail after 30 seconds, releasing all the resources!
+          result1     <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result2     <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          result3     <- Version3.travelGuide(cachedSparql, "Yellowstone")
+        } yield result1.toList.appendedAll(result2).appendedAll(result3)
+      )
+    ) // the second and third execution will take a lot less time because all queries are cached!
+  }
+
   def main(args: Array[String]): Unit = {
     System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
     runStep4
@@ -364,5 +391,6 @@ object ch11_TravelGuide {
     runVersion2WithMappedResource
     runVersion3
     runCachedVersion
+    runCachedVersionWithTimeouts
   }
 }

@@ -12,7 +12,7 @@ object ch12_TravelGuide {
     * with small functions and immutable values that describe small functionalities.
     */
   import ch11_TravelGuide._
-  import ch11_TravelGuide.PopCultureSubject._
+  import ch11_TravelGuide.model._, PopCultureSubject._
   import ch11_TravelGuide.AttractionOrdering._
   import ch11_WikidataDataAccess.getSparqlDataAccess
 
