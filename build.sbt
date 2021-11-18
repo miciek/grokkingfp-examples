@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
       "org.slf4j"          % "slf4j-simple"     % "1.7.32"
     ),
     initialCommands := s"""
-      import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global
+      import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global, scala.concurrent.duration._, java.util.concurrent._
     """,
     run / fork      := true,
     run / javaOptions += "-ea",

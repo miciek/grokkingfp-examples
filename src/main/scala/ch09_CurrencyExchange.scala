@@ -11,11 +11,13 @@ object ch09_CurrencyExchange {
 
   /** PREREQUISITE: model
     */
-  object model:
+  object model {
     opaque type Currency = String
-    object Currency:
+    object Currency {
       def apply(name: String): Currency               = name
       extension (currency: Currency) def name: String = currency
+    }
+  }
   import model._
 
   /** PREREQUISITE: retry function from ch8
@@ -28,12 +30,8 @@ object ch09_CurrencyExchange {
     *
     * We wrap them here to be able to use Scala immutable collections and BigDecimal.
     */
-  import ch09_CurrencyExchangeImpure.exchangeRatesTableApiCall
-
-  def exchangeTable(from: Currency): IO[Map[Currency, BigDecimal]] = {
-    IO.delay(exchangeRatesTableApiCall(from.name).asScala.map {
-      case (currencyName, rate) => (Currency(currencyName), BigDecimal(rate))
-    }.toMap) // implementation is not important, we just use the signature in the book
+  def exchangeRatesTableApiCall(currency: String): Map[String, BigDecimal] = {
+    ch09_CurrencyExchangeImpure.exchangeRatesTableApiCall(currency).asScala.view.mapValues(BigDecimal(_)).toMap
   }
 
   /** STEP 0: Using immutable Maps
@@ -92,7 +90,7 @@ object ch09_CurrencyExchange {
   }
 
   private def bottomUpDesign = {
-    val usdTable: IO[Map[Currency, BigDecimal]] = retry(exchangeTable(Currency("USD")), 10)
+    val usdTable: IO[Map[String, BigDecimal]] = retry(IO.delay(exchangeRatesTableApiCall("USD")), 10)
     println(s"Current USD currency exchange table: ${usdTable.unsafeRunSync()}")
   }
 
@@ -166,14 +164,14 @@ object ch09_CurrencyExchange {
 
   private def runExtractSingleCurrencyRate = {
     val usdExchangeTables = List(
-      Map(Currency("EUR") -> BigDecimal(0.82)),
-      Map(Currency("EUR") -> BigDecimal(0.83)),
-      Map(Currency("JPY") -> BigDecimal(104))
+      Map(Currency("EUR") -> BigDecimal(0.88)),
+      Map(Currency("EUR") -> BigDecimal(0.89), Currency("JPY") -> BigDecimal(114.62)),
+      Map(Currency("JPY") -> BigDecimal(114))
     )
     check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("EUR"))))
-      .expect(List(Some(BigDecimal(0.82)), Some(BigDecimal(0.83)), None))
+      .expect(List(Some(BigDecimal(0.88)), Some(BigDecimal(0.89)), None))
     check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("JPY"))))
-      .expect(List(None, None, Some(BigDecimal(104))))
+      .expect(List(None, Some(BigDecimal(114.62)), Some(BigDecimal(114))))
     check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("BTC"))))
       .expect(List(None, None, None))
     check(List.empty.map(extractSingleCurrencyRate(Currency("EUR"))))
@@ -187,9 +185,9 @@ object ch09_CurrencyExchange {
       }
 
       check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("EUR"))))
-        .expect(List(Some(BigDecimal(0.82)), Some(BigDecimal(0.83)), None))
+        .expect(List(Some(BigDecimal(0.88)), Some(BigDecimal(0.89)), None))
       check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("JPY"))))
-        .expect(List(None, None, Some(BigDecimal(104))))
+        .expect(List(None, Some(BigDecimal(114.62)), Some(BigDecimal(114))))
       check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("BTC"))))
         .expect(List(None, None, None))
       check(List.empty.map(extractSingleCurrencyRate2(Currency("EUR"))))
@@ -199,10 +197,18 @@ object ch09_CurrencyExchange {
 
   /** STEP 1: Using IO
     */
+  def exchangeTable(from: Currency): IO[Map[Currency, BigDecimal]] = {
+    IO.delay(exchangeRatesTableApiCall(from.name)).map(table =>
+      table.map(kv =>
+        kv.match {
+          case (currencyName, rate) => (Currency(currencyName), rate)
+        }
+      )
+    )
+  }
+
   {
-    for {
-      table <- exchangeTable(Currency("USD"))
-    } yield extractSingleCurrencyRate(Currency("EUR"))(table)
+    exchangeTable(Currency("USD")).map(extractSingleCurrencyRate(Currency("EUR")))
   }
 
   object Version1 {
