@@ -73,6 +73,7 @@ lazy val root = (project in file("."))
       ";runMain ch10_CheckInsImperative" +
       ";runMain ch10_CastingDieConcurrently" +
       ";runMain ch11_TravelGuide" +
-      ";runMain ch12_TravelGuide"
+      ";runMain ch12_TravelGuide" +
+      ";runMain chA_ScalaCheatSheet"
     )
   )
