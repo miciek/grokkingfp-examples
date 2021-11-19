@@ -9,9 +9,7 @@ import ch11_TravelGuide.Version3.travelGuide
 import ch11_WikidataDataAccess.getSparqlDataAccess
 import ch12_TravelGuide.{SearchReport, Version4, Version5}
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import org.scalacheck.Arbitrary._
-import org.scalacheck.Gen
+import org.scalacheck._, Arbitrary._, org.scalatestplus.scalacheck._
 import org.apache.jena.fuseki.main.FusekiServer
 import org.apache.jena.query.DatasetFactory
 import org.apache.jena.rdfconnection.RDFConnection
@@ -415,11 +413,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   test("travelGuide should return a search report if it can't find a good-enough guide") {
     // given an external data source with a single attraction,
     // no movies, no artists and no IO failures
-    val dataAccess = dataAccessStub(
-      IO.pure(List(yellowstone)),
-      IO.pure(List.empty),
-      IO.pure(List.empty)
-    )
+    val dataAccess = dataAccessStub(IO.pure(List(yellowstone)), IO.pure(List.empty), IO.pure(List.empty))
 
     // when we want to get a travel guide
     val result: Either[SearchReport, TravelGuide] = Version4.travelGuide(dataAccess, "").unsafeRunSync()
