@@ -149,7 +149,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   val nonNegativeInt: Gen[Int] = Gen.chooseNum(0, Int.MaxValue)
 
   val randomArtist: Gen[Artist] = for {
-    name <- Gen.identifier // introduce Gen.identifier
+    name      <- Gen.identifier // introduce Gen.identifier
     followers <- nonNegativeInt
   } yield Artist(name, followers)
 

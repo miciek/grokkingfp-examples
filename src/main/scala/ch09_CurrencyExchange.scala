@@ -270,7 +270,7 @@ object ch09_CurrencyExchange {
 
     def exchangeInfinitely(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
       for {
-        rates <- lastRates(from, to) // here we use flatMap, so no code below will be executed until we get rates
+        rates  <- lastRates(from, to) // here we use flatMap, so no code below will be executed until we get rates
         result <- exchangeInfinitely(amount, from, to)
       } yield result
     }
