@@ -137,7 +137,7 @@ object ch11_TravelGuide {
                      """
 
       for {
-        solutions <- execQuery(getConnection, query)
+        solutions   <- execQuery(getConnection, query)
         attractions <- solutions.traverse(parseAttraction) // or map(parseAttraction).sequence
       } yield attractions
     }
