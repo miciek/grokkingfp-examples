@@ -157,7 +157,7 @@ object ch07_MusicArtistsSearch extends App {
         .contains(artist.origin.name)) &&                                 // <- using Location
       (!searchByActiveYears ||
       ((artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
-      (artist.yearsActiveStart.value <= activeBefore))) // <- using YearsActiveStart
+      (artist.yearsActiveStart.value <= activeBefore)))                   // <- using YearsActiveStart
     )
   }
 
@@ -315,7 +315,7 @@ object ch07_MusicArtistsSearch extends App {
       (locations.isEmpty || locations.contains(artist.origin.name)) &&
       (!searchByActiveYears ||
       (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using new product type (end)
-      (artist.yearsActive.start <= activeBefore))) // <- using new product type (start)
+      (artist.yearsActive.start <= activeBefore)))        // <- using new product type (start)
     )
   }
 
