@@ -9,7 +9,7 @@ lazy val root = (project in file("."))
       "org.typelevel"     %% "cats-effect"      % "3.3.4",
       "co.fs2"            %% "fs2-core"         % "3.2.4",
       "org.scalatest"     %% "scalatest"        % "3.2.11"   % Test,
-      "org.scalatestplus" %% "scalacheck-1-15"  % "3.2.10.0" % Test,
+      "org.scalatestplus" %% "scalacheck-1-15"  % "3.2.11.0" % Test,
       // imperative libraries:
       "com.typesafe.akka"  % "akka-actor_2.13"  % "2.6.18",
       "org.apache.jena"    % "apache-jena-libs" % "4.3.2",
