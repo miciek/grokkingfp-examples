@@ -288,6 +288,7 @@ object ch11_TravelGuide {
     })
 
     check.executedIO(program)
+    check.executedIO(program) // you can execute it as many times as you want
   }
 
   // Resource has map! TODO: Practicing section, Resource.use, flatMap, map (chapter 5), fromAutocloseable
