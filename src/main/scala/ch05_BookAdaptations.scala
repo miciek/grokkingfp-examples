@@ -79,7 +79,7 @@ object ch05_BookAdaptations extends App {
       book.authors.flatMap(author =>
         bookAdaptations(author).map(movie =>
           s"You may like ${movie.title}, " +
-          s"because you liked $author's ${book.title}"
+            s"because you liked $author's ${book.title}"
         )
       )
     )
@@ -102,7 +102,7 @@ object ch05_BookAdaptations extends App {
       book.authors.flatMap(author =>
         bookAdaptations(author).map(movie =>
           s"You may like ${movie.title}, " +
-          s"because you liked $author's ${book.title}"
+            s"because you liked $author's ${book.title}"
         )
       )
     )

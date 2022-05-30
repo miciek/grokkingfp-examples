@@ -138,14 +138,14 @@ object ch08_SchedulingMeetings {
   }
 
   private def lazyEvaluation = {
-    val program = IO.pure(2022).orElse(IO.delay(throw new Exception()))
+    val program = IO.pure(2022).orElse(IO.delay(throw new Exception))
     check(program).expectThat(_.isInstanceOf[IO[Int]])
     check(program.unsafeRunSync()).expect(2022)
   }
 
   private def eagerEvaluation = {
     try {
-      val program = IO.pure(2022).orElse(IO.pure(throw new Exception()))
+      val program = IO.pure(2022).orElse(IO.pure(throw new Exception))
       check(program).expectThat(_.isInstanceOf[IO[Int]])
     } catch {
       case e: Throwable => assert(e.getMessage == null)

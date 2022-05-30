@@ -25,9 +25,9 @@ object ch07_MusicArtistsSearch extends App {
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
       (genres.isEmpty || genres.contains(artist.genre)) &&
-      (locations.isEmpty || locations.contains(artist.origin)) &&
-      (!searchByActiveYears || ((artist.isActive || artist.yearsActiveEnd >= activeAfter) &&
-      (artist.yearsActiveStart <= activeBefore)))
+        (locations.isEmpty || locations.contains(artist.origin)) &&
+        (!searchByActiveYears || (artist.isActive || artist.yearsActiveEnd >= activeAfter) &&
+          artist.yearsActiveStart <= activeBefore)
     )
   }
 
@@ -152,12 +152,12 @@ object ch07_MusicArtistsSearch extends App {
         activeAfter: Int,
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
-      (genres.isEmpty || genres.contains(artist.genre.name)) &&           // <- using Genre
-      (locations.isEmpty || locations
-        .contains(artist.origin.name)) &&                                 // <- using Location
-      (!searchByActiveYears ||
-      ((artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
-      (artist.yearsActiveStart.value <= activeBefore)))                   // <- using YearsActiveStart
+      (genres.isEmpty || genres.contains(artist.genre.name)) &&              // <- using Genre
+        (locations.isEmpty || locations
+          .contains(artist.origin.name)) &&                                  // <- using Location
+        (!searchByActiveYears ||
+          (artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
+          artist.yearsActiveStart.value <= activeBefore)                     // <- using YearsActiveStart
     )
   }
 
@@ -193,10 +193,10 @@ object ch07_MusicArtistsSearch extends App {
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
       (genres.isEmpty || genres.contains(artist.genre)) &&
-      (locations.isEmpty || locations.contains(artist.origin.name)) &&
-      (!searchByActiveYears ||
-      (artist.yearsActiveEnd.forall(_ >= activeAfter) && // <- using Option.forall
-      (artist.yearsActiveStart <= activeBefore)))
+        (locations.isEmpty || locations.contains(artist.origin.name)) &&
+        (!searchByActiveYears ||
+          artist.yearsActiveEnd.forall(_ >= activeAfter) && // <- using Option.forall
+          artist.yearsActiveStart <= activeBefore)
     )
   }
 
@@ -312,10 +312,10 @@ object ch07_MusicArtistsSearch extends App {
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
       (genres.isEmpty || genres.contains(artist.genre)) &&
-      (locations.isEmpty || locations.contains(artist.origin.name)) &&
-      (!searchByActiveYears ||
-      (artist.yearsActive.end.forall(_ >= activeAfter) && // <- using new product type (end)
-      (artist.yearsActive.start <= activeBefore)))        // <- using new product type (start)
+        (locations.isEmpty || locations.contains(artist.origin.name)) &&
+        (!searchByActiveYears ||
+          artist.yearsActive.end.forall(_ >= activeAfter) && // <- using new product type (end)
+          artist.yearsActive.start <= activeBefore)          // <- using new product type (start)
     )
   }
 
@@ -361,10 +361,10 @@ object ch07_MusicArtistsSearch extends App {
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
       (genres.isEmpty || genres.contains(artist.genre)) && // no change needed
-      (locations.isEmpty || locations.contains(artist.origin.name)) &&
-      (!searchByActiveYears ||
-      (artist.yearsActive.end.forall(_ >= activeAfter) &&
-      (artist.yearsActive.start <= activeBefore)))
+        (locations.isEmpty || locations.contains(artist.origin.name)) &&
+        (!searchByActiveYears ||
+          artist.yearsActive.end.forall(_ >= activeAfter) &&
+          artist.yearsActive.start <= activeBefore)
     )
   }
 
@@ -415,8 +415,8 @@ object ch07_MusicArtistsSearch extends App {
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
       (genres.isEmpty || genres.contains(artist.genre)) &&
-      (locations.isEmpty || locations.contains(artist.origin)) &&
-      (!searchByActiveYears || wasArtistActive(artist, activeAfter, activeBefore))
+        (locations.isEmpty || locations.contains(artist.origin)) &&
+        (!searchByActiveYears || wasArtistActive(artist, activeAfter, activeBefore))
     )
   }
 

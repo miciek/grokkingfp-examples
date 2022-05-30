@@ -9,7 +9,7 @@ object ch06_TvShows extends App {
       .reverse                                     // sortBy sorts in natural order (from the smallest Int to the highest one), so we return a reverse of the List
   }
 
-  sortShows(shows).map(_.title) === (List("Mad Men", "The Wire", "Breaking Bad"))
+  sortShows(shows).map(_.title) === List("Mad Men", "The Wire", "Breaking Bad")
 
   val rawShows = List("Breaking Bad (2008-2013)", "The Wire (2002-2008)", "Mad Men (2007-2015)")
 
