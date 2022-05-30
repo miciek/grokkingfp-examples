@@ -68,7 +68,7 @@ public class ch02_TipCalculation {
         }
     }
 
-    class TipCalculator {
+    static class TipCalculator {
         public List<String> addPerson(List<String> names, String name) {
             List<String> updated = new ArrayList<>(names);
             updated.add(name);

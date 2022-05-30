@@ -106,7 +106,7 @@ public class ch02_ShoppingCartDiscounts {
         }
     }
 
-    class ShoppingCart {
+    static class ShoppingCart {
         public static int getDiscountPercentage(List<String> items) {
             if(items.contains("Book")) {
                 return 5;
