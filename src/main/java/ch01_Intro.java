@@ -40,10 +40,6 @@ public class ch01_Intro {
         return a + b;
     }
 
-    public static int increment(int x) {
-        return x + 1;
-    }
-
     public static char getFirstCharacter(String s) {
         return s.charAt(0);
     }
@@ -54,6 +50,14 @@ public class ch01_Intro {
 
     public static void eatSoup(Soup soup) {
         // TODO: “eating the soup” algorithm
+    }
+
+    public static int increment(int x) {
+        return x + 1;
+    }
+
+    public static String concatenate(String a, String b) {
+        return a + b;
     }
 
     public static int calculateScore(String word)  {
@@ -68,7 +72,8 @@ public class ch01_Intro {
         return word.length();
     }
 
-    public static int calculateScore2(String word)  {
+    // Coffee Break exercise
+    public static int calculateScore2(String word) { // named calculateScore in the book
         int score = 0;
         for(char c : word.toCharArray()) {
             if(c != 'a')
@@ -77,38 +82,41 @@ public class ch01_Intro {
         return score;
     }
 
-    public static int wordScore2(String word)  {
+    public static int wordScore2(String word) { // named wordScore in the book
         return word.replace("a", "").length();
-    }
-
-    public static int wordScore3(String word)  {
-        return stringWithoutChar(word, 'a').length();
     }
 
     public static String stringWithoutChar(String s, char c) {
         return s.replace(Character.toString(c), "");
     }
 
+    public static int wordScore3(String word) { // named wordScore in the book
+        return stringWithoutChar(word, 'a').length();
+    }
+
     public static void main(String[] args) {
-        assert(add(2, 4) == 6);
         System.out.println(add(2, 4));
+        assert(add(2, 4) == 6);
 
-        assert(increment(6) == 7);
-        System.out.println(increment(6));
-
-        assert(getFirstCharacter("Ola") == 'O');
         System.out.println(getFirstCharacter("Ola"));
+        assert(getFirstCharacter("Ola") == 'O');
 
-        assert(divide(12, 2) == 6);
         System.out.println(divide(12, 2));
+        assert(divide(12, 2) == 6);
 
         eatSoup(new Soup());
 
-        assert(wordScore("imperative") == 10);
-        System.out.println(calculateScore("imperative"));
+        System.out.println(increment(6));
+        assert(increment(6) == 7);
 
-        assert(wordScore("declarative") == 11);
+        System.out.println(concatenate("6", "7"));
+        assert(concatenate("6", "7").equals("67"));
+
+        System.out.println(calculateScore("imperative"));
+        assert(wordScore("imperative") == 10);
+
         System.out.println(wordScore("declarative"));
+        assert(wordScore("declarative") == 11);
 
         assert(calculateScore2("imperative") == 9 && wordScore2("declarative") == 9 && wordScore3("declarative") == 9);
     }
