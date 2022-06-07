@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ch02_ShoppingCartDiscounts {
-    static class ShoppingCartBad {
+    static class ShoppingCartBad { // named ShoppingCart in the book
         private List<String> items = new ArrayList<>();
         private boolean bookAdded = false;
 
@@ -27,7 +27,7 @@ public class ch02_ShoppingCartDiscounts {
         }
     }
 
-    static class ShoppingCartCopying {
+    static class ShoppingCartCopying { // named ShoppingCart in the book
         private List<String> items = new ArrayList<>();
         private boolean bookAdded = false;
 
@@ -51,7 +51,7 @@ public class ch02_ShoppingCartDiscounts {
         }
     }
 
-    static class ShoppingCartWithRemove {
+    static class ShoppingCartWithRemove { // named ShoppingCart in the book
         private List<String> items = new ArrayList<>();
         private boolean bookAdded = false;
 
@@ -82,7 +82,7 @@ public class ch02_ShoppingCartDiscounts {
         }
     }
 
-    static class ShoppingCartRecalculating {
+    static class ShoppingCartRecalculating { // named ShoppingCart in the book
         private List<String> items = new ArrayList<>();
 
         public void addItem(String item) {
