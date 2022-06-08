@@ -2,7 +2,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ch03_Itinerary {
+public class ch03_ItineraryOO {
     private List<String> plan = new ArrayList<>();
 
     public void replan(String newCity, String beforeCity) {
@@ -19,7 +19,7 @@ public class ch03_Itinerary {
     }
 
     public static void main(String[] args) {
-        ch03_Itinerary plan = new ch03_Itinerary();
+        ch03_ItineraryOO plan = new ch03_ItineraryOO();
         plan.add("Paris");
         plan.add("Berlin");
         plan.add("Kraków");

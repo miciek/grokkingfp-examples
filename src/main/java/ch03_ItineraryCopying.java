@@ -12,7 +12,7 @@ public class ch03_ItineraryCopying {
 
     static List<String> replanPure(List<String> plan,
                                String newCity,
-                               String beforeCity) {
+                               String beforeCity) { // named replan in the book
         int newCityIndex = plan.indexOf(beforeCity);
         List<String> replanned = new ArrayList<>(plan);
         replanned.add(newCityIndex, newCity);

@@ -34,8 +34,8 @@ lazy val root = (project in file("."))
         ";runMain ch02_ShoppingCartDiscountsScala" +
         ";runMain ch02_TipCalculationScala" +
         ";runMain ch02_TestingPureFunctions" +
-        ";runMain ch03_Itinerary" +
         ";runMain ch03_ItineraryCopying" +
+        ";runMain ch03_ItineraryOO" +
         ";runMain ch03_LapTimes" +
         ";runMain ch03_ListVsString" +
         ";runMain ch03_ListVsStringScala" +

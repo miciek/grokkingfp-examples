@@ -1,4 +1,10 @@
 object ch03_SlicingAndAppending extends App {
+  val appleBook      = List("Apple", "Book")
+  val appleBookMango = appleBook.appended("Mango")
+
+  assert(appleBook.size == 2)
+  assert(appleBookMango.size == 3)
+
   def firstTwo(list: List[String]): List[String] = list.slice(0, 2)
 
   def lastTwo(list: List[String]): List[String] = list.slice(list.size - 2, list.size)
