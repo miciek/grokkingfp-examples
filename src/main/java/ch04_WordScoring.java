@@ -37,7 +37,7 @@ public class ch04_WordScoring {
         }
     };
 
-    static List<String> rankedWordsMutable(List<String> words) {
+    static List<String> rankedWordsMutable(List<String> words) { // named rankedWords in the book
         words.sort(scoreComparator);
         return words;
     }
@@ -51,8 +51,8 @@ public class ch04_WordScoring {
     }
 
     static List<String> rankedWords(Function<String, Integer> wordScore, List<String> words) {
-        Comparator<String> comparator = (w1, w2) -> Integer.compare(wordScore.apply(w2), wordScore.apply(w1));
-        return words.stream().sorted(comparator).collect(Collectors.toList());
+        Comparator<String> wordComparator = (w1, w2) -> Integer.compare(wordScore.apply(w2), wordScore.apply(w1));
+        return words.stream().sorted(wordComparator).collect(Collectors.toList());
     }
 
     static List<Integer> wordScores(Function<String, Integer> wordScore, List<String> words) {
@@ -63,6 +63,7 @@ public class ch04_WordScoring {
         return result;
     }
 
+    // named wordScores in the book
     static List<Integer> wordScoresStreams(Function<String, Integer> wordScore, List<String> words) {
         return words.stream().map(wordScore).collect(Collectors.toList());
     }
@@ -122,17 +123,16 @@ public class ch04_WordScoring {
             assert (ranking.toString().equals("[scala, haskell, rust, java, ada]"));
         }
 
-        {
+        { // the following two usages are equivalent to the new Comparator approach above
+            // named scoreComparator in the book
             Comparator<String> scoreComparator2 = (w1, w2) -> Integer.compare(score(w2), score(w1));
             List<String> ranking = rankedWords(scoreComparator2, words);
-            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
 
-            Comparator<String> scoreWithBonusComparator = (w1, w2) -> Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1));
-            List<String> rankingWithBonus = rankedWords(scoreWithBonusComparator, words);
-            assert (rankingWithBonus.toString().equals("[scala, haskell, rust, java, ada]"));
+            List<String> ranking2 = rankedWords((w1, w2) -> Integer.compare(score(w2), score(w1)), words);
+            assert (ranking2.toString().equals("[haskell, rust, scala, java, ada]"));
         }
 
-        {
+        { // see ch04_JavaFunctionIntro first
             Function<String, Integer> scoreFunction = w -> score(w);
             List<String> ranking = rankedWords(scoreFunction, words);
             assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
@@ -143,6 +143,17 @@ public class ch04_WordScoring {
         }
 
         {
+            // named scoreComparator in the book
+            Comparator<String> scoreComparator2 = (w1, w2) -> Integer.compare(score(w2), score(w1));
+            List<String> ranking = rankedWords(scoreComparator2, words);
+            assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));
+
+            Comparator<String> scoreWithBonusComparator = (w1, w2) -> Integer.compare(scoreWithBonus(w2), scoreWithBonus(w1));
+            List<String> rankingWithBonus = rankedWords(scoreWithBonusComparator, words);
+            assert (rankingWithBonus.toString().equals("[scala, haskell, rust, java, ada]"));
+        }
+
+        { // Coffee Break: Functions as parameters
             List<String> ranking = rankedWords(w -> score(w), words);
             System.out.println(ranking);
             assert (ranking.toString().equals("[haskell, rust, scala, java, ada]"));

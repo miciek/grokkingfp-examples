@@ -1,4 +1,5 @@
 object ch04_ReturningFunctions extends App {
+  // Returning functions from functions
   {
     def largerThan(n: Int): Int => Boolean = i => i > n
 
@@ -31,7 +32,7 @@ object ch04_ReturningFunctions extends App {
     assert(List("rust", "ada").filter(containsS(0)) == List("rust"))
   }
 
-  // CURRYING
+  // Practicing currying
   {
     def largerThan(n: Int)(i: Int): Boolean = i > n
 
@@ -49,9 +50,9 @@ object ch04_ReturningFunctions extends App {
 
     def shorterThan(n: Int)(s: String): Boolean = s.length < n
 
-    val longWords = List("scala", "ada").filter(shorterThan(4))
-    println(longWords)
-    assert(longWords == List("ada"))
+    val shortWords = List("scala", "ada").filter(shorterThan(4))
+    println(shortWords)
+    assert(shortWords == List("ada"))
     assert(List("scala", "ada").filter(shorterThan(7)) == List("scala", "ada"))
 
     def numberOfS(s: String): Int = s.length - s.replaceAll("s", "").length

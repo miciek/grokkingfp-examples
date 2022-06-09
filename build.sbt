@@ -43,8 +43,8 @@ lazy val root = (project in file("."))
         ";runMain ch03_ItineraryScala" +
         ";runMain ch03_SlicingAndAppending" +
         ";runMain ch04_WordScoring" +
-        ";runMain ch04_WordScoringScala" +
         ";runMain ch04_JavaFunctionIntro" +
+        ";runMain ch04_WordScoringScala" +
         ";runMain ch04_PassingFunctions" +
         ";runMain ch04_ReturningFunctions" +
         ";runMain ch04_ProgrammingLanguages" +

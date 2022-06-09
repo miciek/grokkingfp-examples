@@ -15,7 +15,17 @@ object ch04_PassingFunctions extends App {
     assert(words.sortBy(score) == List("java", "rust"))
   }
 
-  // PRACTICING FUNCTION PASSING
+  // sortBy
+  {
+    def score(word: String): Int = word.replaceAll("a", "").length
+    val words                    = List("rust", "java")
+    val sortedWords              = words.sortBy(score)
+    assert(sortedWords == List("java", "rust"))
+    assert(List("rust", "java").sortBy(score) == sortedWords)
+
+  }
+
+  // Practicing function passing
   {
     def len(s: String): Int = s.length
 
@@ -42,7 +52,7 @@ object ch04_PassingFunctions extends App {
     assert(byNegativeNumberOfS == List("rust", "ada"))
   }
 
-  // PRACTICING MAP
+  // Practicing map
   {
     def len(s: String): Int = s.length
 
@@ -69,7 +79,7 @@ object ch04_PassingFunctions extends App {
     assert(doubles == List(10, 2, 4, 8, 0))
   }
 
-  // PRACTICING FILTER
+  // Practicing filter
   {
     def len(s: String): Int = s.length
 
@@ -96,7 +106,7 @@ object ch04_PassingFunctions extends App {
     assert(large == List(5))
   }
 
-  // PRACTICING FOLDLEFT
+  // Practicing foldLeft
   {
     val sum = List(5, 1, 2, 4, 100).foldLeft(0)((sum, i) => sum + i)
     println(sum)

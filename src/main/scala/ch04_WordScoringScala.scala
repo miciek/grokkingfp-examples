@@ -2,6 +2,12 @@ object ch04_WordScoringScala extends App {
 
   def score(word: String): Int = word.replaceAll("a", "").length
 
+  { // incorrect result (java has scored 2 and rust has scored 4)
+    assert(List("rust", "java").sortBy(score) == List("java", "rust"))
+  }
+
+  // see "sortBy" section in ch04_PassingFunctions
+
   val words = List("ada", "haskell", "scala", "java", "rust")
 
   {
@@ -17,6 +23,8 @@ object ch04_WordScoringScala extends App {
       words.sortBy(negativeScore)
     }
 
+    assert(rankedWords(score, List("rust", "java")) == List("rust", "java"))
+
     val wordRanking = rankedWords(score, words)
     println(wordRanking)
     assert(wordRanking == List("haskell", "rust", "scala", "java", "ada"))
@@ -26,6 +34,8 @@ object ch04_WordScoringScala extends App {
     def rankedWords(wordScore: String => Int, words: List[String]): List[String] = {
       words.sortBy(wordScore).reverse
     }
+
+    assert(rankedWords(score, List("rust", "java")) == List("rust", "java"))
 
     {
       val wordRanking = rankedWords(score, words)
@@ -52,6 +62,7 @@ object ch04_WordScoringScala extends App {
       assert(wordRanking == List("scala", "haskell", "rust", "java", "ada"))
     }
 
+    // Coffee break
     def penalty(word: String): Int = if (word.contains("s")) 7 else 0
 
     {
@@ -60,10 +71,12 @@ object ch04_WordScoringScala extends App {
       assert(wordRanking == List("java", "scala", "ada", "haskell", "rust"))
     }
 
-    // MAP
+    // map
     def wordScores(wordScore: String => Int, words: List[String]): List[Int] = {
       words.map(wordScore)
     }
+
+    assert(wordScores(score, List("rust", "java")) == List(4, 2))
 
     {
       val scores = wordScores(w => score(w) + bonus(w) - penalty(w), words)
@@ -71,16 +84,23 @@ object ch04_WordScoringScala extends App {
       assert(scores == List(1, -1, 1, 2, -3))
     }
 
-    // FILTER
+    // see "Practicing map" in ch04_PassingFunctions
+
+    // filter
     {
       def highScoringWords(wordScore: String => Int, words: List[String]): List[String] = {
         words.filter(word => wordScore(word) > 1)
       }
 
+      // note that we don't show what function is passed as wordScore because it doesn't matter
+      assert(highScoringWords(w => score(w) + bonus(w) - penalty(w), List("rust", "java")) == List("java"))
+
       val result = highScoringWords(w => score(w) + bonus(w) - penalty(w), words)
       println(result)
       assert(result == List("java"))
     }
+
+    // see "Practicing filter" in ch04_PassingFunctions
 
     // RETURNING FUNCTIONS #0: problem
     {
@@ -145,6 +165,8 @@ object ch04_WordScoringScala extends App {
       println(result3)
       assert(result3 == List.empty)
     }
+
+    // see "Returning functions from functions" in ch04_ReturningFunctions
 
     // RETURNING FUNCTIONS #3: PROBLEM
     {
@@ -256,10 +278,18 @@ object ch04_WordScoringScala extends App {
       assert(result6 == List("football", "hockey"))
     }
 
+    // see "Practicing currying" in ch04_ReturningFunctions
+
     def cumulativeScore(wordScore: String => Int, words: List[String]): Int = {
-      words.foldLeft(0)((total, word) => {
+      words.foldLeft(0)((total, word) =>
         total + wordScore(word)
-      })
+      )
+    }
+
+    {
+      val result = cumulativeScore(w => score(w) + bonus(w) - penalty(w), List("rust", "java"))
+      println(result)
+      assert(result == -1)
     }
 
     {
@@ -269,9 +299,16 @@ object ch04_WordScoringScala extends App {
     }
 
     {
-      val result = cumulativeScore(w => score(w) + bonus(w) - penalty(w), List("rust", "java"))
-      println(result)
-      assert(result == -1)
+      val wordScore: String => Int = w => score(w) + bonus(w) - penalty(w)
+
+      assert(wordScore("ada") == 1)
+      assert(wordScore("haskell") == -1)
+      assert(wordScore("scala") == 1)
+      assert(wordScore("java") == 2)
+      assert(wordScore("rust") == -3)
     }
+
+    // see "Practicing currying" in ch04_PassingFunctions
+
   }
 }
