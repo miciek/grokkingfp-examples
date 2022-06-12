@@ -99,6 +99,7 @@ object ch05_PointsInsideCircles extends App {
     List("Point(1,1) is within a radius of 2")
   )
 
+  // bonus exercise solution using flatMap/map
   check(riskyRadiuses.flatMap(r =>
     validateRadius(r).flatMap(validRadius =>
       points.flatMap(point =>

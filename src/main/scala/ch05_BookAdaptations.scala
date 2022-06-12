@@ -59,12 +59,12 @@ object ch05_BookAdaptations extends App {
 
   val b1 = movieLists.flatten
 
-  val b2 = books
+  val movies = books
     .flatMap(_.authors)
     .flatMap(bookAdaptations)
 
-  check(b2).expect(List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug")))
-  check(b1).expect(b2)
+  check(movies).expect(List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug")))
+  check(b1).expect(movies)
 
   { // flatMap and changing the size of the list
     check(List(1, 2, 3).flatMap(i => List(i, i + 10))).expectThat(_.size == 6)
@@ -73,6 +73,9 @@ object ch05_BookAdaptations extends App {
       if (i % 2 == 0) List(i) else List.empty
     )).expectThat(_.size == 1)
   }
+
+  // see ch05_BookFriendRecommendations
+  // see ch05_SequencedNestedFlatMaps
 
   val c1 = books
     .flatMap(book =>
@@ -89,14 +92,6 @@ object ch05_BookAdaptations extends App {
     "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
   ))
 
-  val c2 = for {
-    book   <- books
-    author <- book.authors
-    movie  <- bookAdaptations(author)
-  } yield s"You may like ${movie.title}, " + s"because you liked $author's ${book.title}"
-
-  check(c1).expect(c2)
-
   def recommendationFeed(books: List[Book]) = {
     books.flatMap(book =>
       book.authors.flatMap(author =>
@@ -112,4 +107,16 @@ object ch05_BookAdaptations extends App {
     "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
     "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
   ))
+
+  // see "Practicing nested flatMaps" in ch05_Points2d3d
+
+  val c2 = for {
+    book   <- books
+    author <- book.authors
+    movie  <- bookAdaptations(author)
+  } yield s"You may like ${movie.title}, " + s"because you liked $author's ${book.title}"
+
+  check(c1).expect(c2)
+
+  // see "flatMaps vs. for comprehensions" in ch05_Points2d3d
 }

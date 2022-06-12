@@ -43,6 +43,7 @@ object ch05_RandomForComprehensions extends App {
     Set(2, 1, 4)
   )
 
+  // Practicing for comprehensions
   check(for {
     x <- List(1, 2, 3)
     y <- Set(1)
