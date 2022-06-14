@@ -26,6 +26,23 @@ public class ch06_TvShowsJava {
         return new TvShow(name, yearStart, yearEnd);
     }
 
+    public static TvShow example1() throws Exception {
+        String invalidRawShow = "Breaking Bad, 2008-2013";
+        try {
+            return parseShow(invalidRawShow);
+        } catch(Exception e) {
+            return null;
+        }
+    }
+
+    public static void example2() throws Exception {
+        String invalidRawShow = "Breaking Bad, 2008-2013";
+        TvShow show = parseShow(invalidRawShow); // assuming it returns null, not an Exception
+        if(show != null) {
+            // do more things with the show
+        }
+    }
+
     public static int extractSingleYear(String rawShow) throws Exception {
         int dash         = rawShow.indexOf('-');
         int bracketOpen  = rawShow.indexOf('(');
@@ -35,6 +52,7 @@ public class ch06_TvShowsJava {
         else throw new Exception();
     }
 
+    // named parseShow in the book
     public static TvShow parseShowWithSingleYear(String rawShow) throws Exception {
         String name = extractName(rawShow);
         Integer yearStart = null;
@@ -74,5 +92,14 @@ class TvShow {
         this.name = name;
         this.yearStart = yearStart;
         this.yearEnd = yearEnd;
+    }
+
+    @Override
+    public String toString() {
+        return "TvShow{" +
+                "name='" + name + '\'' +
+                ", yearStart=" + yearStart +
+                ", yearEnd=" + yearEnd +
+                '}';
     }
 }

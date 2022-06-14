@@ -1,3 +1,5 @@
+import ch06_TvShows.extractYearStart
+
 object ch06_TvShows extends App {
   case class TvShow(title: String, start: Int, end: Int)
 
@@ -36,20 +38,36 @@ object ch06_TvShows extends App {
 
       // then use these separators to extract 3 pieces of information we need
       val name      = rawShow.substring(0, bracketOpen).trim
-      val yearStart = Integer.parseInt(rawShow.substring(bracketOpen + 1, dash))
-      val yearEnd   = Integer.parseInt(rawShow.substring(dash + 1, bracketClose))
+      val yearStart = Integer.parseInt(rawShow.substring(bracketOpen + 1, dash))  // or: .toInt
+      val yearEnd   = Integer.parseInt(rawShow.substring(dash + 1, bracketClose)) // or: .toInt
 
       TvShow(name, yearStart, yearEnd)
     }
+
+    parseShow("Breaking Bad (2008-2013)") === TvShow("Breaking Bad", 2008, 2013)
 
     def parseShows(rawShows: List[String]): List[TvShow] = {
       rawShows.map(parseShow)
     }
 
-    parseShows(rawShows).map(_.title) === List("Breaking Bad", "The Wire", "Mad Men")
+    parseShows(rawShows) === List(
+      TvShow("Breaking Bad", 2008, 2013),
+      TvShow("The Wire", 2002, 2008),
+      TvShow("Mad Men", 2007, 2015)
+    )
 
     // INVALID INPUT
+    // val invalidRawShow = "Breaking Bad, 2008-2013"
+    // parseShow(invalidRawShow)
     // parseShows(invalidRawShows)
+
+    try {
+      parseShow("Chernobyl (2019)")
+    } catch {
+      case exception: Exception => println(exception)
+    }
+
+    // see ch06_TvShowsJava for more imperative examples
   }
 
   // STEP 1a: using Option without implementing it yet
@@ -71,13 +89,28 @@ object ch06_TvShows extends App {
   }
 
   // STEP 1b: using Option, but implementing smaller functions that return Options first:
+  { // the step-by-step implementation before the for-comprehension refactoring
+    def extractYearStart(rawShow: String): Option[Int] = {
+      val bracketOpen = rawShow.indexOf('(')
+      val dash        = rawShow.indexOf('-')
+      val yearStrOpt  =
+        if (bracketOpen != -1 && dash > bracketOpen + 1) Some(rawShow.substring(bracketOpen + 1, dash)) else None
+      yearStrOpt.map(yearStr => yearStr.toIntOption).flatten
+    }
+
+    extractYearStart("Breaking Bad (2008-2013)") === Some(2008)
+    extractYearStart("Mad Men (-2015)") === None
+    extractYearStart("(2002- N/A ) The Wire") === Some(2002)
+  }
+
+  // we will use a for-comprehension version
   def extractYearStart(rawShow: String): Option[Int] = {
     val bracketOpen = rawShow.indexOf('(')
     val dash        = rawShow.indexOf('-')
     for {
       yearStr <- if (bracketOpen != -1 && dash > bracketOpen + 1) Some(rawShow.substring(bracketOpen + 1, dash))
                  else None
-      year    <- yearStr.trim.toIntOption
+      year    <- yearStr.toIntOption
     } yield year
   }
 
@@ -232,9 +265,19 @@ object ch06_TvShows extends App {
         .flatten        // List[TvShow]
     }
 
+    { // example from the introduction to this section
+      val rawShows = List("The Wire (2002-2008)", "Chernobyl (2019)")
+      parseShows(rawShows) === List(TvShow("The Wire", 2002, 2008), TvShow("Chernobyl", 2019, 2019))
+    }
+
     parseShows(rawShowsWithOneInvalid) === List(TvShow("Breaking Bad", 2008, 2013), TvShow("Mad Men", 2007, 2015))
     parseShows(List("Chernobyl [2019]", "Breaking Bad (2008-2013)")) === List(TvShow("Breaking Bad", 2008, 2013))
     parseShows(List("Chernobyl [2019]", "Breaking Bad")) === List.empty
+
+    {
+      val rawShows = List("Breaking Bad (2008-2013)", "The Wire 2002 2008", "Mad Men (2007-2015)")
+      parseShows(rawShows) === List(TvShow("Breaking Bad", 2008, 2013), TvShow("Mad Men", 2007, 2015))
+    }
   }
 
   // Coffee Break: error handling strategies
@@ -264,6 +307,10 @@ object ch06_TvShows extends App {
 
   parseShows(rawShows).map(_.map(_.title)) === Some(List("Breaking Bad", "The Wire", "Mad Men"))
   parseShows(rawShowsWithOneInvalid) === None
+  parseShows(List("Chernobyl (2019)", "Breaking Bad (2008-2013)")) === Some(List(
+    TvShow("Chernobyl", 2019, 2019),
+    TvShow("Breaking Bad", 2008, 2013)
+  ))
   parseShows(List("Chernobyl [2019]", "Breaking Bad (2008-2013)")) === None
   parseShows(List("Chernobyl [2019]", "Breaking Bad")) === None
   parseShows(List("Chernobyl (2019)", "Breaking Bad")) === None
@@ -292,6 +339,24 @@ object ch06_TvShows extends App {
       extractName("(2022)") === None
     }
 
+    { // the step-by-step implementation before the for-comprehension refactoring
+      def extractYearStart(rawShow: String): Either[String, Int] = {
+        val bracketOpen   = rawShow.indexOf('(')
+        val dash          = rawShow.indexOf('-')
+        val yearStrEither =
+          if (bracketOpen != -1 && dash > bracketOpen + 1) Right(rawShow.substring(bracketOpen + 1, dash))
+          else Left(s"Can't extract start year from $rawShow")
+        yearStrEither.map(yearStr => yearStr.toIntOption.toRight(s"Can't parse $yearStr")).flatten
+      }
+
+      extractYearStart("The Wire (2002-2008)") === Right(2002)
+      extractYearStart("The Wire (-2008)") === Left("Can't extract start year from The Wire (-2008)")
+      extractYearStart("The Wire (oops-2008)") === Left("Can't parse oops")
+      extractYearStart("The Wire (2002-)") === Right(2002)
+
+      // see the for-comprehension version below
+    }
+
     { // Understanding Either.map, flatten, toRight
       Right("1985").map(_.toIntOption) === Right(Some(1985))
       val yearStrEither: Either[String, String] = Left("Error")
@@ -312,10 +377,13 @@ object ch06_TvShows extends App {
 
       List(List(1985)).flatten === List(1985)
       List(List()).flatten === List()
+      Some(Some(1985)).flatten === Some(1985)
       Some(None).flatten === None
+      Right(Right(1985)).flatten === Right(1985)
       Right(Left("Error")).flatten === Left("Error")
     }
 
+    // we will use a for-comprehension version
     def extractYearStart(rawShow: String): Either[String, Int] = {
       val bracketOpen = rawShow.indexOf('(')
       val dash        = rawShow.indexOf('-')
@@ -351,7 +419,6 @@ object ch06_TvShows extends App {
       val dash         = rawShow.indexOf('-')
       val bracketOpen  = rawShow.indexOf('(')
       val bracketClose = rawShow.indexOf(')')
-
       for {
         yearStr <-
           if (
