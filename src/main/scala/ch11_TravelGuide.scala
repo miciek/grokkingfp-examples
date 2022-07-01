@@ -384,7 +384,6 @@ object ch11_TravelGuide {
   }
 
   def main(args: Array[String]): Unit = {
-    System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
     runStep4
     runStep5
     runVersion2

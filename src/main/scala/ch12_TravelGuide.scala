@@ -113,8 +113,6 @@ object ch12_TravelGuide {
   }
 
   private def runVersion4 = {
-    System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "Error")
-
     // We need a DataAccess to run the travelGuide function so let's wrap it in Resource
     val connectionResource: Resource[IO, RDFConnection] = Resource.make(
       IO.blocking(
