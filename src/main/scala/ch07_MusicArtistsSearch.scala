@@ -50,24 +50,16 @@ object ch07_MusicArtistsSearch extends App {
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
 
-    searchArtists(artists, List.empty, List.empty, true, 1950, 1979) ===
-      List(
-        Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
-        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
-      )
-
-    searchArtists(artists, List.empty, List.empty, true, 1983, 2003) ===
+    searchArtists(artists, List.empty, List.empty, true, 1981, 2003) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
 
-    searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2022) ===
+    searchArtists(artists, List.empty, List("U.S."), false, 0, 0) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
       )
-
-    searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) === List.empty
 
     searchArtists(artists, List.empty, List.empty, false, 2019, 2022) ===
       List(
@@ -77,15 +69,24 @@ object ch07_MusicArtistsSearch extends App {
       )
 
     // additional cases:
+    searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) === List.empty
+
+    searchArtists(artists, List.empty, List.empty, true, 1950, 1979) ===
+      List(
+        Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
+        Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
+      )
+
     searchArtists(artists, List.empty, List.empty, true, 1950, 1959) ===
       List(
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
       )
 
-    searchArtists(artists, List.empty, List("U.S."), false, 0, 0) ===
+    searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2022) ===
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
       )
+
   }
 
   // STEP 1: newtypes
@@ -468,105 +469,77 @@ object ch07_MusicArtistsSearch extends App {
       )
     )
 
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByGenre(List(Pop)),
-          SearchByOrigin(List(Location("England"))),
-          SearchByActiveYears(1950, 2022)
-        )
-      )
-    ).expect {
+    searchArtists(
+      artists,
       List(
-        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+        SearchByGenre(List(Pop)),
+        SearchByOrigin(List(Location("England"))),
+        SearchByActiveYears(1950, 2022)
       )
-    }
+    ) === List(
+      Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+    )
 
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByOrigin(List(Location("England"))),
-          SearchByActiveYears(1950, 2022)
-        )
-      )
-    ).expect {
+    searchArtists(
+      artists,
       List(
-        Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
-        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+        SearchByActiveYears(1950, 2022)
       )
-    }
+    ) === List(
+      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
+      Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
+      Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+    )
 
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByActiveYears(1950, 2022)
-        )
-      )
-    ).expect {
+    searchArtists(
+      artists,
       List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
-        Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
-        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+        SearchByGenre(List(Pop)),
+        SearchByOrigin(List(Location("England")))
       )
-    }
-
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByActiveYears(1983, 2003)
-        )
-      )
-    ).expect {
-      List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
-        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-      )
-    }
-
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByGenre(List(HeavyMetal)),
-          SearchByActiveYears(2019, 2022)
-        )
-      )
-    ).expect {
-      List(
-        Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981))
-      )
-    }
-
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByActiveYears(1950, 1959)
-        )
-      )
-    ).expect {
-      List(
-        Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-      )
-    }
-
-    check(
-      searchArtists(
-        artists,
-        List(
-          SearchByOrigin(List(Location("U.S."))),
-          SearchByActiveYears(1950, 1959)
-        )
-      )
-    ).expect {
-      List.empty
-    }
+    ) === List(
+      Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+    )
 
     searchArtists(artists, List.empty) === artists
+
+    // additional examples:
+    searchArtists(
+      artists,
+      List(
+        SearchByActiveYears(1983, 2003)
+      )
+    ) === List(
+      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
+      Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+    )
+
+    searchArtists(
+      artists,
+      List(
+        SearchByGenre(List(HeavyMetal)),
+        SearchByActiveYears(2019, 2022)
+      )
+    ) === List(
+      Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981))
+    )
+
+    searchArtists(
+      artists,
+      List(
+        SearchByActiveYears(1950, 1959)
+      )
+    ) === List(
+      Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
+    )
+
+    searchArtists(
+      artists,
+      List(
+        SearchByOrigin(List(Location("U.S."))),
+        SearchByActiveYears(1950, 1959)
+      )
+    ) === List.empty
   }
 
   // NEW REQUIREMENTS:
