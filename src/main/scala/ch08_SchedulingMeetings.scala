@@ -158,6 +158,8 @@ object ch08_SchedulingMeetings {
     // described behaviour: call the side-effectful IO action and return results if successful; if it fails—call it again:
     calendarEntries("Alice").orElse(calendarEntries("Alice"))
 
+    calendarEntries("Alice").orElse(IO.pure(List.empty))
+
     // described behaviour: call the side-effectful IO action and return results if successful; if it fails, retry max two times;
     // if all retries fail, return an `IO` value that will always succeed and return an empty List:
     calendarEntries("Alice")
@@ -246,8 +248,8 @@ object ch08_SchedulingMeetings {
 
   // note that schedulingProgram doesn't know anything about consoleGet/Print
   // we import then now:
-  def consoleGet(): String                = ch08_ConsoleInterface.consoleGet()
   def consolePrint(message: String): Unit = ch08_ConsoleInterface.consolePrint(message)
+  def consoleGet(): String                = ch08_ConsoleInterface.consoleGet()
 
   {
     import Version2.schedule
@@ -304,9 +306,9 @@ object ch08_SchedulingMeetings {
   }
   // PROBLEM SOLVED: signature lies
 
-  // an example of caching from a client perspective (see ch10 for more)
+  // a non-implemented example of caching from a client perspective (see ch10 for more)
   trait Caching {
-    def cachedCalendarEntries(name: String): IO[List[MeetingTime]]
+    def cachedCalendarEntries(name: String): IO[List[MeetingTime]] // fails if no value found
     def updateCachedEntries(name: String, newEntries: List[MeetingTime]): IO[Unit]
 
     def calendarEntriesWithCache(name: String): IO[List[MeetingTime]] = {
@@ -315,7 +317,7 @@ object ch08_SchedulingMeetings {
         _              <- updateCachedEntries(name, currentEntries)
       } yield currentEntries
 
-      getEntriesAndUpdateCache.orElse(cachedCalendarEntries(name))
+      cachedCalendarEntries(name).orElse(getEntriesAndUpdateCache)
     }
   }
 
