@@ -50,18 +50,9 @@ object ch09_CurrencyExchange {
 
     // updated
     val updatedUsdRates = usdRates.updated(Currency("JPY"), BigDecimal(103.91))
+    check(updatedUsdRates).expect(Map(Currency("EUR") -> BigDecimal(0.82), Currency("JPY") -> BigDecimal(103.91)))
     println(usdRates)
     println(updatedUsdRates)
-    check(usdRates.updated(Currency("EUR"), BigDecimal(0.83))).expect(Map(Currency("EUR") -> BigDecimal(0.83)))
-
-    // removed
-    check(usdRates.removed(Currency("EUR"))).expect(Map.empty[Currency, BigDecimal])
-    check(usdRates.removed(Currency("JPY"))).expect(usdRates)
-
-    // get
-    check(usdRates.get(Currency("EUR"))).expect(Some(BigDecimal(0.82)))
-    check(usdRates.get(Currency("JPY"))).expect(None)
-
     { // Practicing immutable maps
       // a map which contains a single pair: "key" -> "value":
       val m1: Map[String, String] = Map("key" -> "value")
@@ -86,6 +77,17 @@ object ch09_CurrencyExchange {
       // a String value stored under "key" in m4
       val valueFromM4: Option[String] = m4.get("key")
       check(valueFromM4).expect(None)
+
+      // working with currency maps
+      check(usdRates.updated(Currency("EUR"), BigDecimal(0.83))).expect(Map(Currency("EUR") -> BigDecimal(0.83)))
+
+      // removed
+      check(usdRates.removed(Currency("EUR"))).expect(Map.empty[Currency, BigDecimal])
+      check(usdRates.removed(Currency("JPY"))).expect(usdRates)
+
+      // get
+      check(usdRates.get(Currency("EUR"))).expect(Some(BigDecimal(0.82)))
+      check(usdRates.get(Currency("JPY"))).expect(None)
     }
   }
 
