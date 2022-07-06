@@ -15,10 +15,10 @@ public class ch10_CheckInsImperative {
     public static void main(String[] args) throws InterruptedException {
         noSynchronization();
         monitors();
+        actors();
         threadSafeDataStructures();
         atomicReferencesImperative();
         atomicReferencesFunctional();
-        actors();
     }
 
     static void noSynchronization() throws InterruptedException {
@@ -55,6 +55,25 @@ public class ch10_CheckInsImperative {
         // main thread is the ranking computation thread (a simulation that shows the problem)
         Thread.sleep(300);
         System.out.println("[monitors] Computing ranking based on: " + cityCheckIns);
+    }
+
+    static void actors() throws InterruptedException {
+        ActorSystem system = ActorSystem.create("test-system");
+        ActorRef checkInsActor = system.actorOf(Props.create(CheckInsActor.class), "check-ins-actor");
+        ActorRef rankingActor = system.actorOf(Props.create(RankingActor.class), "ranking-actor");
+        Runnable task = () -> {
+            for(int i = 0; i < 1000; i++) {
+                var cityName = i % 2 == 0 ? "Cairo" : "Auckland";
+                checkInsActor.tell(new StoreCheckIn(cityName), null);
+            }
+        };
+        new Thread(task).start();
+        new Thread(task).start();
+
+        Thread.sleep(300);
+        rankingActor.tell(new ComputeRanking(checkInsActor), null);
+        Thread.sleep(100);
+        system.terminate();
     }
 
     static void threadSafeDataStructures() throws InterruptedException {
@@ -114,25 +133,6 @@ public class ch10_CheckInsImperative {
 
         Thread.sleep(300);
         System.out.println("[atomic reference functional] Computing ranking based on: " + cityCheckIns.get());
-    }
-
-    static void actors() throws InterruptedException {
-        ActorSystem system = ActorSystem.create("test-system");
-        ActorRef checkInsActor = system.actorOf(Props.create(CheckInsActor.class), "check-ins-actor");
-        ActorRef rankingActor = system.actorOf(Props.create(RankingActor.class), "ranking-actor");
-        Runnable task = () -> {
-            for(int i = 0; i < 1000; i++) {
-                var cityName = i % 2 == 0 ? "Cairo" : "Auckland";
-                checkInsActor.tell(new StoreCheckIn(cityName), null);
-            }
-        };
-        new Thread(task).start();
-        new Thread(task).start();
-
-        Thread.sleep(300);
-        rankingActor.tell(new ComputeRanking(checkInsActor), null);
-        Thread.sleep(100);
-        system.terminate();
     }
 }
 

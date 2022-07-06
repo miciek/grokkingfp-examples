@@ -44,9 +44,9 @@ object ch10_CheckIns {
     */
   def topCities(cityCheckIns: Map[City, Int]): List[CityStats] = {
     cityCheckIns.toList
-      .map {
+      .map(_ match {
         case (city, checkIns) => CityStats(city, checkIns)
-      }
+      })
       .sortBy(_.checkIns)
       .reverse
       .take(3)
@@ -137,8 +137,7 @@ object ch10_CheckIns {
 
     val example: IO[Int] = for {
       counter <- Ref.of[IO, Int](0)
-      _       <- counter.update(_ + 1)
-      _       <- counter.update(_ + 2)
+      _       <- counter.update(_ + 3)
       result  <- counter.get
     } yield result
 
@@ -199,6 +198,7 @@ object ch10_CheckIns {
   }
 
   def differentUpdateRankingApproaches: Unit = {
+    // named updateRanking in the book
     def updateRankingRecursion(
         storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]]
@@ -210,21 +210,23 @@ object ch10_CheckIns {
       } yield ()
     }
 
+    // named updateRanking in the book
     def updateRankingRecursionNothing(
         storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]]
-    ): IO[Nothing] = { // TODO: introduce Nothing
+    ): IO[Nothing] = {
       for {
         newRanking <- storedCheckIns.get.map(topCities)
         _          <- storedRanking.set(newRanking)
-        nothing    <- updateRankingRecursionNothing(storedCheckIns, storedRanking)
-      } yield nothing
+        result     <- updateRankingRecursionNothing(storedCheckIns, storedRanking)
+      } yield result
     }
 
+    // named updateRanking in the book
     def updateRankingForeverM(
         storedCheckIns: Ref[IO, Map[City, Int]],
         storedRanking: Ref[IO, List[CityStats]]
-    ): IO[Nothing] = { // TODO: introduce foreverM
+    ): IO[Nothing] = {
       (for {
         newRanking <- storedCheckIns.get.map(topCities)
         _          <- storedRanking.set(newRanking)
@@ -245,6 +247,7 @@ object ch10_CheckIns {
 
   object Version2 {
     // before Coffee Break:
+    // named processCheckIns in the book
     def processCheckInsNoOutput(checkIns: Stream[IO, City]): IO[Unit] = {
       for {
         storedCheckIns <- Ref.of[IO, Map[City, Int]](Map.empty)
