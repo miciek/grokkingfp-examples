@@ -17,19 +17,21 @@ public class ch11_QueryingWikidata {
                 "              rdfs:label ?label.\n" +
                 "  FILTER(LANG(?label) = \"en\").\n" +
                 "} LIMIT 3";
+        
         RDFConnection connection = RDFConnectionRemote.create()
                 .destination("https://query.wikidata.org/")
                 .queryEndpoint("sparql")
                 .build();
 
         QueryExecution execution = connection.query(QueryFactory.create(query));
-
         Iterator<QuerySolution> solutions = execution.execSelect();
+        
         solutions.forEachRemaining(solution -> {
             String id = solution.getResource("attraction").getLocalName();
             String label = solution.getLiteral("label").getString();
             System.out.printf("Got attraction %s (id = %s)%n", label, id);
         });
+        
         execution.close();
         connection.close();
 

@@ -18,9 +18,10 @@ object ch11_TravelGuide {
     */
   object model {
     opaque type LocationId = String
-    object LocationId:
+    object LocationId {
       def apply(value: String): LocationId        = value
       extension (a: LocationId) def value: String = a
+    }
 
     case class Location(id: LocationId, name: String, population: Int)
     case class Attraction(name: String, description: Option[String], location: Location)
@@ -43,11 +44,12 @@ object ch11_TravelGuide {
   }
   import AttractionOrdering._
 
-  trait DataAccess             {
+  trait DataAccess {
     def findAttractions(name: String, ordering: AttractionOrdering, limit: Int): IO[List[Attraction]]
     def findArtistsFromLocation(locationId: LocationId, limit: Int): IO[List[Artist]]
     def findMoviesAboutLocation(locationId: LocationId, limit: Int): IO[List[Movie]]
   }
+
   object DataAccessAlternative { // alternatively DataAccess can be modeled as a product type:
     case class DataAccess( // NOTE: WE DON'T USE IT IN THE BOOK, we use the type above
         findAttractions: (String, AttractionOrdering, Int) => IO[List[Attraction]],
@@ -152,16 +154,29 @@ object ch11_TravelGuide {
       f // you should be able to use f now without knowing anything about the connection (which you should close() later)
     }
 
+    def passingAQueryingBehavior = { // functions as values discussion (passing a querying behavior)
+      def findAttractions(execQuery: String => IO[List[QuerySolution]])(
+          name: String,
+          ordering: AttractionOrdering,
+          limit: Int
+      ): IO[List[Attraction]] = ???
+
+      def execQueryFunction(query: String): IO[List[QuerySolution]] = ???
+
+      val f: (String, AttractionOrdering, Int) => IO[List[Attraction]] = findAttractions(execQueryFunction)
+      f // you should be able to use f now without knowing anything about the connection (which you should close() later) or query execution
+    }
+
+    /** @see [[ch11_WikidataDataAccess]] for a Wikidata Sparql endpoint implementation using Apache Jena
+      *      and final version of all DataAccess functions
+      */
+
     check
       .executedIO(findAttractions("Bridge of Sighs", ByLocationPopulation, 1))
       .expectThat(_.map(_.name) == List("Bridge of Sighs"))
 
     // connection.close() // PROBLEM we are not able to close each connection used by the getConnection clients
     // and we can't pass connection directly because it's a mutable, stateful value
-
-    /** @see [[ch11_WikidataDataAccess]] for a Wikidata Sparql endpoint implementation using Apache Jena
-      *      and final version of all DataAccess functions
-      */
   }
 
   /** STEP 5: connecting the dots
@@ -291,7 +306,7 @@ object ch11_TravelGuide {
     check.executedIO(program) // you can execute it as many times as you want
   }
 
-  // Resource has map! TODO: Practicing section, Resource.use, flatMap, map (chapter 5), fromAutocloseable
+  // Resource has map!
   val queryExecResource: Resource[IO, String => IO[List[QuerySolution]]] = connectionResource.map(execQuery)
   val dataAccessResource: Resource[IO, DataAccess]                       =
     connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
@@ -350,14 +365,26 @@ object ch11_TravelGuide {
   }
 
   private def runCachedVersion = {
+    // Coffee Break
+    // before:
+    connectionResource.use(connection => {
+      val dataAccess = getSparqlDataAccess(execQuery(connection))
+      for {
+        result1 <- Version3.travelGuide(dataAccess, "Yellowstone")
+        result2 <- Version3.travelGuide(dataAccess, "Yellowstone")
+        result3 <- Version3.travelGuide(dataAccess, "Yellowstone")
+      } yield result1.toList.appendedAll(result2).appendedAll(result3)
+    }).unsafeRunSync()
+
+    // after:
     check.executedIO(
       connectionResource.use(connection =>
         for {
-          cache       <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
-          cachedSparql = getSparqlDataAccess(cachedExecQuery(connection, cache))
-          result1     <- Version3.travelGuide(cachedSparql, "Yellowstone")
-          result2     <- Version3.travelGuide(cachedSparql, "Yellowstone")
-          result3     <- Version3.travelGuide(cachedSparql, "Yellowstone")
+          cache     <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
+          dataAccess = getSparqlDataAccess(cachedExecQuery(connection, cache)) // <- here is the main change
+          result1   <- Version3.travelGuide(dataAccess, "Yellowstone")
+          result2   <- Version3.travelGuide(dataAccess, "Yellowstone")
+          result3   <- Version3.travelGuide(dataAccess, "Yellowstone")
         } yield result1.toList.appendedAll(result2).appendedAll(result3)
       )
     ) // the second and third execution will take a lot less time because all queries are cached!
@@ -384,13 +411,6 @@ object ch11_TravelGuide {
   }
 
   def main(args: Array[String]): Unit = {
-    runStep4
-    runStep5
-    runVersion2
-    runVersion2UsingResource
-    runVersion2WithMappedResource
-    runVersion3
     runCachedVersion
-    runCachedVersionWithTimeouts
   }
 }
