@@ -101,7 +101,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
     })
   }
 
-  test("guide score should always be between 20 and 50 if there is an artist and a movie, but no description") {
+  test("guide score should always be between 20 and 50 if there is an artist and a movie but no description") {
     forAll((followers: Int, boxOffice: Int) => {
       val guide = TravelGuide(
         Attraction(
@@ -466,7 +466,7 @@ class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   test("travelGuide should return a search report with some guides if it can't fetch artists due to IO failures") {
     // given a data source that fails when trying to fetch artists for "Yosemite"
     val dataAccess =
-      new DataAccess { // it's more complicated case, so it's better to define it directly, without helpers
+      new DataAccess { // it's more complicated case, so it's better to define it directly, without helpers, so that we don't surprise readers
         def findAttractions(name: String, ordering: AttractionOrdering, limit: Int) =
           IO.pure(List(yosemite, yellowstone))
         def findArtistsFromLocation(locationId: LocationId, limit: Int)             =
