@@ -1,6 +1,9 @@
 import cats.effect.{IO, Resource}
-import cats.implicits._
+import cats.implicits.*
 import org.apache.jena.rdfconnection.{RDFConnection, RDFConnectionRemote}
+
+import java.util.concurrent.TimeUnit
+import scala.concurrent.duration.FiniteDuration
 
 object ch12_TravelGuide {
 
@@ -164,6 +167,36 @@ object ch12_TravelGuide {
               .map(findGoodGuide)
         })
     }
+
+  }
+
+  // not in the book, just mentioned:
+  object Version6 {
+    // BONUS: you can also make the findGoodGuide function more concise by using the separate function:
+    def findGoodGuide(errorsOrGuides: List[Either[Throwable, TravelGuide]]): Either[SearchReport, TravelGuide] = {
+      val (errors, guides) = errorsOrGuides.separate
+      val errorMessages    = errors.map(_.getMessage)
+      guides.sortBy(guideScore).reverse.headOption match {
+        case Some(bestGuide) =>
+          if (guideScore(bestGuide) > 55) Right(bestGuide) else Left(SearchReport(guides, errorMessages))
+        case None            => Left(SearchReport(List.empty, errorMessages))
+      }
+    }
+
+    import Version4.travelGuideForAttraction
+    def travelGuide(dataAccess: DataAccess, attractionName: String): IO[Either[SearchReport, TravelGuide]] = {
+      dataAccess
+        .findAttractions(attractionName, ByLocationPopulation, 3)
+        .attempt
+        .flatMap { // BONUS: we can use a simpler syntax to pass functions that use pattern matching (see Appendix A)
+          case Left(exception)    => IO.pure(Left(SearchReport(List.empty, List(exception.getMessage))))
+          case Right(attractions) => attractions
+              .map(attraction => travelGuideForAttraction(dataAccess, attraction))
+              .map(_.attempt) // note that we attempt on individual IO values, so it needs to be before parSequence
+              .parSequence
+              .map(findGoodGuide)
+        }
+    }
   }
 
   private def runVersion5 = {
@@ -176,8 +209,19 @@ object ch12_TravelGuide {
     )                                                                                                       // Left with errors
   }
 
+  private def runVersion6 = {
+    check.executedIO(dataAccessResource.use(dataAccess => Version6.travelGuide(dataAccess, "Yellowstone"))) // Right
+    check.executedIO(
+      dataAccessResource.use(dataAccess => Version6.travelGuide(dataAccess, "Yosemite"))
+    )                                                                                                       // Left without errors
+    check.executedIO(
+      dataAccessResource.use(dataAccess => Version6.travelGuide(dataAccess, "Hacking attempt \""))
+    )                                                                                                       // Left with errors
+  }
+
   def main(args: Array[String]): Unit = {
     runVersion4
     runVersion5
+    runVersion6
   }
 }
