@@ -16,7 +16,7 @@ object ch10_CastingDieConcurrently extends App {
   check.executedIO(for {
     _      <- IO.sleep(1.second) // introduce 1.second
     result <- List(castTheDie(), castTheDie()).parSequence
-  } yield result)
+  } yield result.sum) // or result.foldLeft(0)(_ + _)
 
   // 2. cast two dies concurrently, store each result in an atomic reference that holds a List, and return the final list as a result
   check.executedIO(for {
