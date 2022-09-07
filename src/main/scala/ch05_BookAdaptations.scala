@@ -18,13 +18,13 @@ object ch05_BookAdaptations extends App {
       .map(_.title)
       .filter(_.contains("Scala"))
       .size
-    check(scalaBooksQty1).expect(1)
+    assert(scalaBooksQty1 == 1)
 
     val scalaBooksQty2 = books
       .map(book => book.title)
       .filter(title => title.contains("Scala"))
       .size
-    check(scalaBooksQty2).expect(1)
+    assert(scalaBooksQty2 == 1)
   }
 
   val books = List(
@@ -38,20 +38,17 @@ object ch05_BookAdaptations extends App {
   }
 
   val a1 = books.map(_.authors)
-  check(a1).expect(List(
-    List("Chiusano", "Bjarnason"),
-    List("Tolkien")
-  ))
+  assert(a1 == List(List("Chiusano", "Bjarnason"), List("Tolkien")))
 
   val a2 = books.map(_.authors).flatten
-  check(a2).expect(List("Chiusano", "Bjarnason", "Tolkien"))
+  assert(a2 == List("Chiusano", "Bjarnason", "Tolkien"))
 
   val a3 = books.flatMap(_.authors)
-  check(a2).expect(a3)
+  assert(a2 == a3)
 
   val authors    = List("Chiusano", "Bjarnason", "Tolkien")
   val movieLists = authors.map(bookAdaptations)
-  check(movieLists).expect(List(
+  assert(movieLists == List(
     List.empty,
     List.empty,
     List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug"))
@@ -63,15 +60,13 @@ object ch05_BookAdaptations extends App {
     .flatMap(_.authors)
     .flatMap(bookAdaptations)
 
-  check(movies).expect(List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug")))
-  check(b1).expect(movies)
+  assert(movies == List(Movie("An Unexpected Journey"), Movie("The Desolation of Smaug")))
+  assert(b1 == movies)
 
   { // flatMap and changing the size of the list
-    check(List(1, 2, 3).flatMap(i => List(i, i + 10))).expectThat(_.size == 6)
-    check(List(1, 2, 3).flatMap(i => List(i * 2))).expectThat(_.size == 3)
-    check(List(1, 2, 3).flatMap(i =>
-      if (i % 2 == 0) List(i) else List.empty
-    )).expectThat(_.size == 1)
+    assert(List(1, 2, 3).flatMap(i => List(i, i + 10)).size == 6)
+    assert(List(1, 2, 3).flatMap(i => List(i * 2)).size == 3)
+    assert(List(1, 2, 3).flatMap(i => if (i % 2 == 0) List(i) else List.empty).size == 1)
   }
 
   // see ch05_BookFriendRecommendations
@@ -87,7 +82,7 @@ object ch05_BookAdaptations extends App {
       )
     )
 
-  check(c1).expect(List(
+  assert(c1 == List(
     "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
     "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
   ))
@@ -103,10 +98,10 @@ object ch05_BookAdaptations extends App {
     )
   }
 
-  check(recommendationFeed(books)).expect(List(
+  assert(recommendationFeed(books) == (List(
     "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
     "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
-  ))
+  )))
 
   // see "Practicing nested flatMaps" in ch05_Points2d3d
 
@@ -116,7 +111,7 @@ object ch05_BookAdaptations extends App {
     movie  <- bookAdaptations(author)
   } yield s"You may like ${movie.title}, " + s"because you liked $author's ${book.title}"
 
-  check(c1).expect(c2)
+  assert(c1 == c2)
 
   // see "flatMaps vs. for comprehensions" in ch05_Points2d3d
 }

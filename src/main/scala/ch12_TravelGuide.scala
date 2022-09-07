@@ -129,13 +129,15 @@ object ch12_TravelGuide {
     val dataAccessResource: Resource[IO, DataAccess] =
       connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
 
-    check.executedIO(dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yellowstone"))) // Right
-    check.executedIO(
+    unsafeRunTimedIO(dataAccessResource.use(dataAccess =>
+      Version4.travelGuide(dataAccess, "Yellowstone")
+    )) // Right
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Yosemite"))
-    )                                                                                                       // Left without errors
-    check.executedIO(
+    )  // Left without errors
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version4.travelGuide(dataAccess, "Hacking attempt \""))
-    )                                                                                                       // Left with errors
+    )  // Left with errors
   }
 
   object Version5 {
@@ -200,28 +202,43 @@ object ch12_TravelGuide {
   }
 
   private def runVersion5 = {
-    check.executedIO(dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Yellowstone"))) // Right
-    check.executedIO(
+    unsafeRunTimedIO(dataAccessResource.use(dataAccess =>
+      Version5.travelGuide(dataAccess, "Yellowstone")
+    )) // Right
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Yosemite"))
-    )                                                                                                       // Left without errors
-    check.executedIO(
+    )  // Left without errors
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version5.travelGuide(dataAccess, "Hacking attempt \""))
-    )                                                                                                       // Left with errors
+    )  // Left with errors
   }
 
   private def runVersion6 = {
-    check.executedIO(dataAccessResource.use(dataAccess => Version6.travelGuide(dataAccess, "Yellowstone"))) // Right
-    check.executedIO(
+    unsafeRunTimedIO(dataAccessResource.use(dataAccess =>
+      Version6.travelGuide(dataAccess, "Yellowstone")
+    )) // Right
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version6.travelGuide(dataAccess, "Yosemite"))
-    )                                                                                                       // Left without errors
-    check.executedIO(
+    )  // Left without errors
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version6.travelGuide(dataAccess, "Hacking attempt \""))
-    )                                                                                                       // Left with errors
+    )  // Left with errors
   }
 
   def main(args: Array[String]): Unit = {
     runVersion4
     runVersion5
     runVersion6
+  }
+
+  /** Helper function that runs the given IO[A], times its execution, prints it, and returns it
+    */
+  private def unsafeRunTimedIO[A](io: IO[A]): A = {
+    import cats.effect.unsafe.implicits.global
+    val start  = System.currentTimeMillis()
+    val result = io.unsafeRunSync()
+    val end    = System.currentTimeMillis()
+    println(s"$result (took ${end - start}ms)")
+    result
   }
 }

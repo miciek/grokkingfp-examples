@@ -13,100 +13,84 @@ object ch05_PointsInsideCircles extends App {
     radius * radius >= point.x * point.x + point.y * point.y
   }
 
-  check(for {
+  assert((for {
     r     <- radiuses
     point <- points
-  } yield s"$point is within a radius of $r: " + isInside(point, r).toString).expect(
+  } yield s"$point is within a radius of $r: " + isInside(point, r).toString) ==
     List(
       "Point(5,2) is within a radius of 2: false",
       "Point(1,1) is within a radius of 2: true",
       "Point(5,2) is within a radius of 1: false",
       "Point(1,1) is within a radius of 1: false"
-    )
-  )
+    ))
 
   // FILTERING TECHNIQUES
 
   // using filter
-  check(for {
+  assert((for {
     r     <- radiuses
     point <- points.filter(p => isInside(p, r))
-  } yield s"$point is within a radius of $r").expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  } yield s"$point is within a radius of $r") == List("Point(1,1) is within a radius of 2"))
 
   // using a guard expression
-  check(for {
+  assert((for {
     r     <- radiuses
     point <- points
     if isInside(point, r)
-  } yield s"$point is within a radius of $r").expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  } yield s"$point is within a radius of $r") == List("Point(1,1) is within a radius of 2"))
 
   // using flatMap
   def insideFilter(point: Point, radius: Int): List[Point] = if (isInside(point, radius)) List(point) else List.empty
 
-  check(for {
+  assert((for {
     r       <- radiuses
     point   <- points
     inPoint <- insideFilter(point, r)
-  } yield s"$inPoint is within a radius of $r").expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  } yield s"$inPoint is within a radius of $r") == List("Point(1,1) is within a radius of 2"))
 
   // Coffee Break: Filtering Techniques
   val riskyRadiuses = List(-10, 0, 2)
 
-  check(for {
+  assert((for {
     r     <- riskyRadiuses
     point <- points.filter(p => isInside(p, r))
-  } yield s"$point is within a radius of $r").expect(
+  } yield s"$point is within a radius of $r") ==
     List(
       "Point(5,2) is within a radius of -10",
       "Point(1,1) is within a radius of -10",
       "Point(1,1) is within a radius of 2"
-    )
-  )
+    ))
 
   // using filter
-  check(for {
+  assert((for {
     r     <- riskyRadiuses.filter(r => r > 0)
     point <- points.filter(p => isInside(p, r))
-  } yield s"$point is within a radius of $r").expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  } yield s"$point is within a radius of $r") == List("Point(1,1) is within a radius of 2"))
 
   // using a guard expression
-  check(for {
+  assert((for {
     r     <- riskyRadiuses
     if r > 0
     point <- points
     if isInside(point, r)
-  } yield s"$point is within a radius of $r").expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  } yield s"$point is within a radius of $r") == List("Point(1,1) is within a radius of 2"))
 
   // using flatMap
   def validateRadius(radius: Int): List[Int] = if (radius > 0) List(radius) else List.empty
 
-  check(for {
+  assert((for {
     r           <- riskyRadiuses
     validRadius <- validateRadius(r)
     point       <- points
     inPoint     <- insideFilter(point, validRadius)
-  } yield s"$inPoint is within a radius of $r").expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  } yield s"$inPoint is within a radius of $r") == List("Point(1,1) is within a radius of 2"))
 
   // bonus exercise solution using flatMap/map
-  check(riskyRadiuses.flatMap(r =>
+  assert(riskyRadiuses.flatMap(r =>
     validateRadius(r).flatMap(validRadius =>
       points.flatMap(point =>
         insideFilter(point, validRadius).map(inPoint => s"$inPoint is within a radius of $r")
       )
     )
-  )).expect(
-    List("Point(1,1) is within a radius of 2")
-  )
+  ) == List("Point(1,1) is within a radius of 2"))
 }

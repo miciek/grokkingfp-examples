@@ -2,6 +2,8 @@ import cats.effect.IO
 import cats.implicits._
 import cats.effect.unsafe.implicits.global
 
+import ch08_SchedulingMeetings.retry
+
 object ch08_CastingDie {
   def castTheDieImpure(): Int = {
     ch08_CastingDieImpure.NoFailures.castTheDieImpure()
@@ -17,8 +19,9 @@ object ch08_CastingDie {
     import ch08_CastingDieImpure.getIntUnsafely
     val existingInt: IO[Int]        = IO.pure(6)
     val intFromUnsafePlace: IO[Int] = IO.delay(getIntUnsafely())
-    check(existingInt.unsafeRunSync()).expect(6)
-    check.potentiallyFailing(intFromUnsafePlace.unsafeRunSync()).expectThat(r => r > 0 && r < 7)
+    assert(existingInt.unsafeRunSync() == 6)
+    // assert(intFromUnsafePlace.unsafeRunSync() < 7) // may randomly fail to return any value, so we need a trick to test it:
+    assert(retry(intFromUnsafePlace, 100).unsafeRunSync() < 7) // when we eventually get a value, the assertion holds
 
     println(castTheDieImpure())
     println(castTheDieImpure())

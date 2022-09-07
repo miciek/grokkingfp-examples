@@ -50,16 +50,24 @@ object ch08_SchedulingMeetings {
   }
 
   private def runStep1 = {
-    check.potentiallyFailing { scheduledMeetings("Alice", "Bob").unsafeRunSync() }.expect {
-      List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10))
-    }
+    // may randomly fail to return a value, but when it returns a value the assertion holds:
+    // assert(scheduledMeetings("Alice", "Bob").unsafeRunSync() == List(
+    //   MeetingTime(8, 10),
+    //   MeetingTime(11, 12),
+    //   MeetingTime(9, 10)
+    // ))
+    // we will be able to assert potentially failing IOs later in the chapter (see `runStep1Again` below)
 
     val scheduledMeetingsProgram = scheduledMeetings("Alice", "Bob")
-    check(scheduledMeetingsProgram).expectThat(_.isInstanceOf[IO[List[MeetingTime]]])
+    assert(scheduledMeetingsProgram.isInstanceOf[IO[List[MeetingTime]]])
 
-    check.potentiallyFailing { scheduledMeetingsProgram.unsafeRunSync() }.expect {
-      List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10))
-    }
+    // may randomly fail to return a value, but when it returns a value, the assertion holds:
+    // assert(scheduledMeetingsProgram.unsafeRunSync() == List(
+    //   MeetingTime(8, 10),
+    //   MeetingTime(11, 12),
+    //   MeetingTime(9, 10)
+    // ))
+    // we will be able to assert potentially failing IOs later in the chapter (see `runStep1Again` below)
   }
 
   // Coffee Break: Working with values
@@ -90,10 +98,11 @@ object ch08_SchedulingMeetings {
   private def runVersion1 = {
     import Version1.schedule
     val program = schedule("Alice", "Bob", 1)
-    check(program).expectThat(_.isInstanceOf[IO[Option[MeetingTime]]])
-    check.potentiallyFailing { program.unsafeRunSync() }.expect {
-      Some(MeetingTime(10, 11))
-    }
+    assert(program.isInstanceOf[IO[Option[MeetingTime]]])
+
+    // may randomly fail to return a value, but when it returns a value, the assertion holds:
+    // assert(program.unsafeRunSync() == Some(MeetingTime(10, 11)))
+    // we will be able to assert potentially failing IOs later in the chapter (see `runep1Again` below)
   }
   // PROBLEM SOLVED: entangled concerns
 
@@ -126,9 +135,9 @@ object ch08_SchedulingMeetings {
     val program3 = year.orElse(IO.delay(throw new Exception("can't recover")))
     val program4 = noYear.orElse(IO.delay(throw new Exception("can't recover")))
 
-    check(program1.unsafeRunSync()).expect(996)
-    check(program2.unsafeRunSync()).expect(2020)
-    check(program3.unsafeRunSync()).expect(996)
+    assert(program1.unsafeRunSync() == 996)
+    assert(program2.unsafeRunSync() == 2020)
+    assert(program3.unsafeRunSync() == 996)
 
     try {
       program4.unsafeRunSync()
@@ -139,14 +148,14 @@ object ch08_SchedulingMeetings {
 
   private def lazyEvaluation = {
     val program = IO.pure(2022).orElse(IO.delay(throw new Exception))
-    check(program).expectThat(_.isInstanceOf[IO[Int]])
-    check(program.unsafeRunSync()).expect(2022)
+    assert(program.isInstanceOf[IO[Int]])
+    assert(program.unsafeRunSync() == 2022)
   }
 
   private def eagerEvaluation = {
     try {
       val program = IO.pure(2022).orElse(IO.pure(throw new Exception))
-      check(program).expectThat(_.isInstanceOf[IO[Int]])
+      assert(program.isInstanceOf[IO[Int]])
     } catch {
       case e: Throwable => assert(e.getMessage == null)
     }
@@ -198,7 +207,7 @@ object ch08_SchedulingMeetings {
       } yield meetings.headOption
     }
 
-    check(schedule _).expectThat(_.isInstanceOf[(String, String, Int) => IO[Option[MeetingTime]]])
+    assert(schedule.isInstanceOf[(String, String, Int) => IO[Option[MeetingTime]]])
   }
 
   object Version2 {
@@ -217,7 +226,7 @@ object ch08_SchedulingMeetings {
     import Version2.schedule
 
     val program = schedule("Alice", "Bob", 1)
-    check(program).expectThat(_.isInstanceOf[IO[Option[MeetingTime]]])
+    assert(program.isInstanceOf[IO[Option[MeetingTime]]])
 
     // we can execute it many times and it won't fail!
     program.unsafeRunSync()
@@ -227,18 +236,10 @@ object ch08_SchedulingMeetings {
     // note we can't assert on fixed results because
     // there may be different results since in this version of schedule
     // we sometime use List.empty fallback!
-    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 1)
-    }
-    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 2)
-    }
-    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 3)
-    }
-    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 4)
-    }
+    assert(schedule("Alice", "Bob", 1).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 1))
+    assert(schedule("Alice", "Bob", 2).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 2))
+    assert(schedule("Alice", "Bob", 3).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 3))
+    assert(schedule("Alice", "Bob", 4).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 4))
   }
   // PROBLEM SOLVED: no failure handling
 
@@ -291,18 +292,10 @@ object ch08_SchedulingMeetings {
     // there may be different results since in this version of schedule
     // we sometime use List.empty fallback!
 
-    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 1)
-    }
-    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 2)
-    }
-    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 3)
-    }
-    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expectThat {
-      _.forall(meeting => meeting.endHour - meeting.startHour == 4)
-    }
+    assert(schedule("Alice", "Bob", 1).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 1))
+    assert(schedule("Alice", "Bob", 2).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 2))
+    assert(schedule("Alice", "Bob", 3).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 3))
+    assert(schedule("Alice", "Bob", 4).unsafeRunSync().forall(meeting => meeting.endHour - meeting.startHour == 4))
   }
   // PROBLEM SOLVED: signature lies
 
@@ -340,7 +333,7 @@ object ch08_SchedulingMeetings {
       },
       10
     ).attempt.unsafeRunSync()
-    check(calls).expect(11)
+    assert(calls == 11)
   }
 
   object Version4 {
@@ -361,18 +354,10 @@ object ch08_SchedulingMeetings {
   private def runVersion4 = {
     import Version4.schedule
 
-    check { schedule("Alice", "Bob", 1).unsafeRunSync() }.expect {
-      Some(MeetingTime(10, 11))
-    }
-    check { schedule("Alice", "Bob", 2).unsafeRunSync() }.expect {
-      Some(MeetingTime(12, 14))
-    }
-    check { schedule("Alice", "Bob", 3).unsafeRunSync() }.expect {
-      Some(MeetingTime(12, 15))
-    }
-    check { schedule("Alice", "Bob", 4).unsafeRunSync() }.expect {
-      Some(MeetingTime(12, 16))
-    }
+    assert(schedule("Alice", "Bob", 1).unsafeRunSync() == Some(MeetingTime(10, 11)))
+    assert(schedule("Alice", "Bob", 2).unsafeRunSync() == Some(MeetingTime(12, 14)))
+    assert(schedule("Alice", "Bob", 3).unsafeRunSync() == Some(MeetingTime(12, 15)))
+    assert(schedule("Alice", "Bob", 4).unsafeRunSync() == Some(MeetingTime(12, 16)))
   }
 
   // STEP 5: any number of people attending
@@ -384,10 +369,13 @@ object ch08_SchedulingMeetings {
   }
 
   private def runScheduledMeetings = {
-    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
-      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
-    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+    assert(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync() == List(
+      MeetingTime(8, 10),
+      MeetingTime(11, 12),
+      MeetingTime(9, 10)
+    ))
+    assert(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync().size == 4)
+    assert(scheduledMeetings(List.empty).unsafeRunSync() == List.empty)
   }
 
   object Version5 { // FINAL VERSION: also presented at the beginning of the chapter
@@ -410,21 +398,11 @@ object ch08_SchedulingMeetings {
     // there is only a very very small chance we'll use a fallback
     // (because there is a 10-retry strategy in this version)
 
-    check { schedule(List("Alice", "Bob"), 1).unsafeRunSync() }.expect {
-      Some(MeetingTime(10, 11))
-    }
-    check { schedule(List("Alice", "Bob"), 2).unsafeRunSync() }.expect {
-      Some(MeetingTime(12, 14))
-    }
-    check { schedule(List("Alice", "Bob"), 3).unsafeRunSync() }.expect {
-      Some(MeetingTime(12, 15))
-    }
-    check { schedule(List("Alice", "Bob"), 4).unsafeRunSync() }.expect {
-      Some(MeetingTime(12, 16))
-    }
-    check { schedule(List("Alice", "Bob", "Charlie"), 1).unsafeRunSync() }.expectThat { r =>
-      r.forall(m => m.endHour - m.startHour == 1)
-    }
+    assert(schedule(List("Alice", "Bob"), 1).unsafeRunSync() == Some(MeetingTime(10, 11)))
+    assert(schedule(List("Alice", "Bob"), 2).unsafeRunSync() == Some(MeetingTime(12, 14)))
+    assert(schedule(List("Alice", "Bob"), 3).unsafeRunSync() == Some(MeetingTime(12, 15)))
+    assert(schedule(List("Alice", "Bob"), 4).unsafeRunSync() == Some(MeetingTime(12, 16)))
+    assert(schedule(List("Alice", "Bob", "Charlie"), 1).unsafeRunSync().forall(m => m.endHour - m.startHour == 1))
   }
 
   // BONUS: scheduledMeetings using foldLeft instead of sequence:
@@ -440,12 +418,15 @@ object ch08_SchedulingMeetings {
         })
     }
 
-    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
-      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+    assert(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync() == List(
+      MeetingTime(8, 10),
+      MeetingTime(11, 12),
+      MeetingTime(9, 10)
+    ))
 
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
+    assert(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync().size == 4)
 
-    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+    assert(scheduledMeetings(List.empty).unsafeRunSync() == List.empty)
   }
 
   // BONUS: scheduledMeetings using traverse
@@ -456,12 +437,15 @@ object ch08_SchedulingMeetings {
         .map(_.flatten)
     }
 
-    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
-      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+    assert(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync() == List(
+      MeetingTime(8, 10),
+      MeetingTime(11, 12),
+      MeetingTime(9, 10)
+    ))
 
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
+    assert(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync().size == 4)
 
-    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+    assert(scheduledMeetings(List.empty).unsafeRunSync() == List.empty)
   }
 
   // BONUS: scheduledMeetings using flatTraverse
@@ -470,23 +454,54 @@ object ch08_SchedulingMeetings {
       attendees.flatTraverse(attendee => retry(calendarEntries(attendee), 10))
     }
 
-    check(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync())
-      .expect(List(MeetingTime(8, 10), MeetingTime(11, 12), MeetingTime(9, 10)))
+    assert(scheduledMeetings(List("Alice", "Bob")).unsafeRunSync() == List(
+      MeetingTime(8, 10),
+      MeetingTime(11, 12),
+      MeetingTime(9, 10)
+    ))
 
-    check(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync()).expectThat(_.size == 4)
+    assert(scheduledMeetings(List("Alice", "Bob", "Charlie")).unsafeRunSync().size == 4)
 
-    check(scheduledMeetings(List.empty).unsafeRunSync()).expect(List.empty)
+    assert(scheduledMeetings(List.empty).unsafeRunSync() == List.empty)
   }
 
   // BONUS: sequence works on other types as well! e.g. on List[Option]
   private def bonus4 = {
     val years: List[Option[Int]]      = List(Some(2019), None, Some(2021))
     val resultNone: Option[List[Int]] = years.sequence
-    check(resultNone).expect(None)
+    assert(resultNone == None)
 
     val goodYears: List[Option[Int]]  = List(Some(2019), Some(2021))
     val resultSome: Option[List[Int]] = goodYears.sequence
-    check(resultSome).expect(Some(List(2019, 2021)))
+    assert(resultSome == Some(List(2019, 2021)))
+  }
+
+  private def runStep1Again = {
+    // we now know the retry function so we can run proper assertions for our Step 1 functions
+    assert(retry(scheduledMeetings("Alice", "Bob"), 100).unsafeRunSync() == List(
+      MeetingTime(8, 10),
+      MeetingTime(11, 12),
+      MeetingTime(9, 10)
+    )) // may randomly fail to return a value, but when it returns a value the assertion holds
+
+    val scheduledMeetingsProgram = scheduledMeetings("Alice", "Bob")
+    assert(scheduledMeetingsProgram.isInstanceOf[IO[List[MeetingTime]]])
+
+    assert(retry(scheduledMeetingsProgram, 100).unsafeRunSync() == List(
+      MeetingTime(8, 10),
+      MeetingTime(11, 12),
+      MeetingTime(9, 10)
+    )) // may randomly fail to return a value, but when it returns a value, the assertion holds
+  }
+
+  private def runVersion1Again = {
+    // we now know the retry function so we can run proper assertions for our Version 1 functions
+    import Version1.schedule
+    val program = schedule("Alice", "Bob", 1)
+    assert(program.isInstanceOf[IO[Option[MeetingTime]]])
+
+    // may randomly fail to return a value, but when it returns a value, the assertion holds:
+    assert(retry(program, 100).unsafeRunSync() == Some(MeetingTime(10, 11)))
   }
 
   def main(args: Array[String]): Unit = {
@@ -508,5 +523,7 @@ object ch08_SchedulingMeetings {
     bonus2
     bonus3
     bonus4
+    runStep1Again
+    runVersion1Again
   }
 }

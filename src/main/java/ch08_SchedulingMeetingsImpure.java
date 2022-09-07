@@ -178,20 +178,20 @@ public class ch08_SchedulingMeetingsImpure {
     }
 
     public static void main(String[] args) {
-        check.apply(scheduleNoFailures("Alice", "Bob", 1)).expect(new MeetingTime(10, 11));
-        check.apply(scheduleNoFailures("Alice", "Bob", 2)).expect(new MeetingTime(12, 14));
-        check.apply(scheduleNoFailures("Alice", "Bob", 3)).expect(new MeetingTime(12, 15));
-        check.apply(scheduleNoFailures("Alice", "Bob", 4)).expect(new MeetingTime(12, 16));
-        check.apply(scheduleNoFailures("Alice", "Bob", 5)).expect((MeetingTime) null);
-        check.apply(scheduleNoFailures("Alice", "Charlie", 2)).expectThat(meetingTime -> true);
+        assert(scheduleNoFailures("Alice", "Bob", 1).equals(new MeetingTime(10, 11)));
+        assert(scheduleNoFailures("Alice", "Bob", 2).equals(new MeetingTime(12, 14)));
+        assert(scheduleNoFailures("Alice", "Bob", 3).equals(new MeetingTime(12, 15)));
+        assert(scheduleNoFailures("Alice", "Bob", 4).equals(new MeetingTime(12, 16)));
+        assert(scheduleNoFailures("Alice", "Bob", 5) == null);
+        scheduleNoFailures("Alice", "Charlie", 2); // we don't know Charlie's schedule, so can't assert
 
         try {
-            check.apply(schedule("Alice", "Bob", 1)).expect(new MeetingTime(10, 11));
-            check.apply(schedule("Alice", "Bob", 2)).expect(new MeetingTime(12, 14));
-            check.apply(schedule("Alice", "Bob", 3)).expect(new MeetingTime(12, 15));
-            check.apply(schedule("Alice", "Bob", 4)).expect(new MeetingTime(12, 16));
-            check.apply(schedule("Alice", "Bob", 5)).expect((MeetingTime) null);
-            check.apply(schedule("Alice", "Charlie", 2)).expectThat(meetingTime -> true);
+            assert(schedule("Alice", "Bob", 1).equals(new MeetingTime(10, 11)));
+            assert(schedule("Alice", "Bob", 2).equals(new MeetingTime(12, 14)));
+            assert(schedule("Alice", "Bob", 3).equals(new MeetingTime(12, 15)));
+            assert(schedule("Alice", "Bob", 4).equals(new MeetingTime(12, 16)));
+            assert(schedule("Alice", "Bob", 5) == null);
+            schedule("Alice", "Charlie", 2); // we don't know Charlie's schedule, so can't assert
         } catch (Throwable t) {
             System.out.println("Caught an exception in the impure version: " + t.getMessage());
         }

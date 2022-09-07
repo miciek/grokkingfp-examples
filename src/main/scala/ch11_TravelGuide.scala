@@ -171,9 +171,9 @@ object ch11_TravelGuide {
       *      and final version of all DataAccess functions
       */
 
-    check
-      .executedIO(findAttractions("Bridge of Sighs", ByLocationPopulation, 1))
-      .expectThat(_.map(_.name) == List("Bridge of Sighs"))
+    assert(
+      findAttractions("Bridge of Sighs", ByLocationPopulation, 1).unsafeRunSync().map(_.name) == List("Bridge of Sighs")
+    )
 
     // connection.close() // PROBLEM we are not able to close each connection used by the getConnection clients
     // and we can't pass connection directly because it's a mutable, stateful value
@@ -195,7 +195,7 @@ object ch11_TravelGuide {
     val wikidata = getSparqlDataAccess(execQuery(connection))
 
     // now we can execute our program using the real Wikidata data access!
-    check.executedIO(Version1.travelGuide(wikidata, "Yosemite"))
+    unsafeRunTimedIO(Version1.travelGuide(wikidata, "Yosemite"))
     // PROBLEM with Version1: for a very popular attraction, like "Yosemite", the returned TravelGuide doesn't contain any pop culture subjects
     // we only check the first result, even though there may be better choices and better locations with similar names
 
@@ -272,7 +272,7 @@ object ch11_TravelGuide {
       .build
 
     val wikidata = getSparqlDataAccess(execQuery(connection))
-    check.executedIO(Version2.travelGuide(wikidata, "Yosemite"))
+    println(Version2.travelGuide(wikidata, "Yosemite").unsafeRunSync())
     connection.close()
 
     // PROBLEM: this will not leak in happy-path, but may leak on errors (we need orElse(closeExecution), too)
@@ -303,8 +303,8 @@ object ch11_TravelGuide {
       Version2.travelGuide(wikidata, "Yosemite") // this will not leak, even if there are errors
     })
 
-    check.executedIO(program)
-    check.executedIO(program) // you can execute it as many times as you want
+    unsafeRunTimedIO(program)
+    unsafeRunTimedIO(program) // you can execute it as many times as you want
   }
 
   // Resource has map!
@@ -313,7 +313,7 @@ object ch11_TravelGuide {
     connectionResource.map(connection => getSparqlDataAccess(execQuery(connection)))
 
   private def runVersion2WithMappedResource = {
-    check.executedIO(dataAccessResource.use(dataAccess => Version2.travelGuide(dataAccess, "Yosemite")))
+    unsafeRunTimedIO(dataAccessResource.use(dataAccess => Version2.travelGuide(dataAccess, "Yosemite")))
   }
 
   // PROBLEM: we make all queries sequentially, but we can make parallel queries in two attractions
@@ -340,7 +340,7 @@ object ch11_TravelGuide {
   }
 
   private def runVersion3 = {
-    check.executedIO(
+    unsafeRunTimedIO(
       dataAccessResource.use(dataAccess => Version3.travelGuide(dataAccess, "Yellowstone"))
     ) // this will take a lot less time than Version2!
   }
@@ -378,7 +378,7 @@ object ch11_TravelGuide {
     }).unsafeRunSync()
 
     // after:
-    check.executedIO(
+    unsafeRunTimedIO(
       connectionResource.use(connection =>
         for {
           cache     <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
@@ -395,7 +395,7 @@ object ch11_TravelGuide {
     * let's fail fast if requests take too long (timeout 30s)
     */
   private def runCachedVersionWithTimeouts = {
-    check.executedIO(
+    unsafeRunTimedIO(
       connectionResource.use(connection =>
         for {
           cache       <- Ref.of[IO, Map[String, List[QuerySolution]]](Map.empty)
@@ -413,5 +413,15 @@ object ch11_TravelGuide {
 
   def main(args: Array[String]): Unit = {
     runCachedVersion
+  }
+
+  /** Helper function that runs the given IO[A], times its execution, prints it, and returns it
+    */
+  private def unsafeRunTimedIO[A](io: IO[A]): A = {
+    val start  = System.currentTimeMillis()
+    val result = io.unsafeRunSync()
+    val end    = System.currentTimeMillis()
+    println(s"$result (took ${end - start}ms)")
+    result
   }
 }

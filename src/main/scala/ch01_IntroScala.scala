@@ -12,11 +12,6 @@ def wordScore(word: String): Int = {
 
 object ch01_IntroScala extends App {
   assert(increment(6) == 7)
-  println(increment(6))
-
   assert(getFirstCharacter("Ola") == 'O')
-  println(getFirstCharacter("Ola"))
-
   assert(wordScore("Scala") == 5)
-  println(wordScore("Scala"))
 }
