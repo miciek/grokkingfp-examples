@@ -19,6 +19,8 @@ import org.apache.jena.riot.RDFDataMgr
   */
 class ch12_TravelGuideTest extends AnyFunSuite with ScalaCheckPropertyChecks {
 
+  // IMPORTANT: If you want to write these tests yourself, remove all of the tests below
+
   /** STEP 1: testing by providing examples
     */
   test("score of a guide with a description, 0 artists, and 2 popular movies should be 65") {
