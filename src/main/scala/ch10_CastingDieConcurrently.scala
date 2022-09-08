@@ -11,11 +11,13 @@ object ch10_CastingDieConcurrently extends App {
 
   def castTheDie(): IO[Int] = IO.delay(castTheDieImpure())
 
-  /** Helper function that runs the given IO[A], times its execution, prints it, and returns it
+  /** Helper function that runs the given IO[A], times its execution, prints it, and returns it.
+    * We also allow to specify the IORuntime environment. See the bonus code below for a different runtime.
+    * This is how we separate the definition from the execution environment.
     */
-  private def unsafeRunTimedIO[A](io: IO[A])(implicit runtime: IORuntime = IORuntime.global): A = {
+  private def unsafeRunTimedIO[A](io: IO[A])(runtime: IORuntime = IORuntime.global): A = {
     val start  = System.currentTimeMillis()
-    val result = io.unsafeRunSync()
+    val result = io.unsafeRunSync()(runtime)
     val end    = System.currentTimeMillis()
     println(s"$result (took ${end - start}ms)")
     result

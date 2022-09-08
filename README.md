@@ -30,7 +30,7 @@ If you face any other problems, like compilation errors, runtime errors, IDE pro
 
 ###### Installing the Java Development Kit (JDK)
 
-JDK will allow your to run Java and Scala (which is a JVM language) code. If you are unsure, please run `javac -version` in your terminal, and you should get something like` javac 17`. If you don’t, please visit https://jdk.java.net/17/. 
+JDK will allow your to run Java and Scala (which is a JVM language) code. If you are unsure, please run `javac -version` in your terminal, and you should get something like `javac 17`. If you don’t, please visit https://jdk.java.net/17/. 
 
 ###### Installing **sbt** (Scala build tool)
 
