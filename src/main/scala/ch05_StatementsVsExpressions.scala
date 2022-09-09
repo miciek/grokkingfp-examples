@@ -6,9 +6,9 @@ object ch05_StatementsVsExpressions extends App {
   val result = for {
     x <- xs
   } yield x * x
-  check(result).expect(List(1, 4, 9, 16, 25))
+  assert(result == List(1, 4, 9, 16, 25))
 
   // the above is equivalent to:
   val numbers = List(1, 2, 3, 4, 5)
-  check(numbers.map(_ * 2)).expect(List(2, 4, 6, 8, 10))
+  assert(numbers.map(_ * 2) == List(2, 4, 6, 8, 10))
 }

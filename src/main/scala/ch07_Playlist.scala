@@ -57,7 +57,8 @@ object ch07_Playlist extends App {
       songs.appendedAll(matchingSongs)
     )
 
-  check {
+  assert(
     gatherSongs(List(playlist1, playlist2, playlist3), fooFighters, Funk)
-  }.expect(playlist1.songs.appendedAll(playlist2.songs).appended(Song(fooFighters, "My Hero")))
+      == playlist1.songs.appendedAll(playlist2.songs).appended(Song(fooFighters, "My Hero"))
+  )
 }

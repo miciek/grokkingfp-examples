@@ -22,7 +22,6 @@ object ch04_PassingFunctions extends App {
     val sortedWords              = words.sortBy(score)
     assert(sortedWords == List("java", "rust"))
     assert(List("rust", "java").sortBy(score) == sortedWords)
-
   }
 
   // Practicing function passing

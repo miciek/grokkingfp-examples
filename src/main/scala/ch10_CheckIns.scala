@@ -32,7 +32,8 @@ object ch10_CheckIns {
       .covary[IO]
 
   private def showCheckIns = {
-    check.withoutPrinting(checkIns.map(_.name).compile.toList.unsafeRunSync()).expectThat { allCheckIns =>
+    assert {
+      val allCheckIns = checkIns.map(_.name).compile.toList.unsafeRunSync()
       allCheckIns.size == 600_003 && allCheckIns.count(_ == "Sydney") == 100_002 && allCheckIns
         .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Cape Town") == 100_000 && allCheckIns
         .count(_ == "City 27") == 1
@@ -50,6 +51,16 @@ object ch10_CheckIns {
       .sortBy(_.checkIns)
       .reverse
       .take(3)
+  }
+
+  /** Helper function that runs the given IO[A], times its execution, prints it, and returns it
+    */
+  private def unsafeRunTimedIO[A](io: IO[A]): A = {
+    val start  = System.currentTimeMillis()
+    val result = io.unsafeRunSync()
+    val end    = System.currentTimeMillis()
+    println(s"$result (took ${end - start}ms)")
+    result
   }
 
   private def step1 = { // Coffee Break: Many things in a single thread
@@ -77,7 +88,7 @@ object ch10_CheckIns {
         .drain
     }
 
-    check.timed(processCheckInsRaw(checkInsSmall).unsafeRunSync())
+    unsafeRunTimedIO(processCheckInsRaw(checkInsSmall))
 
     def processCheckIns(checkIns: Stream[IO, City]): IO[Unit] = {
       checkIns
@@ -90,8 +101,8 @@ object ch10_CheckIns {
         .drain
     }
 
-    check.timed(processCheckIns(checkInsSmall).unsafeRunSync())
-    // check.timed(processCheckIns(checkIns).unsafeRunSync()) // a long, long time...
+    unsafeRunTimedIO(processCheckIns(checkInsSmall))
+    // unsafeRunTimedIO(processCheckIns(checkIns)) // a long, long time...
   }
 
   object Version1 {
@@ -111,10 +122,7 @@ object ch10_CheckIns {
   }
 
   private def runVersion1 = {
-    check
-      .timed {
-        Version1.processCheckIns(checkIns).unsafeRunSync()
-      }
+    unsafeRunTimedIO(Version1.processCheckIns(checkIns))
   }
 
   // PROBLEMS: the current version is updated only every 100k elements (if you make it lower, it takes a lot longer)
@@ -132,7 +140,7 @@ object ch10_CheckIns {
       ref.update(_ + 2).unsafeToFuture() // because we don't know fibers yet
       Thread.sleep(100)
 
-      check(ref.get.unsafeRunSync()).expect(3)
+      assert(ref.get.unsafeRunSync() == 3)
     }
 
     val example: IO[Int] = for {
@@ -141,7 +149,7 @@ object ch10_CheckIns {
       result  <- counter.get
     } yield result
 
-    check(example.unsafeRunSync()).expect(3)
+    assert(example.unsafeRunSync() == 3)
   }
 
   private def parSequenceIntro = {
@@ -151,14 +159,14 @@ object ch10_CheckIns {
       result  <- counter.get
     } yield result
 
-    check.timed(exampleSequential.unsafeRunSync()).expect(9)
+    assert(unsafeRunTimedIO(exampleSequential) == 9)
 
     val exampleConcurrent: IO[Int] = for {
       counter <- Ref.of[IO, Int](0)
       _       <- List(counter.update(_ + 2), counter.update(_ + 3), counter.update(_ + 4)).parSequence
       result  <- counter.get
     } yield result
-    check.timed(exampleConcurrent.unsafeRunSync()).expect(9)
+    assert(unsafeRunTimedIO(exampleConcurrent) == 9)
   }
 
   private def parSequenceWithSleepingIntro = { // parSequence with sleeping intro
@@ -172,7 +180,7 @@ object ch10_CheckIns {
     } yield result
 
     println("The following will run for around 2 seconds")
-    check.timed(exampleSequential.unsafeRunSync()).expect(9)
+    assert(unsafeRunTimedIO(exampleSequential) == 9)
 
     val exampleConcurrent: IO[Int] = for {
       counter <- Ref.of[IO, Int](0)
@@ -184,7 +192,7 @@ object ch10_CheckIns {
     } yield result
 
     println("The following will run for around 1 second")
-    check.timed(exampleConcurrent.unsafeRunSync()).expect(9)
+    assert(unsafeRunTimedIO(exampleConcurrent) == 9)
   }
 
   /** See [[ch10_CastingDieConcurrently]] for parSequence exercises
@@ -273,8 +281,8 @@ object ch10_CheckIns {
 
   private def runVersion2 = {
     println("The following should print ranking every 1 second")
-    // check(Version2.processCheckIns(checkIns).unsafeRunSync()) // won't finish because it's an infinite program
-    check(Version2.processCheckIns(checkIns).unsafeRunTimed(3.seconds)) // run for max 3 seconds
+    // Version2.processCheckIns(checkIns).unsafeRunSync()) // won't finish because it's an infinite program
+    Version2.processCheckIns(checkIns).unsafeRunTimed(3.seconds) // run for max 3 seconds
   }
 
   // PROBLEM: our program doesn't return so we need to decide the way we want to consume rankings (here, println every 1 second)
@@ -297,8 +305,8 @@ object ch10_CheckIns {
 
   private def runVersion3 = {
     println("The following should print two rankings")
-    check
-      .executedIO {
+    assert(
+      unsafeRunTimedIO(
         for {
           processing <- Version3.processCheckIns(checkIns)
           ranking    <- processing.currentRanking
@@ -307,14 +315,14 @@ object ch10_CheckIns {
           newRanking <- processing.currentRanking
           _          <- processing.stop
         } yield newRanking
-      }
-      .expectThat(_.size == 3)
+      ).size == 3
+    )
   }
 
   // Quick quiz: fibers
   // What will this program do? How long will it run?
   private def quiz = {
-    check.executedIO(for {
+    unsafeRunTimedIO(for {
       fiber <- IO.sleep(300.millis).flatMap(_ => IO.println("hello")).foreverM.start
       _     <- IO.sleep(1.second)
       _     <- fiber.cancel

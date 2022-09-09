@@ -50,44 +50,44 @@ object ch09_CurrencyExchange {
 
     // updated
     val updatedUsdRates = usdRates.updated(Currency("JPY"), BigDecimal(103.91))
-    check(updatedUsdRates).expect(Map(Currency("EUR") -> BigDecimal(0.82), Currency("JPY") -> BigDecimal(103.91)))
+    assert(updatedUsdRates == Map(Currency("EUR") -> BigDecimal(0.82), Currency("JPY") -> BigDecimal(103.91)))
     println(usdRates)
     println(updatedUsdRates)
     { // Practicing immutable maps
       // a map which contains a single pair: "key" -> "value":
       val m1: Map[String, String] = Map("key" -> "value")
-      check(m1).expect(Map("key" -> "value"))
+      assert(m1 == Map("key" -> "value"))
 
       // a map which updates m1 and stores "value2" under "key2"
       val m2: Map[String, String] = m1.updated("key2", "value2")
-      check(m2).expect(Map("key" -> "value", "key2" -> "value2"))
+      assert(m2 == Map("key" -> "value", "key2" -> "value2"))
 
       // a map which updates m2 and stores "another2" under "key2"
       val m3: Map[String, String] = m2.updated("key2", "another2")
-      check(m3).expect(Map("key" -> "value", "key2" -> "another2"))
+      assert(m3 == Map("key" -> "value", "key2" -> "another2"))
 
       // a map which updates m2 and removes the "key"
       val m4: Map[String, String] = m3.removed("key")
-      check(m4).expect(Map("key2" -> "another2"))
+      assert(m4 == Map("key2" -> "another2"))
 
       // a String value stored under "key" in m3
       val valueFromM3: Option[String] = m3.get("key")
-      check(valueFromM3).expect(Some("value"))
+      assert(valueFromM3 == Some("value"))
 
       // a String value stored under "key" in m4
       val valueFromM4: Option[String] = m4.get("key")
-      check(valueFromM4).expect(None)
+      assert(valueFromM4 == None)
 
       // working with currency maps
-      check(usdRates.updated(Currency("EUR"), BigDecimal(0.83))).expect(Map(Currency("EUR") -> BigDecimal(0.83)))
+      assert(usdRates.updated(Currency("EUR"), BigDecimal(0.83)) == Map(Currency("EUR") -> BigDecimal(0.83)))
 
       // removed
-      check(usdRates.removed(Currency("EUR"))).expect(Map.empty[Currency, BigDecimal])
-      check(usdRates.removed(Currency("JPY"))).expect(usdRates)
+      assert(usdRates.removed(Currency("EUR")) == Map.empty[Currency, BigDecimal])
+      assert(usdRates.removed(Currency("JPY")) == usdRates)
 
       // get
-      check(usdRates.get(Currency("EUR"))).expect(Some(BigDecimal(0.82)))
-      check(usdRates.get(Currency("JPY"))).expect(None)
+      assert(usdRates.get(Currency("EUR")) == Some(BigDecimal(0.82)))
+      assert(usdRates.get(Currency("JPY")) == None)
     }
   }
 
@@ -119,19 +119,18 @@ object ch09_CurrencyExchange {
 
     val ints: List[Int]       = List(1, 2, 3)
     val strings: List[String] = List("a", "b", "c")
-    check(ints.zip(strings)).expect(List((1, "a"), (2, "b"), (3, "c")))
+    assert(ints.zip(strings) == List((1, "a"), (2, "b"), (3, "c")))
 
-    check(rates.zip(rates)).expect(
+    assert(rates.zip(rates) ==
       List(
         (BigDecimal(0.81), BigDecimal(0.81)),
         (BigDecimal(0.82), BigDecimal(0.82)),
         (BigDecimal(0.83), BigDecimal(0.83))
-      )
-    )
+      ))
 
-    check(rates.drop(1)).expect(List(BigDecimal(0.82), BigDecimal(0.83)))
+    assert(rates.drop(1) == List(BigDecimal(0.82), BigDecimal(0.83)))
 
-    check(rates.zip(rates.drop(1))).expect(ratePairs)
+    assert(rates.zip(rates.drop(1)) == ratePairs)
   }
 
   // zip + tuples + tuple pattern matching intro
@@ -147,10 +146,10 @@ object ch09_CurrencyExchange {
   }
 
   private def runTrending = {
-    check(trending(List.empty)).expect(false)
-    check(trending(List(BigDecimal(1), BigDecimal(2), BigDecimal(3), BigDecimal(8)))).expect(true)
-    check(trending(List(BigDecimal(1), BigDecimal(4), BigDecimal(3), BigDecimal(8)))).expect(false)
-    check(trending(List(BigDecimal(1), BigDecimal(2), BigDecimal(9), BigDecimal(8)))).expect(false)
+    assert(trending(List.empty) == false)
+    assert(trending(List(BigDecimal(1), BigDecimal(2), BigDecimal(3), BigDecimal(8))) == true)
+    assert(trending(List(BigDecimal(1), BigDecimal(4), BigDecimal(3), BigDecimal(8))) == false)
+    assert(trending(List(BigDecimal(1), BigDecimal(2), BigDecimal(9), BigDecimal(8))) == false)
   }
 
   def extractSingleCurrencyRate(currencyToExtract: Currency)(table: Map[Currency, BigDecimal]): Option[BigDecimal] = {
@@ -170,14 +169,18 @@ object ch09_CurrencyExchange {
       Map(Currency("EUR") -> BigDecimal(0.89), Currency("JPY") -> BigDecimal(114.62)),
       Map(Currency("JPY") -> BigDecimal(114))
     )
-    check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("EUR"))))
-      .expect(List(Some(BigDecimal(0.88)), Some(BigDecimal(0.89)), None))
-    check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("JPY"))))
-      .expect(List(None, Some(BigDecimal(114.62)), Some(BigDecimal(114))))
-    check(usdExchangeTables.map(extractSingleCurrencyRate(Currency("BTC"))))
-      .expect(List(None, None, None))
-    check(List.empty.map(extractSingleCurrencyRate(Currency("EUR"))))
-      .expect(List.empty)
+    assert(usdExchangeTables.map(extractSingleCurrencyRate(Currency("EUR"))) == List(
+      Some(BigDecimal(0.88)),
+      Some(BigDecimal(0.89)),
+      None
+    ))
+    assert(usdExchangeTables.map(extractSingleCurrencyRate(Currency("JPY"))) == List(
+      None,
+      Some(BigDecimal(114.62)),
+      Some(BigDecimal(114))
+    ))
+    assert(usdExchangeTables.map(extractSingleCurrencyRate(Currency("BTC"))) == List(None, None, None))
+    assert(List.empty.map(extractSingleCurrencyRate(Currency("EUR"))) == List.empty)
 
     { // alternative implementation
       def extractSingleCurrencyRate2(
@@ -186,14 +189,18 @@ object ch09_CurrencyExchange {
         table.get(currencyToExtract)
       }
 
-      check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("EUR"))))
-        .expect(List(Some(BigDecimal(0.88)), Some(BigDecimal(0.89)), None))
-      check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("JPY"))))
-        .expect(List(None, Some(BigDecimal(114.62)), Some(BigDecimal(114))))
-      check(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("BTC"))))
-        .expect(List(None, None, None))
-      check(List.empty.map(extractSingleCurrencyRate2(Currency("EUR"))))
-        .expect(List.empty)
+      assert(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("EUR"))) == List(
+        Some(BigDecimal(0.88)),
+        Some(BigDecimal(0.89)),
+        None
+      ))
+      assert(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("JPY"))) == List(
+        None,
+        Some(BigDecimal(114.62)),
+        Some(BigDecimal(114))
+      ))
+      assert(usdExchangeTables.map(extractSingleCurrencyRate2(Currency("BTC"))) == List(None, None, None))
+      assert(List.empty.map(extractSingleCurrencyRate2(Currency("EUR"))) == List.empty)
     }
   }
 
@@ -230,8 +237,9 @@ object ch09_CurrencyExchange {
   }
 
   private def runVersion1 = {
-    check(Version1.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_.isInstanceOf[Option[BigDecimal]])
+    assert(Version1.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync().isInstanceOf[
+      Option[BigDecimal]
+    ])
   }
 
   // PROBLEMS: just one decision, we'd like to repeat until successful + hardcoded 3 currencyTable fetches
@@ -247,8 +255,9 @@ object ch09_CurrencyExchange {
       } yield if (trending(rates)) Some(amount * rates.last) else None
     }
 
-    check(exchangeIfTrendingForComp(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_.isInstanceOf[Option[BigDecimal]])
+    assert(exchangeIfTrendingForComp(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync().isInstanceOf[
+      Option[BigDecimal]
+    ])
 
     def exchangeIfTrending(amount: BigDecimal, from: Currency, to: Currency): IO[Option[BigDecimal]] = {
       for {
@@ -257,8 +266,7 @@ object ch09_CurrencyExchange {
       } yield result
     }
 
-    check(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_.exists(_ > 750))
+    assert(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync().exists(_ > 750))
   }
 
   private def lazinessAndInfinity = {
@@ -291,8 +299,7 @@ object ch09_CurrencyExchange {
       } yield result
     }
 
-    check(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_ > 750)
+    assert(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync() > 750)
   }
 
   def currencyRate(from: Currency, to: Currency): IO[BigDecimal] = {
@@ -310,8 +317,8 @@ object ch09_CurrencyExchange {
   }
 
   private def runLastRatesCh8 = {
-    check(lastRatesCh8(Currency("USD"), Currency("EUR"), 0)).expectThat(_.unsafeRunSync().size == 0)
-    check(lastRatesCh8(Currency("USD"), Currency("EUR"), 10)).expectThat(_.unsafeRunSync().size == 10)
+    assert(lastRatesCh8(Currency("USD"), Currency("EUR"), 0).unsafeRunSync().size == 0)
+    assert(lastRatesCh8(Currency("USD"), Currency("EUR"), 10).unsafeRunSync().size == 10)
   }
 
   object Version2 {
@@ -336,11 +343,10 @@ object ch09_CurrencyExchange {
 
   private def runVersion2 = {
     import Version2._
-    check(lastRates(Currency("USD"), Currency("EUR"), 0)).expectThat(_.unsafeRunSync().size == 0)
-    check(lastRates(Currency("USD"), Currency("EUR"), 10)).expectThat(_.unsafeRunSync().size == 10)
+    assert(lastRates(Currency("USD"), Currency("EUR"), 0).unsafeRunSync().size == 0)
+    assert(lastRates(Currency("USD"), Currency("EUR"), 10).unsafeRunSync().size == 10)
 
-    check(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_ > 750)
+    assert(exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync() > 750)
   }
 
   // PROBLEMS: we analyse three elements and discard them, we don't use a sliding window, each computation is isolated, no time between calls
@@ -367,9 +373,9 @@ object ch09_CurrencyExchange {
     val stream3 = year.orElse(Stream.raiseError[IO](new Exception("can't recover")))
     val stream4 = noYear.orElse(Stream.raiseError[IO](new Exception("can't recover")))
 
-    check(stream1.compile.toList.unsafeRunSync()).expect(List(996))
-    check(stream2.compile.toList.unsafeRunSync()).expect(List(2020))
-    check(stream3.compile.toList.unsafeRunSync()).expect(List(996))
+    assert(stream1.compile.toList.unsafeRunSync() == List(996))
+    assert(stream2.compile.toList.unsafeRunSync() == List(2020))
+    assert(stream3.compile.toList.unsafeRunSync() == List(996))
 
     try {
       stream4.compile.toList.unsafeRunSync()
@@ -381,7 +387,7 @@ object ch09_CurrencyExchange {
   val firstThreeRates: IO[List[BigDecimal]] = rates(Currency("USD"), Currency("EUR")).take(3).compile.toList
 
   private def runFirstThreeRates = {
-    check(firstThreeRates.unsafeRunSync()).expectThat(_.size == 3)
+    assert(firstThreeRates.unsafeRunSync().size == 3)
   }
 
   object Version3 {
@@ -399,8 +405,7 @@ object ch09_CurrencyExchange {
   }
 
   private def runVersion3 = {
-    check(Version3.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_ > 750)
+    assert(Version3.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync() > 750)
   }
 
   /** STEP 4: Combining streams
@@ -411,13 +416,13 @@ object ch09_CurrencyExchange {
   private def ratesZipTicks = {
     val firstThreeRates: IO[List[(BigDecimal, Unit)]] =
       rates(Currency("USD"), Currency("EUR")).zip(ticks).take(3).compile.toList
-    check(firstThreeRates.unsafeRunSync()).expectThat(_.size == 3)
+    assert(firstThreeRates.unsafeRunSync().size == 3)
   }
 
   private def ratesZipLeftTicks = {
     val firstThreeRates: IO[List[BigDecimal]] =
       rates(Currency("USD"), Currency("EUR")).zipLeft(ticks).take(3).compile.toList
-    check(firstThreeRates.unsafeRunSync()).expectThat(_.size == 3)
+    assert(firstThreeRates.unsafeRunSync().size == 3)
   }
 
   object Version4 {
@@ -436,8 +441,7 @@ object ch09_CurrencyExchange {
   }
 
   private def runVersion4 = {
-    check(Version4.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync())
-      .expectThat(_ > 750)
+    assert(Version4.exchangeIfTrending(BigDecimal(1000), Currency("USD"), Currency("EUR")).unsafeRunSync() > 750)
   }
 
   def main(args: Array[String]): Unit = {

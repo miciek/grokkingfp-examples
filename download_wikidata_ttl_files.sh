@@ -11,6 +11,12 @@ download() {
   wget https://www.wikidata.org/wiki/Special:EntityData/$1.ttl
 }
 
+echo "WARNING: This script downloads a new testdata.ttl file which is used in tests."
+echo "Some tests may start failing because they explicitly rely on what data is available."
+echo "If you intend to run tests included in the repository, it's best to leave the old testdata.ttl file in place."
+
+read -p "Press enter to continue"
+
 download "Q52517"    # Bridge of Sighs (tourist attraction in Venice)
 download "Q641"      # Venice
 download "Q1586748"  # Talco (artist from Venice)

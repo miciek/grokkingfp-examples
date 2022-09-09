@@ -10,7 +10,7 @@ public class ch09_Stream123s {
         Stream<Integer> numbers = Stream.of(1, 2, 3);
         Stream<Integer> oddNumbers = oddNumbers(numbers);
         List<Integer> result = oddNumbers.collect(Collectors.toList());
-        check.apply(result).expect(List.of(1, 3));
+        assert(result.equals(List.of(1, 3)));
         // System.out.println(numbers.count()); // not possible because we can't reuse Java Streams
 
         Stream<Integer> infiniteNumbers = Stream.iterate(0, i -> i + 1);
@@ -19,7 +19,7 @@ public class ch09_Stream123s {
         // List<Integer> infiniteResult = infiniteOddNumbers.collect(Collectors.toList());
         Stream<Integer> limitedStream = infiniteOddNumbers.limit(3);
         List<Integer> limitedResult = limitedStream.collect(Collectors.toList());
-        check.apply(limitedResult).expect(List.of(1, 3, 5));
+        assert(limitedResult.equals(List.of(1, 3, 5)));
 
         // Stream<Integer> oddNumbersStream = numbers.filter(n -> n % 2 != 0); // not possible because we can't reuse Java Streams
 

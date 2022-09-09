@@ -35,58 +35,57 @@ object ch07_MusicArtistsSearch extends App {
     import Version0._
 
     // coffee break cases:
-    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) === List(Artist(
+    assert(searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) == List(Artist(
       "Bee Gees",
       "Pop",
       "England",
       1958,
       false,
       2003
-    ))
+    )))
 
-    searchArtists(artists, List.empty, List("England"), true, 1950, 2022) ===
+    assert(searchArtists(artists, List.empty, List("England"), true, 1950, 2022) ==
       List(
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
-      )
+      ))
 
-    searchArtists(artists, List.empty, List.empty, true, 1981, 2003) ===
+    assert(searchArtists(artists, List.empty, List.empty, true, 1981, 2003) ==
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
-      )
+      ))
 
-    searchArtists(artists, List.empty, List("U.S."), false, 0, 0) ===
+    assert(searchArtists(artists, List.empty, List("U.S."), false, 0, 0) ==
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
-      )
+      ))
 
-    searchArtists(artists, List.empty, List.empty, false, 2019, 2022) ===
+    assert(searchArtists(artists, List.empty, List.empty, false, 2019, 2022) ==
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0),
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
-      )
+      ))
 
     // additional cases:
-    searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) === List.empty
+    assert(searchArtists(artists, List.empty, List("U.S."), true, 1950, 1959) == List.empty)
 
-    searchArtists(artists, List.empty, List.empty, true, 1950, 1979) ===
+    assert(searchArtists(artists, List.empty, List.empty, true, 1950, 1979) ==
       List(
         Artist("Led Zeppelin", "Hard Rock", "England", 1968, false, 1980),
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
-      )
+      ))
 
-    searchArtists(artists, List.empty, List.empty, true, 1950, 1959) ===
+    assert(searchArtists(artists, List.empty, List.empty, true, 1950, 1959) ==
       List(
         Artist("Bee Gees", "Pop", "England", 1958, false, 2003)
-      )
+      ))
 
-    searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2022) ===
+    assert(searchArtists(artists, List("Heavy Metal"), List.empty, true, 2019, 2022) ==
       List(
         Artist("Metallica", "Heavy Metal", "U.S.", 1981, true, 0)
-      )
-
+      ))
   }
 
   // STEP 1: newtypes
@@ -165,8 +164,8 @@ object ch07_MusicArtistsSearch extends App {
   {
     import Version1._
 
-    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ===
-      List(Artist("Bee Gees", Genre("Pop"), Location("England"), YearsActiveStart(1958), false, YearsActiveEnd(2003)))
+    assert(searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ==
+      List(Artist("Bee Gees", Genre("Pop"), Location("England"), YearsActiveStart(1958), false, YearsActiveEnd(2003))))
   }
 
   // STEP 2a: Option type (reverted all newtypes except of origin, because we'll make them better)
@@ -204,8 +203,8 @@ object ch07_MusicArtistsSearch extends App {
   {
     import Version2a._
 
-    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ===
-      List(Artist("Bee Gees", "Pop", Location("England"), 1958, Some(2003)))
+    assert(searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ==
+      List(Artist("Bee Gees", "Pop", Location("England"), 1958, Some(2003))))
   }
 
   { // Option higher-order functions (see TvShows as well)
@@ -213,32 +212,32 @@ object ch07_MusicArtistsSearch extends App {
     val noYear: Option[Int] = None
 
     // map
-    check(year.map(_ * 2)).expect(Some(1992))
-    check(noYear.map(_ * 2)).expect(None)
+    assert(year.map(_ * 2) == Some(1992))
+    assert(noYear.map(_ * 2) == None)
 
     // flatMap
-    check(year.flatMap(y => Some(y * 2))).expect(Some(1992))
-    check(noYear.flatMap(y => Some(y * 2))).expect(None)
-    check(year.flatMap(y => None)).expect(None)
-    check(noYear.flatMap(y => None)).expect(None)
+    assert(year.flatMap(y => Some(y * 2)) == Some(1992))
+    assert(noYear.flatMap(y => Some(y * 2)) == None)
+    assert(year.flatMap(y => None) == None)
+    assert(noYear.flatMap(y => None) == None)
 
     // filter
-    check(year.filter(_ < 2020)).expect(Some(996))
-    check(noYear.filter(_ < 2020)).expect(None)
-    check(year.filter(_ > 2020)).expect(None)
-    check(noYear.filter(_ > 2020)).expect(None)
+    assert(year.filter(_ < 2020) == Some(996))
+    assert(noYear.filter(_ < 2020) == None)
+    assert(year.filter(_ > 2020) == None)
+    assert(noYear.filter(_ > 2020) == None)
 
     // forall
-    check(year.forall(_ < 2020)).expect(true)
-    check(noYear.forall(_ < 2020)).expect(true)
-    check(year.forall(_ > 2020)).expect(false)
-    check(noYear.forall(_ > 2020)).expect(true)
+    assert(year.forall(_ < 2020) == true)
+    assert(noYear.forall(_ < 2020) == true)
+    assert(year.forall(_ > 2020) == false)
+    assert(noYear.forall(_ > 2020) == true)
 
     // exists
-    check(year.exists(_ < 2020)).expect(true)
-    check(noYear.exists(_ < 2020)).expect(false)
-    check(year.exists(_ > 2020)).expect(false)
-    check(noYear.exists(_ > 2020)).expect(false)
+    assert(year.exists(_ < 2020) == true)
+    assert(noYear.exists(_ < 2020) == false)
+    assert(year.exists(_ > 2020) == false)
+    assert(noYear.exists(_ > 2020) == false)
   }
 
   { // Coffee Break: forall/exists/contains
@@ -255,32 +254,32 @@ object ch07_MusicArtistsSearch extends App {
     // 1. users that haven't specified their city or live in Melbourne
     def f1(users: List[User]): List[User] = users.filter(_.city.forall(_ == "Melbourne"))
 
-    check(f1(users)).expectThat(_.map(_.name) == List("Alice", "Mallory"))
+    assert(f1(users).map(_.name) == List("Alice", "Mallory"))
 
     // 2. users that live in Lagos
     def f2(users: List[User]): List[User] = users.filter(_.city.contains("Lagos"))
 
-    check(f2(users)).expectThat(_.map(_.name) == List("Bob"))
+    assert(f2(users).map(_.name) == List("Bob"))
 
     // 3. users that like Bee Gees
     def f3(users: List[User]): List[User] = users.filter(_.favoriteArtists.contains("Bee Gees"))
 
-    check(f3(users)).expectThat(_.map(_.name) == List("Alice", "Bob", "Mallory"))
+    assert(f3(users).map(_.name) == List("Alice", "Bob", "Mallory"))
 
     // 4. users that live in cities that start with a letter T
     def f4(users: List[User]): List[User] = users.filter(_.city.exists(_.startsWith("T")))
 
-    check(f4(users)).expectThat(_.map(_.name) == List("Eve"))
+    assert(f4(users).map(_.name) == List("Eve"))
 
     // 5. users that only like artists that have a name longer than 8 characters (or no favorite artists at all)
     def f5(users: List[User]): List[User] = users.filter(_.favoriteArtists.forall(_.length > 8))
 
-    check(f5(users)).expectThat(_.map(_.name) == List("Eve", "Trent"))
+    assert(f5(users).map(_.name) == List("Eve", "Trent"))
 
     // 6. users that like some artists whose names start with M
     def f6(users: List[User]): List[User] = users.filter(_.favoriteArtists.exists(_.startsWith("M")))
 
-    check(f6(users)).expectThat(_.map(_.name) == List("Mallory"))
+    assert(f6(users).map(_.name) == List("Mallory"))
   }
 
   // STEP 2b: new product type
@@ -324,8 +323,8 @@ object ch07_MusicArtistsSearch extends App {
     import Version2b_Data._
     import Version2b_Behavior._
 
-    searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ===
-      List(Artist("Bee Gees", "Pop", Location("England"), PeriodInYears(1958, Some(2003))))
+    assert(searchArtists(artists, List("Pop"), List("England"), true, 1950, 2022) ==
+      List(Artist("Bee Gees", "Pop", Location("England"), PeriodInYears(1958, Some(2003)))))
   }
 
   // STEP 3: sum type
@@ -373,12 +372,12 @@ object ch07_MusicArtistsSearch extends App {
     import Version2b_Data.PeriodInYears
     import Version3._
 
-    searchArtists(artists, List(Pop), List("England"), true, 1950, 2022) === List(Artist(
+    assert(searchArtists(artists, List(Pop), List("England"), true, 1950, 2022) == List(Artist(
       "Bee Gees",
       Pop,
       Location("England"),
       PeriodInYears(1958, Some(2003))
-    ))
+    )))
   }
 
   // STEP 4: Algebraic Data Type (ADT) = product type + sum type
@@ -425,9 +424,9 @@ object ch07_MusicArtistsSearch extends App {
     import Version4_Data._
     import Version4_Behavior._
 
-    searchArtists(artists, List(Pop), List(Location("England")), true, 1950, 2022) === List(
+    assert(searchArtists(artists, List(Pop), List(Location("England")), true, 1950, 2022) == List(
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-    )
+    ))
   }
 
   { // Practicing pattern matching
@@ -438,9 +437,9 @@ object ch07_MusicArtistsSearch extends App {
       case ActiveBetween(start, end) => end - start
     }
 
-    activeLength(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981)), 2022) === 41
-    activeLength(Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)), 2022) === 12
-    activeLength(Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003)), 2022) === 45
+    assert(activeLength(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981)), 2022) == 41)
+    assert(activeLength(Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)), 2022) == 12)
+    assert(activeLength(Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003)), 2022) == 45)
   }
 
   { // STEP 5: modeling behaviors
@@ -469,77 +468,77 @@ object ch07_MusicArtistsSearch extends App {
       )
     )
 
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByGenre(List(Pop)),
         SearchByOrigin(List(Location("England"))),
         SearchByActiveYears(1950, 2022)
       )
-    ) === List(
+    ) == List(
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-    )
+    ))
 
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByActiveYears(1950, 2022)
       )
-    ) === List(
+    ) == List(
       Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
       Artist("Led Zeppelin", HardRock, Location("England"), ActiveBetween(1968, 1980)),
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-    )
+    ))
 
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByGenre(List(Pop)),
         SearchByOrigin(List(Location("England")))
       )
-    ) === List(
+    ) == List(
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-    )
+    ))
 
-    searchArtists(artists, List.empty) === artists
+    assert(searchArtists(artists, List.empty) == artists)
 
     // additional examples:
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByActiveYears(1983, 2003)
       )
-    ) === List(
+    ) == List(
       Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981)),
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-    )
+    ))
 
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByGenre(List(HeavyMetal)),
         SearchByActiveYears(2019, 2022)
       )
-    ) === List(
+    ) == List(
       Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(since = 1981))
-    )
+    ))
 
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByActiveYears(1950, 1959)
       )
-    ) === List(
+    ) == List(
       Artist("Bee Gees", Pop, Location("England"), ActiveBetween(1958, 2003))
-    )
+    ))
 
-    searchArtists(
+    assert(searchArtists(
       artists,
       List(
         SearchByOrigin(List(Location("U.S."))),
         SearchByActiveYears(1950, 1959)
       )
-    ) === List.empty
+    ) == List.empty)
   }
 
   // NEW REQUIREMENTS:
@@ -602,7 +601,7 @@ object ch07_MusicArtistsSearch extends App {
       )
     )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
@@ -610,9 +609,7 @@ object ch07_MusicArtistsSearch extends App {
           SearchByOrigin(List(Location("England"))),
           SearchByActiveYears(PeriodInYears(1950, 2022))
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist(
           "Bee Gees",
           Pop,
@@ -620,18 +617,16 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByOrigin(List(Location("England"))),
           SearchByActiveYears(PeriodInYears(1950, 2022))
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist("Led Zeppelin", HardRock, Location("England"), ActiveInPast(List(PeriodInYears(1968, 1980)))),
         Artist(
           "Bee Gees",
@@ -640,17 +635,15 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByActiveYears(PeriodInYears(1950, 2022))
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
         Artist("Led Zeppelin", HardRock, Location("England"), ActiveInPast(List(PeriodInYears(1968, 1980)))),
         Artist(
@@ -660,17 +653,15 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByActiveYears(PeriodInYears(1983, 2003))
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
         Artist(
           "Bee Gees",
@@ -679,30 +670,26 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByActiveYears(PeriodInYears(2019, 2022))
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty))
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByActiveYears(PeriodInYears(1950, 1959))
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist(
           "Bee Gees",
           Pop,
@@ -710,17 +697,15 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByActiveLength(48, 2022)
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist(
           "Bee Gees",
           Pop,
@@ -728,17 +713,15 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByActiveLength(48, 2022)
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist(
           "Bee Gees",
           Pop,
@@ -746,42 +729,36 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByOrigin(List(Location("U.S."))),
           SearchByActiveLength(48, 2022)
         )
-      )
-    }.expect {
-      List.empty
-    }
+      ) == List.empty
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByOrigin(List(Location("U.S."))),
           SearchByActiveLength(40, 2022)
         )
-      )
-    }.expect {
-      List(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)))
-    }
+      ) == List(Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)))
+    )
 
-    check {
+    assert(
       searchArtists(
         artists,
         List(
           SearchByOrigin(List(Location("U.S."), Location("England"))),
           SearchByActiveLength(40, 2022)
         )
-      )
-    }.expect {
-      List(
+      ) == List(
         Artist("Metallica", HeavyMetal, Location("U.S."), StillActive(1981, List.empty)),
         Artist(
           "Bee Gees",
@@ -790,6 +767,6 @@ object ch07_MusicArtistsSearch extends App {
           ActiveInPast(List(PeriodInYears(1958, 2003), PeriodInYears(2009, 2012)))
         )
       )
-    }
+    )
   }
 }

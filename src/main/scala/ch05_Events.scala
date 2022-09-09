@@ -7,9 +7,9 @@ object ch05_Events extends App {
       else null
     }
 
-    check(parseAdHoc("Apollo Program", 1961, 1972)).expect(Event("Apollo Program", 1961, 1972))
-    check(parseAdHoc("", 1939, 1945)).expect(null)
-    check(parseAdHoc("Event", 1949, 1945)).expect(null)
+    assert(parseAdHoc("Apollo Program", 1961, 1972) == Event("Apollo Program", 1961, 1972))
+    assert(parseAdHoc("", 1939, 1945) == null)
+    assert(parseAdHoc("Event", 1949, 1945) == null)
   }
 
   { // using Option
@@ -18,9 +18,9 @@ object ch05_Events extends App {
       else None
     }
 
-    check(parse("Apollo Program", 1961, 1972)).expect(Some(Event("Apollo Program", 1961, 1972)))
-    check(parse("", 1939, 1945)).expect(None)
-    check(parse("Event", 1949, 1945)).expect(None)
+    assert(parse("Apollo Program", 1961, 1972) == Some(Event("Apollo Program", 1961, 1972)))
+    assert(parse("", 1939, 1945) == None)
+    assert(parse("Event", 1949, 1945) == None)
   }
 
   { // parsing as a pipeline
@@ -36,9 +36,9 @@ object ch05_Events extends App {
       validStart <- validateStart(start, end)
     } yield Event(validName, validStart, validEnd)
 
-    check(parse("Apollo Program", 1961, 1972)).expect(Some(Event("Apollo Program", 1961, 1972)))
-    check(parse("", 1939, 1945)).expect(None)
-    check(parse("Event", 1949, 1945)).expect(None)
+    assert(parse("Apollo Program", 1961, 1972) == Some(Event("Apollo Program", 1961, 1972)))
+    assert(parse("", 1939, 1945) == None)
+    assert(parse("Event", 1949, 1945) == None)
 
     // Coffee break: Parsing with Option
     def validateLength(start: Int, end: Int, minLength: Int): Option[Int] =
@@ -51,9 +51,9 @@ object ch05_Events extends App {
       validLength <- validateLength(start, end, minLength)
     } yield Event(validName, validStart, validEnd)
 
-    check(parseLongEvent("Apollo Program", 1961, 1972, 10)).expect(Some(Event("Apollo Program", 1961, 1972)))
-    check(parseLongEvent("World War II", 1939, 1945, 10)).expect(None)
-    check(parseLongEvent("", 1939, 1945, 10)).expect(None)
-    check(parseLongEvent("Apollo Program", 1972, 1961, 10)).expect(None)
+    assert(parseLongEvent("Apollo Program", 1961, 1972, 10) == Some(Event("Apollo Program", 1961, 1972)))
+    assert(parseLongEvent("World War II", 1939, 1945, 10) == None)
+    assert(parseLongEvent("", 1939, 1945, 10) == None)
+    assert(parseLongEvent("Apollo Program", 1972, 1961, 10) == None)
   }
 }
