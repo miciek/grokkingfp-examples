@@ -4,6 +4,7 @@ object ch03_SlicingAndAppending extends App {
 
   assert(appleBook.size == 2)
   assert(appleBookMango.size == 3)
+  assert(appleBookMango == List("Apple", "Book", "Mango"))
 
   def firstTwo(list: List[String]): List[String] = list.slice(0, 2)
 
