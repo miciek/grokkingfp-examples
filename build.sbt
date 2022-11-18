@@ -14,7 +14,7 @@ lazy val root = (project in file("."))
       "com.typesafe.akka"  % "akka-actor_2.13"  % "2.6.20",
       "org.apache.jena"    % "apache-jena-libs" % "4.6.1",
       "org.apache.jena"    % "jena-fuseki-main" % "4.6.1",
-      "org.slf4j"          % "slf4j-nop"        % "2.0.3"
+      "org.slf4j"          % "slf4j-nop"        % "2.0.4"
     ),
     initialCommands := s"""
       import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global
