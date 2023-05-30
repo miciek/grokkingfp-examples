@@ -6,6 +6,7 @@ lazy val root = (project in file("."))
     scalaVersion    := "3.2.2",
     scalacOptions ++= List("-unchecked"),
     libraryDependencies ++= Seq(
+      "org.typelevel"     %% "cats-effect"      % "3.4.11",
       "org.typelevel"     %% "cats-effect"      % "3.4.10",
       "co.fs2"            %% "fs2-core"         % "3.7.0",
       "org.scalatest"     %% "scalatest"        % "3.2.16"   % Test,
