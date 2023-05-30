@@ -1,7 +1,9 @@
 // note that we need two imports (see build.sbt for details)
 import cats.effect.IO
-import cats.implicits._
+import cats.implicits.*
 import cats.effect.unsafe.implicits.global
+
+import scala.util.Try
 
 /** PREREQUISITE 1: MeetingTime model
   */
@@ -147,18 +149,16 @@ object ch08_SchedulingMeetings {
   }
 
   private def lazyEvaluation = {
-    val program = IO.pure(2022).orElse(IO.delay(throw new Exception))
+    val program = IO.delay(throw new Exception).orElse(IO.pure(2022))
     assert(program.isInstanceOf[IO[Int]])
     assert(program.unsafeRunSync() == 2022)
   }
 
   private def eagerEvaluation = {
-    try {
-      val program = IO.pure(2022).orElse(IO.pure(throw new Exception))
+    assert(Try {
+      val program = IO.pure(throw new Exception).orElse(IO.pure(2022))
       assert(program.isInstanceOf[IO[Int]])
-    } catch {
-      case e: Throwable => assert(e.getMessage == null)
-    }
+    }.isFailure)
   }
 
   private def recoveryStrategies = {
