@@ -4,7 +4,7 @@ lazy val root = (project in file("."))
     organization    := "Michał Płachta (Manning)",
     version         := "1.0",
     scalaVersion    := "3.3.0",
-    scalacOptions ++= List("-unchecked"),
+    scalacOptions ++= List("-unchecked", "-deprecation", "-explain"),
     libraryDependencies ++= Seq(
       "org.typelevel"     %% "cats-effect"      % "3.5.0",
       "org.typelevel"     %% "cats-effect"      % "3.4.10",
