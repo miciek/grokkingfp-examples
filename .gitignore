@@ -5,6 +5,9 @@ out
 .DS_Store
 *.zip
 .metals
+metals.sbt
 project/metals.sbt
 .bloop
 .bsp
+.vscode
+src/main/scala/Playground.scala
