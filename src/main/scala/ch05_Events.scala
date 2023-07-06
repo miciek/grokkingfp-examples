@@ -1,7 +1,5 @@
 object ch05_Events extends App {
-  case class Event(name: String, start: Int, end: Int)
-
-  { // using nulls
+  case class Event(name: String, start: Int, end: Int) { // using nulls
     def parseAdHoc(name: String, start: Int, end: Int): Event = { // named parse in the book
       if (name.size > 0 && end < 3000 & start <= end) Event(name, start, end)
       else null

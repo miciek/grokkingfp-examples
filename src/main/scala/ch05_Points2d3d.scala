@@ -2,9 +2,7 @@
   * create all possible 2D & 3D points.
   */
 object ch05_Points2d3d extends App {
-  case class Point(x: Int, y: Int)
-
-  { // Practicing nested flatMaps
+  case class Point(x: Int, y: Int) { // Practicing nested flatMaps
     val points = List(1).flatMap(x =>
       List(-2, 7).map(y =>
         Point(x, y)
