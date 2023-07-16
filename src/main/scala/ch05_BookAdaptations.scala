@@ -5,9 +5,7 @@ import ch05_BookAdaptations.books
   */
 object ch05_BookAdaptations extends App {
   case class Book(title: String, authors: List[String])
-  case class Movie(title: String)
-
-  {
+  case class Movie(title: String) {
     val books = List(
       Book("FP in Scala", List("Chiusano", "Bjarnason")),
       Book("The Hobbit", List("Tolkien")),
