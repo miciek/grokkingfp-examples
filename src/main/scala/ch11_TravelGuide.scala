@@ -402,7 +402,7 @@ object ch11_TravelGuide {
           cachedSparql =
             getSparqlDataAccess(
               cachedExecQuery(connection, cache).map(_.timeout(30.seconds)) // note that we map over a functions result.
-            )                                                               // each query will fail after 30 seconds, releasing all the resources!
+            ) // each query will fail after 30 seconds, releasing all the resources!
           result1     <- Version3.travelGuide(cachedSparql, "Yellowstone")
           result2     <- Version3.travelGuide(cachedSparql, "Yellowstone")
           result3     <- Version3.travelGuide(cachedSparql, "Yellowstone")
