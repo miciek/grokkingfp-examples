@@ -12,8 +12,8 @@ lazy val root = (project in file("."))
       "org.scalatestplus" %% "scalacheck-1-16"  % "3.2.14.0" % Test,
       // imperative libraries:
       "com.typesafe.akka"  % "akka-actor_2.13"  % "2.6.20",
-      "org.apache.jena"    % "apache-jena-libs" % "5.1.0",
-      "org.apache.jena"    % "jena-fuseki-main" % "5.1.0",
+      "org.apache.jena"    % "apache-jena-libs" % "5.2.0",
+      "org.apache.jena"    % "jena-fuseki-main" % "5.2.0",
       "org.slf4j"          % "slf4j-nop"        % "2.0.16"
     ),
     initialCommands := s"""
