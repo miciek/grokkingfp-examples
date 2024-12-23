@@ -22,12 +22,14 @@ object ch08_SchedulingMeetings {
     */
   def calendarEntriesApiCall(name: String): List[MeetingTime] = {
     import scala.jdk.CollectionConverters._
-    ch08_SchedulingMeetingsAPI.calendarEntriesApiCall(name).asScala.toList
+    ch08_SchedulingMeetingsAPI.calendarEntriesApiCall(name).asScala.toList.map(mt =>
+      MeetingTime(mt.startHour, mt.endHour) // convert from Java to Scala
+    )
   }
 
   def createMeetingApiCall(names: List[String], meetingTime: MeetingTime): Unit = {
     import scala.jdk.CollectionConverters._
-    ch08_SchedulingMeetingsAPI.createMeetingApiCall(names.asJava, meetingTime)
+    ch08_SchedulingMeetingsAPI.createMeetingApiCall(names.asJava, meetingTime.startHour, meetingTime.endHour)
   }
 
   /** STEP 0: imperative implementation of the happy-path: see [[ch08_SchedulingMeetingsImpure.scheduleNoFailures()]]
