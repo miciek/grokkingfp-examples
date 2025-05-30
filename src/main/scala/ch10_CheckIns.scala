@@ -94,7 +94,7 @@ object ch10_CheckIns {
       checkIns
         .scan(Map.empty[City, Int])((cityCheckIns, city) =>
           cityCheckIns.updatedWith(city)(_.map(_ + 1).orElse(Some(1)))
-        )                    // introduce updatedWith
+        ) // introduce updatedWith
         .map(topCities)
         .foreach(IO.println) // introduce IO.println
         .compile
