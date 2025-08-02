@@ -8,7 +8,7 @@ object ch06_TvShows extends App {
   def sortShows(shows: List[TvShow]): List[TvShow] = {
     shows
       .sortBy(tvShow => tvShow.end - tvShow.start) // sortBy gets a function that returns an Int for a given TvShow
-      .reverse                                     // sortBy sorts in natural order (from the smallest Int to the highest one), so we return a reverse of the List
+      .reverse // sortBy sorts in natural order (from the smallest Int to the highest one), so we return a reverse of the List
   }
 
   assert(sortShows(shows).map(_.title) == List("Mad Men", "The Wire", "Breaking Bad"))
@@ -259,10 +259,10 @@ object ch06_TvShows extends App {
 
   { // STEP 2a: trying to blindly implement parseShows by following only the compiler ("best-effort" error handling strategy)
     def parseShows(rawShows: List[String]): List[TvShow] = {
-      rawShows          // List[String]
+      rawShows   // List[String]
         .map(parseShow) // List[Option[TvShow]]
-        .map(_.toList)  // List[List[TvShow]]
-        .flatten        // List[TvShow]
+        .map(_.toList) // List[List[TvShow]]
+        .flatten // List[TvShow]
     }
 
     { // example from the introduction to this section
