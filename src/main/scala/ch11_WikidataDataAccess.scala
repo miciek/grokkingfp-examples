@@ -2,9 +2,21 @@ import cats.effect.IO
 import ch11_TravelGuide._
 import ch11_TravelGuide.model._, PopCultureSubject._
 import ch11_TravelGuide.AttractionOrdering._
+import org.apache.jena.http.sys.RegistryRequestModifier
 import org.apache.jena.query.QuerySolution
 
 object ch11_WikidataDataAccess {
+
+  /** Wikidata (like all Wikimedia services) rejects requests with generic User-Agents (403 Forbidden).
+    * See https://meta.wikimedia.org/wiki/User-Agent_policy. This registers a descriptive User-Agent header
+    * for every Jena request sent to the Wikidata endpoint. Call it once before connecting to Wikidata.
+    */
+  def identifyToWikidata(): Unit = RegistryRequestModifier
+    .get()
+    .addPrefix(
+      "https://query.wikidata.org/",
+      (_, headers) => headers.put("User-Agent", "grokkingfp-examples (https://github.com/miciek/grokkingfp-examples)")
+    )
 
   def getSparqlDataAccess(execQuery: String => IO[List[QuerySolution]]): DataAccess = new DataAccess {
     val prefixes = """

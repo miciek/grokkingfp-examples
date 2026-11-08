@@ -413,6 +413,7 @@ object ch11_TravelGuide {
   }
 
   def main(args: Array[String]): Unit = {
+    ch11_WikidataDataAccess.identifyToWikidata()
     runCachedVersion
   }
 
