@@ -24,6 +24,9 @@ lazy val root = (project in file("."))
     """,
     run / fork      := true,
     run / javaOptions += "-ea",
+    // JDK 24+ warns about sun.misc.Unsafe used by Akka and Scala's LazyVals; older JDKs don't know this flag
+    run / javaOptions ++= (if (java.lang.Runtime.version.feature >= 24) List("--sun-misc-unsafe-memory-access=allow")
+                           else Nil),
     addCommandAlias(
       "runAll",
       ";runMain ch01_Intro" +
