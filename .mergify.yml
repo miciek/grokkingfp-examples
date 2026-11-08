@@ -1,8 +1,9 @@
 pull_request_rules:
-  - name: automatic merge when CI passes
+  - name: automatic merge of Scala Steward PRs when CI passes
     conditions:
+      - author=scala-steward
       - check-success=test
-      - base=master
+      - base=main
     actions:
       merge:
         method: merge
