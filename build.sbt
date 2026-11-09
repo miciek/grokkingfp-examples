@@ -30,12 +30,14 @@ lazy val root = (project in file("."))
       import org.apache.jena.query._, org.apache.jena.rdfconnection._
     """,
     run / fork      := true,
-    exportJars      := false,                   // sbt 2 defaults to true; tests load testdata.ttl via a resource URL that Jena cannot read from a JAR
-    Test / test     := (Test / testFull).value, // sbt 2 made `test` incremental; keep running all tests (as in the book)
+    exportJars      :=
+      false, // sbt 2 defaults to true; tests load testdata.ttl via a resource URL that Jena cannot read from a JAR
+    Test / test := (Test / testFull).value, // sbt 2 made `test` incremental; keep running all tests (as in the book)
     run / javaOptions += "-ea",
     // JDK 24+ warns about sun.misc.Unsafe used by Akka and Scala's LazyVals; older JDKs don't know this flag
-    run / javaOptions ++= (if (java.lang.Runtime.version.feature >= 24) List("--sun-misc-unsafe-memory-access=allow")
-                           else Nil),
+    run / javaOptions ++=
+      (if (java.lang.Runtime.version.feature >= 24) List("--sun-misc-unsafe-memory-access=allow")
+       else Nil),
     addCommandAlias(
       "runAll",
       ";runMain ch01_Intro" +

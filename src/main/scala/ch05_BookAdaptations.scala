@@ -98,10 +98,11 @@ object ch05_BookAdaptations extends App {
     )
   }
 
-  assert(recommendationFeed(books) == (List(
-    "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
-    "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
-  )))
+  assert(recommendationFeed(books) ==
+    (List(
+      "You may like An Unexpected Journey, because you liked Tolkien's The Hobbit",
+      "You may like The Desolation of Smaug, because you liked Tolkien's The Hobbit"
+    )))
 
   // see "Practicing nested flatMaps" in ch05_Points2d3d
 

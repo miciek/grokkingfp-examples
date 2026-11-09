@@ -34,8 +34,10 @@ object ch10_CheckIns {
   private def showCheckIns = {
     assert {
       val allCheckIns = checkIns.map(_.name).compile.toList.unsafeRunSync()
-      allCheckIns.size == 600_003 && allCheckIns.count(_ == "Sydney") == 100_002 && allCheckIns
-        .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Cape Town") == 100_000 && allCheckIns
+      allCheckIns.size == 600_003 && allCheckIns.count(_ == "Sydney") == 100_002 &&
+      allCheckIns
+        .count(_ == "Lima") == 100_001 && allCheckIns.count(_ == "Cape Town") == 100_000 &&
+      allCheckIns
         .count(_ == "City 27") == 1
     }
   }
@@ -94,7 +96,7 @@ object ch10_CheckIns {
       checkIns
         .scan(Map.empty[City, Int])((cityCheckIns, city) =>
           cityCheckIns.updatedWith(city)(_.map(_ + 1).orElse(Some(1)))
-        ) // introduce updatedWith
+        )                    // introduce updatedWith
         .map(topCities)
         .foreach(IO.println) // introduce IO.println
         .compile
