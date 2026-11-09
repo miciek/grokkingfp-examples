@@ -13,7 +13,7 @@ lazy val root = (project in file("."))
       "-Wconf:msg=Implicit parameters should be provided with a `using` clause:s"
     ),
     libraryDependencies ++= Seq(
-      "org.typelevel"     %% "cats-effect"      % "3.6.4",
+      "org.typelevel"     %% "cats-effect"      % "3.7.1",
       "co.fs2"            %% "fs2-core"         % "3.14.0",
       "org.scalatest"     %% "scalatest"        % "3.2.20"   % Test,
       "org.scalatestplus" %% "scalacheck-1-19"  % "3.2.20.0" % Test,
