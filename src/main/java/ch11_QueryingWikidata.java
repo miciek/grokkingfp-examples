@@ -50,4 +50,26 @@ public class ch11_QueryingWikidata {
         //      }
         // }
     }
+
+    /**
+     * NOTE: this class is not part of the book and was added later. Wikidata (like all Wikimedia services)
+     * started rejecting requests without a descriptive User-Agent header (403 Forbidden, see
+     * https://meta.wikimedia.org/wiki/User-Agent_policy). To fix it without affecting how readers use this
+     * repository when reading the book, we made Jena start this class automatically when it initializes
+     * (it's listed in src/main/resources/META-INF/services/org.apache.jena.sys.JenaSubsystemLifecycle).
+     * After this change, all requests to Wikidata (from examples, tests, and sbt console) send the header
+     * without any changes to the book's code.
+     */
+    public static class WikidataUserAgent implements org.apache.jena.sys.JenaSubsystemLifecycle {
+        @Override
+        public void start() {
+            org.apache.jena.http.sys.RegistryRequestModifier.get().addPrefix(
+                    "https://query.wikidata.org/",
+                    (params, headers) -> headers.put("User-Agent", "grokkingfp-examples (https://github.com/miciek/grokkingfp-examples)")
+            );
+        }
+
+        @Override
+        public void stop() {}
+    }
 }

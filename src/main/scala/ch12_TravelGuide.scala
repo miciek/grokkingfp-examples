@@ -226,7 +226,6 @@ object ch12_TravelGuide {
   }
 
   def main(args: Array[String]): Unit = {
-    ch11_WikidataDataAccess.identifyToWikidata()
     runVersion4
     runVersion5
     runVersion6

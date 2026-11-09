@@ -2,21 +2,9 @@ import cats.effect.IO
 import ch11_TravelGuide._
 import ch11_TravelGuide.model._, PopCultureSubject._
 import ch11_TravelGuide.AttractionOrdering._
-import org.apache.jena.http.sys.RegistryRequestModifier
 import org.apache.jena.query.QuerySolution
 
 object ch11_WikidataDataAccess {
-
-  /** Wikidata (like all Wikimedia services) rejects requests with generic User-Agents (403 Forbidden).
-    * See https://meta.wikimedia.org/wiki/User-Agent_policy. This registers a descriptive User-Agent header
-    * for every Jena request sent to the Wikidata endpoint. Call it once before connecting to Wikidata.
-    */
-  def identifyToWikidata(): Unit = RegistryRequestModifier
-    .get()
-    .addPrefix(
-      "https://query.wikidata.org/",
-      (_, headers) => headers.put("User-Agent", "grokkingfp-examples (https://github.com/miciek/grokkingfp-examples)")
-    )
 
   def getSparqlDataAccess(execQuery: String => IO[List[QuerySolution]]): DataAccess = new DataAccess {
     val prefixes = """
@@ -32,10 +20,16 @@ object ch11_WikidataDataAccess {
         case ByLocationPopulation => "DESC(?population)"
       }
 
+      // NOTE: this query differs from the one shown in the book. Wikidata no longer marks national parks
+      // (e.g., Yellowstone and Yosemite) as tourist attractions (wd:Q570116), so the original query returned
+      // no results. Now we look for tourist attractions OR national parks (wd:Q46169). The original line
+      // from the book is kept below for reference.
       val query = s"""
         |$prefixes
         |SELECT DISTINCT ?attraction ?attractionLabel ?description ?location ?locationLabel ?population WHERE {
-        |  ?attraction wdt:P31 wd:Q570116;
+        |  # ?attraction wdt:P31 wd:Q570116; # <- the original line from the book
+        |  VALUES ?type { wd:Q570116 wd:Q46169 }
+        |  ?attraction wdt:P31 ?type;
         |              rdfs:label ?attractionLabel;
         |              wdt:P131 ?location.
         |  FILTER(LANG(?attractionLabel) = "en").

@@ -114,6 +114,10 @@ object ch11_TravelGuide {
         case ByLocationPopulation => "DESC(?population)"
       }
 
+      // NOTE: this query differs from the one shown in the book. Wikidata no longer marks national parks
+      // (e.g., Yellowstone and Yosemite) as tourist attractions (wd:Q570116), so the original query returned
+      // no results. Now we look for tourist attractions OR national parks (wd:Q46169). The original line
+      // from the book is kept below for reference.
       val query =
         s"""
                      PREFIX wd: <http://www.wikidata.org/entity/>
@@ -121,7 +125,9 @@ object ch11_TravelGuide {
                      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
                      PREFIX schema: <http://schema.org/>
                      SELECT DISTINCT ?attraction ?attractionLabel ?description ?location ?locationLabel ?population WHERE {
-                       ?attraction wdt:P31 wd:Q570116;
+                       # ?attraction wdt:P31 wd:Q570116; # <- the original line from the book
+                       VALUES ?type { wd:Q570116 wd:Q46169 }
+                       ?attraction wdt:P31 ?type;
                                    rdfs:label ?attractionLabel;
                                    wdt:P131 ?location.
                        FILTER(LANG(?attractionLabel) = "en").
@@ -413,7 +419,6 @@ object ch11_TravelGuide {
   }
 
   def main(args: Array[String]): Unit = {
-    ch11_WikidataDataAccess.identifyToWikidata()
     runCachedVersion
   }
 
