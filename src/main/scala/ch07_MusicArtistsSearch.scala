@@ -153,11 +153,12 @@ object ch07_MusicArtistsSearch extends App {
         activeBefore: Int
     ): List[Artist] = artists.filter(artist =>
       (genres.isEmpty || genres.contains(artist.genre.name)) &&              // <- using Genre
-        (locations.isEmpty || locations
-          .contains(artist.origin.name)) &&                                  // <- using Location
+        (locations.isEmpty ||
+          locations
+            .contains(artist.origin.name)) &&                                // <- using Location
         (!searchByActiveYears ||
           (artist.isActive || artist.yearsActiveEnd.value >= activeAfter) && // <- using YearsActiveEnd
-          artist.yearsActiveStart.value <= activeBefore)                     // <- using YearsActiveStart
+          artist.yearsActiveStart.value <= activeBefore) // <- using YearsActiveStart
     )
   }
 
@@ -315,7 +316,7 @@ object ch07_MusicArtistsSearch extends App {
         (locations.isEmpty || locations.contains(artist.origin.name)) &&
         (!searchByActiveYears ||
           artist.yearsActive.end.forall(_ >= activeAfter) && // <- using new product type (end)
-          artist.yearsActive.start <= activeBefore)          // <- using new product type (start)
+          artist.yearsActive.start <= activeBefore) // <- using new product type (start)
     )
   }
 
@@ -565,8 +566,8 @@ object ch07_MusicArtistsSearch extends App {
       periods.exists(p => p.start <= checkedPeriod.end && p.end >= checkedPeriod.start)
 
     def wasArtistActive(artist: Artist, searchedPeriod: PeriodInYears): Boolean = artist.yearsActive match {
-      case StillActive(since, previousPeriods) =>
-        since <= searchedPeriod.end || periodOverlapsWithPeriods(searchedPeriod, previousPeriods)
+      case StillActive(since, previousPeriods) => since <= searchedPeriod.end ||
+        periodOverlapsWithPeriods(searchedPeriod, previousPeriods)
       case ActiveInPast(periods)               => periodOverlapsWithPeriods(searchedPeriod, periods)
     }
 
