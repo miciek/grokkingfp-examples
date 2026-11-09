@@ -4,7 +4,14 @@ lazy val root = (project in file("."))
     organization    := "Michał Płachta (Manning)",
     version         := "1.0",
     scalaVersion    := "3.10.0",
-    scalacOptions ++= List("-unchecked", "-deprecation", "-explain"),
+    scalacOptions ++= List(
+      "-unchecked",
+      "-deprecation",
+      "-explain",
+      // the book's examples use `extends App` and pass implicits explicitly; silence only these two warnings
+      "-Wconf:msg=trait App in package scala is deprecated:s",
+      "-Wconf:msg=Implicit parameters should be provided with a `using` clause:s"
+    ),
     libraryDependencies ++= Seq(
       "org.typelevel"     %% "cats-effect"      % "3.6.4",
       "co.fs2"            %% "fs2-core"         % "3.14.0",
