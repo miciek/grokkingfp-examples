@@ -1,9 +1,9 @@
 lazy val root = (project in file("."))
   .settings(
-    name            := "grokkingfp-examples",
-    organization    := "Michał Płachta (Manning)",
-    version         := "1.0",
-    scalaVersion    := "3.10.0",
+    name                             := "grokkingfp-examples",
+    organization                     := "Michał Płachta (Manning)",
+    version                          := "1.0",
+    scalaVersion                     := "3.10.0",
     scalacOptions ++= List(
       "-unchecked",
       "-deprecation",
@@ -23,18 +23,37 @@ lazy val root = (project in file("."))
       "org.apache.jena"    % "jena-fuseki-main" % "6.2.0",
       "org.slf4j"          % "slf4j-nop"        % "2.0.20"
     ),
-    initialCommands := s"""
+    // The last lines work around a problem in sbt 2's console: the REPL's class loader defines JDK-internal XML
+    // classes itself, so Jena fails to initialize (IllegalAccessError). We initialize Jena once, using the project's
+    // class loader, before the reader types anything. While doing it, we hide the "no SLF4J binding" message that
+    // sbt's own (older) SLF4J prints to stderr; initialization errors are still thrown. See test_sbt_console.sh.
+    initialCommands                  := s"""
       import fs2._, cats.effect._, cats.implicits._, cats.effect.unsafe.implicits.global
       import scala.concurrent.duration._, java.util.concurrent._
       import scala.jdk.javaapi.CollectionConverters.asScala
       import org.apache.jena.query._, org.apache.jena.rdfconnection._
+      {
+        Thread.currentThread.setContextClassLoader(Thread.currentThread.getContextClassLoader.getParent)
+        val stderr = System.err
+        System.setErr(new java.io.PrintStream(java.io.OutputStream.nullOutputStream))
+        try org.apache.jena.sys.JenaSystem.init() finally System.setErr(stderr)
+      }
     """,
-    run / fork      := true,
-    exportJars      :=
-      false, // sbt 2 defaults to true; tests load testdata.ttl via a resource URL that Jena cannot read from a JAR
-    Test / test := (Test / testFull).value, // sbt 2 made `test` incremental; keep running all tests (as in the book)
+    // JDK 24+ warnings in the console's JVM: JLine loads a native library, and Scala's LazyVals use sun.misc.Unsafe:
+    Compile / console / javaOptions ++=
+      (if (java.lang.Runtime.version.feature >= 24)
+         List("--enable-native-access=ALL-UNNAMED", "--sun-misc-unsafe-memory-access=allow")
+       else Nil),
+    // the console uses the packaged project jar; don't look for a main class for its manifest
+    // (avoids the "multiple main classes detected" warning; `sbt run` still lets you choose):
+    Compile / packageBin / mainClass := None,
+    run / fork                       := true,
+    // sbt 2 defaults to true; tests load testdata.ttl via a resource URL that Jena cannot read from a JAR:
+    exportJars                       := false,
+    // sbt 2 made `test` incremental; keep running all tests (as in the book):
+    Test / test                      := (Test / testFull).value,
     run / javaOptions += "-ea",
-    // JDK 24+ warns about sun.misc.Unsafe used by Akka and Scala's LazyVals; older JDKs don't know this flag
+    // JDK 24+ warns about sun.misc.Unsafe used by Akka and Scala's LazyVals; older JDKs don't know this flag:
     run / javaOptions ++=
       (if (java.lang.Runtime.version.feature >= 24) List("--sun-misc-unsafe-memory-access=allow")
        else Nil),

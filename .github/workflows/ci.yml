@@ -21,5 +21,7 @@ jobs:
       run: sbt test
     - name: Run all examples
       run: sbt runAll
+    - name: Check sbt console
+      run: ./test_sbt_console.sh
     - name: Check formatting
       run: sbt 'scalafmtSbtCheck; scalafmtCheck'
