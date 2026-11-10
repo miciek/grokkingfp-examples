@@ -372,7 +372,7 @@ object ch11_TravelGuide {
     } yield solutions
   }
 
-  private def runCachedVersion = {
+  private def runCachedVersion: List[TravelGuide] = {
     // Coffee Break
     // before:
     connectionResource.use(connection => {
@@ -419,7 +419,13 @@ object ch11_TravelGuide {
   }
 
   def main(args: Array[String]): Unit = {
-    runCachedVersion
+    // we check only the parts of the result that are stable, because Wikidata data changes over time
+    val guides = runCachedVersion
+    assert(guides.size == 3)
+    assert(guides.forall(_ == guides.head)) // all three runs return the same guide (the last two are cached)
+    assert(guides.head.attraction.name == "Yellowstone National Park")
+    assert(guides.head.attraction.location.name == "Wyoming")
+    assert(guides.head.subjects.nonEmpty)
   }
 
   /** Helper function that runs the given IO[A], times its execution, prints it, and returns it
