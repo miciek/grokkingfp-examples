@@ -3,7 +3,7 @@ lazy val root = (project in file("."))
     name                             := "grokkingfp-examples",
     organization                     := "Michał Płachta (Manning)",
     version                          := "1.0",
-    scalaVersion                     := "3.10.0",
+    scalaVersion                     := "3.10.1",
     scalacOptions ++= List(
       "-unchecked",
       "-deprecation",
