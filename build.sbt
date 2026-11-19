@@ -14,7 +14,7 @@ lazy val root = (project in file("."))
     ),
     libraryDependencies ++= Seq(
       "org.typelevel"     %% "cats-effect"      % "3.7.1",
-      "co.fs2"            %% "fs2-core"         % "3.14.0",
+      "co.fs2"            %% "fs2-core"         % "3.16.0",
       "org.scalatest"     %% "scalatest"        % "3.2.20"   % Test,
       "org.scalatestplus" %% "scalacheck-1-19"  % "3.2.20.0" % Test,
       // imperative libraries:
